@@ -61,7 +61,6 @@ func main() {
 		handler.Version = Version
 		handler.ExitErrHandler = func(c *cli.Context, err error) {}
 
-		// todo: how is this going to work in docker?
 		go rtm.ManageConnection()
 		for e := range rtm.IncomingEvents {
 			switch d := e.Data.(type) {
@@ -73,36 +72,30 @@ func main() {
 					continue
 				}
 
-				writeToSlack := func(text string) {
+				w := utils.WriterFunc(func(p []byte) (n int, err error) {
+					text := string(p)
+					log.Printf("[DEBUG] %s", text)
 					msg := rtm.NewOutgoingMessage(text, d.Msg.Channel)
-					rtm.SendMessage(msg)
-				}
+                                        rtm.SendMessage(msg)
+                                        return len(p), nil
+                                })
 
-				handler.Writer = utils.WriterFunc(func(p []byte) (n int, err error) {
-					writeToSlack(string(p))
-					return len(p), nil
-				})
-
-				handler.ErrWriter = utils.WriterFunc(func(p []byte) (n int, err error) {
-					log.Printf("[ERROR] %s", string(p))
-					writeToSlack(string(p))
-					return len(p), nil
-				})
-
+				handler.Writer = w
+				handler.ErrWriter = w
 				handler.Commands = []cli.Command{
-					commands.NewEchoCommand(rtm, d.Msg.Channel).Command(),
+					commands.NewEchoCommand(w).Command(),
 				}
 
 				if err := handler.Run(args); err != nil {
-					log.Printf("[ERROR] %s", err)
-					writeToSlack(err.Error())
+					text := fmt.Sprintf("Error: %s", err.Error())
+					w.Write([]byte(text))
 				}
 			case *slack.RTMError:
-				return fmt.Errorf("RTM Error: %s", d.Msg)
+				log.Printf("[ERROR] Unexected RTM error: %s", d.Msg)
+			 case *slack.AckErrorEvent:
+                                log.Printf("[ERROR] Unexpected Ack error: %s", d.Error())
 			case *slack.InvalidAuthEvent:
 				return fmt.Errorf("The bot's auth token is invalid")
-			case *slack.AckErrorEvent:
-				return d
 			default:
 				log.Printf("[DEBUG] Unhandled event: %#v", e)
 			}

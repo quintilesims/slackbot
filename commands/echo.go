@@ -1,21 +1,20 @@
 package commands
 
 import (
+	"fmt"
+	"io"
 	"strings"
 
-	"github.com/nlopes/slack"
 	"github.com/urfave/cli"
 )
 
 type EchoCommand struct {
-	rtm       *slack.RTM
-	channelID string
+	w io.Writer
 }
 
-func NewEchoCommand(rtm *slack.RTM, channelID string) *EchoCommand {
+func NewEchoCommand(w io.Writer) *EchoCommand {
 	return &EchoCommand{
-		rtm:       rtm,
-		channelID: channelID,
+		w: w,
 	}
 }
 
@@ -29,13 +28,14 @@ func (e EchoCommand) Command() cli.Command {
 }
 
 func (e *EchoCommand) echo(c *cli.Context) error {
-	// cannot send empty messages in slack
 	text := strings.Join(c.Args(), " ")
 	if text == "" {
-		text = "Hello, World!"
+		return fmt.Errorf("please specify at least one argument")
 	}
 
-	msg := e.rtm.NewOutgoingMessage(text, e.channelID)
-	e.rtm.SendMessage(msg)
+	if _, err := e.w.Write([]byte(text)); err != nil {
+		return err
+	}
+
 	return nil
 }
