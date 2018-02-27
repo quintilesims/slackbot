@@ -4,26 +4,49 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/nlopes/slack"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestEcho(t *testing.T) {
-	w := bytes.NewBuffer(nil)
-	e := newMessageEvent("!echo Hello, World!")
-	if err := NewEchoAction().OnMessageEvent(e, w); err != nil {
-		t.Fatal(err)
+	cases := map[string]string{
+		"!echo Hello, World!":   "Hello, World!",
+		"!echo":                 "",
+		"!echo one two three":   "one two three",
+		"!echo onetwo    three": "onetwo    three",
 	}
 
-	assert.Equal(t, "Hello, World!", w.String())
+	a := NewEchoAction()
+	for input, expected := range cases {
+		t.Run(input, func(t *testing.T) {
+			e := newMessageEvent(input)
+			w := bytes.NewBuffer(nil)
+			if err := a.OnMessageEvent(e, w); err != nil {
+				t.Fatal(err)
+			}
+
+			assert.Equal(t, expected, w.String())
+		})
+	}
 }
 
 func TestEchoPassthrough(t *testing.T) {
-	w := bytes.NewBuffer(nil)
-	e := &slack.MessageEvent{Msg: slack.Msg{Text: "!echo Hello, World!"}}
-	if err := NewEchoAction().OnMessageEvent(e, w); err != nil {
-		t.Fatal(err)
+	cases := []string{
+		"echo Hello, World!",
+		"!ehco Hello, World!",
+		"some other command",
+		"",
 	}
 
-	assert.Equal(t, "Hello, World!", w.String())
+	a := NewEchoAction()
+	for _, c := range cases {
+		t.Run(c, func(t *testing.T) {
+			e := newMessageEvent(c)
+			w := bytes.NewBuffer(nil)
+			if err := a.OnMessageEvent(e, w); err != nil {
+				t.Fatal(err)
+			}
+
+			assert.Empty(t, w.String())
+		})
+	}
 }
