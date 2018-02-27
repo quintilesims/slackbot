@@ -1,0 +1,12 @@
+version: '2'
+
+services:
+  slackbot:
+    build: .
+    ports:
+      - 9090:9090
+  ngrok:
+    image: fnichol/ngrok
+    links:
+    - slackbot
+    network_mode: bridge

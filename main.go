@@ -2,15 +2,18 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"os"
-	"strings"
 
 	"github.com/nlopes/slack"
-	"github.com/quintilesims/slackbot/commands"
+	"github.com/quintilesims/slackbot/controllers"
 	"github.com/quintilesims/slackbot/logging"
+	"github.com/quintilesims/slackbot/rtm"
 	"github.com/quintilesims/slackbot/utils"
 	"github.com/urfave/cli"
+	"github.com/zpatrick/fireball"
 )
 
 var Version string
@@ -20,13 +23,15 @@ func main() {
 		Version = "unset/develop"
 	}
 
-	// todo: would be nice to wrap help text in markdown as code snippet
-	// cli.AppHelpTemplate = fmt.Sprintf("```\n%s\n```", cli.AppHelpTemplate)
-
-	app := cli.NewApp()
-	app.Name = "slackbot"
-	app.Version = Version
-	app.Flags = []cli.Flag{
+	slackbot := cli.NewApp()
+	slackbot.Name = "slackbot"
+	slackbot.Version = Version
+	slackbot.Flags = []cli.Flag{
+		cli.IntFlag{
+			Name:  "p, port",
+			Usage: "- todo - ",
+			Value: 9090,
+		},
 		cli.BoolFlag{
 			Name:  "d, debug",
 			Usage: "- todo -",
@@ -38,62 +43,72 @@ func main() {
 		},
 	}
 
-	app.Before = func(c *cli.Context) error {
-		log.SetOutput(logging.NewLogWriter(c.Bool("debug")))
+	slackbot.Before = func(c *cli.Context) error {
+		debug := c.Bool("debug")
+		log.SetOutput(logging.NewLogWriter(debug))
 		logger := log.New(os.Stdout, "[DEBUG] ", log.Flags())
 		slack.SetLogger(logger)
 
 		return nil
 	}
 
-	app.Action = func(c *cli.Context) error {
+	slackbot.Action = func(c *cli.Context) error {
 		token := c.String("token")
 		if token == "" {
 			return fmt.Errorf("Token is not set!")
 		}
 
 		api := slack.New(token)
-		rtm := api.NewRTM()
-		defer rtm.Disconnect()
+		r := api.NewRTM()
+		defer r.Disconnect()
 
-		handler := cli.NewApp()
-		handler.Name = "slackbot"
-		handler.Version = Version
-		handler.ExitErrHandler = func(c *cli.Context, err error) {}
+		controller := controllers.NewHireController()
+		routes := fireball.Decorate(
+			controller.Routes(),
+			fireball.LogDecorator())
 
-		go rtm.ManageConnection()
-		for e := range rtm.IncomingEvents {
-			switch d := e.Data.(type) {
+		a := fireball.NewApp(routes)
+		port := fmt.Sprintf(":%d", c.Int("port"))
+		log.Printf("[INFO] Listening on port %s", port)
+		go http.ListenAndServe(port, a)
+
+		/*
+
+
+
+		 */
+
+		actions := rtm.Actions{
+			rtm.NewEchoAction(),
+		}
+
+		if err := actions.Init(); err != nil {
+			return err
+		}
+
+
+		newChannelWriter := func(channelID string) io.Writer {
+			return utils.WriterFunc(func(b []byte) (n int, err error) {
+				msg := r.NewOutgoingMessage(string(b), channelID)
+				r.SendMessage(msg)
+				return len(b), nil
+			})
+		}
+
+		go r.ManageConnection()
+		for e := range r.IncomingEvents {
+			switch event := e.Data.(type) {
 			case *slack.ConnectedEvent:
-				log.Printf("Slack connection successful!")
+				log.Printf("[INFO] Slack connection successful!")
 			case *slack.MessageEvent:
-				args := strings.Split(d.Msg.Text, " ")
-				if len(args) == 0 || args[0] != "slackbot" {
-					continue
-				}
-
-				w := utils.WriterFunc(func(p []byte) (n int, err error) {
-					text := string(p)
-					log.Printf("[DEBUG] %s", text)
-					msg := rtm.NewOutgoingMessage(text, d.Msg.Channel)
-                                        rtm.SendMessage(msg)
-                                        return len(p), nil
-                                })
-
-				handler.Writer = w
-				handler.ErrWriter = w
-				handler.Commands = []cli.Command{
-					commands.NewEchoCommand(w).Command(),
-				}
-
-				if err := handler.Run(args); err != nil {
-					text := fmt.Sprintf("Error: %s", err.Error())
-					w.Write([]byte(text))
+				w := newChannelWriter(event.Msg.Channel)
+				if err := actions.OnMessageEvent(event, w); err != nil {
+					w.Write([]byte(err.Error()))
 				}
 			case *slack.RTMError:
-				log.Printf("[ERROR] Unexected RTM error: %s", d.Msg)
-			 case *slack.AckErrorEvent:
-                                log.Printf("[ERROR] Unexpected Ack error: %s", d.Error())
+				log.Printf("[ERROR] Unexected RTM error: %s", event.Msg)
+			case *slack.AckErrorEvent:
+				log.Printf("[ERROR] Unexpected Ack error: %s", event.Error())
 			case *slack.InvalidAuthEvent:
 				return fmt.Errorf("The bot's auth token is invalid")
 			default:
@@ -104,7 +119,7 @@ func main() {
 		return nil
 	}
 
-	if err := app.Run(os.Args); err != nil {
+	if err := slackbot.Run(os.Args); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}

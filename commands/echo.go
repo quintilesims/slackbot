@@ -23,16 +23,18 @@ func (e EchoCommand) Command() cli.Command {
 		Name:      "echo",
 		Usage:     "- todo -",
 		ArgsUsage: "- todo - ",
-		Action:    e.echo,
+		Action: func(c *cli.Context) error {
+			return e.run(c.Args())
+		},
 	}
 }
 
-func (e *EchoCommand) echo(c *cli.Context) error {
-	text := strings.Join(c.Args(), " ")
-	if text == "" {
+func (e *EchoCommand) run(args []string) error {
+	if len(args) == 0 {
 		return fmt.Errorf("please specify at least one argument")
 	}
 
+	text := strings.Join(args, " ")
 	if _, err := e.w.Write([]byte(text)); err != nil {
 		return err
 	}
