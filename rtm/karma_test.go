@@ -1,6 +1,8 @@
 package rtm
 
 import (
+	"bytes"
+	"fmt"
 	"testing"
 
 	"github.com/nlopes/slack"
@@ -20,6 +22,42 @@ func TestKarmaInit(t *testing.T) {
 	}
 
 	assert.Contains(t, keys, StoreKeyKarma)
+}
+
+func TestKarmaDisplay(t *testing.T) {
+	currentKarma := map[string]int{
+		"cats":  -2,
+		"sleep": 0,
+		"tacos": 3,
+		"dogs":  5,
+	}
+
+	s := db.NewMemoryStore()
+	if err := s.Write(StoreKeyKarma, currentKarma); err != nil {
+		t.Fatal(err)
+	}
+
+	// add some ids that aren't in the store
+	currentKarma["red"] = 0
+	currentKarma["blue"] = 0
+
+	a := NewKarmaAction(s)
+	for id, karma := range currentKarma {
+		t.Run(id, func(t *testing.T) {
+			e := newMessageEvent(fmt.Sprintf("!karma %s", id))
+			w := bytes.NewBuffer(nil)
+			if err := a.OnMessageEvent(e, w); err != nil {
+				t.Fatal(err)
+			}
+
+			expected := fmt.Sprintf("karma for '%s': %d", id, karma)
+			assert.Equal(t, expected, w.String())
+		})
+	}
+}
+
+func TestKarmaDisplayErrors(t *testing.T){
+	// todo: error with no args, > 1 args
 }
 
 func TestKarmaUpdate(t *testing.T) {
@@ -72,4 +110,8 @@ func TestKarmaUpdate(t *testing.T) {
 	}
 
 	assert.Equal(t, expected, result)
+}
+
+func TestKarmaPassthrough(t *testing.T){
+        // todo
 }

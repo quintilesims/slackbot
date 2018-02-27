@@ -9,6 +9,7 @@ import (
 
 	"github.com/nlopes/slack"
 	"github.com/quintilesims/slackbot/controllers"
+	"github.com/quintilesims/slackbot/db"
 	"github.com/quintilesims/slackbot/logging"
 	"github.com/quintilesims/slackbot/rtm"
 	"github.com/quintilesims/slackbot/utils"
@@ -78,14 +79,15 @@ func main() {
 
 		 */
 
+		s := db.NewMemoryStore()
 		actions := rtm.Actions{
 			rtm.NewEchoAction(),
+			rtm.NewKarmaAction(s),
 		}
 
 		if err := actions.Init(); err != nil {
 			return err
 		}
-
 
 		newChannelWriter := func(channelID string) io.Writer {
 			return utils.WriterFunc(func(b []byte) (n int, err error) {

@@ -48,7 +48,7 @@ func NewKarmaAction(store db.Store) *ActionSchema {
 					return nil
 				}
 
-				var karma map[string]int
+				karma := map[string]int{}
 				if err := store.Read(StoreKeyKarma, &karma); err != nil {
 					return err
 				}
@@ -59,8 +59,23 @@ func NewKarmaAction(store db.Store) *ActionSchema {
 				return store.Write(StoreKeyKarma, karma)
 			}
 
-			// todo: !karma zpatrick
-			// todo: !karma zpatrick test (should be error)
+			if args[0] == "!karma" {
+				if len(args) > 2 {
+					return fmt.Errorf("!karma can only accept a single identifier")
+				}
+
+				karma := map[string]int{}
+				if err := store.Read(StoreKeyKarma, &karma); err != nil {
+					return err
+				}
+
+				id := args[1]
+				text := fmt.Sprintf("karma for '%s': %d", id, karma[id])
+				if _, err := w.Write([]byte(text)); err != nil {
+					return err
+				}
+			}
+
 			return nil
 		},
 	}
