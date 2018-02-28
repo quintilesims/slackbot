@@ -15,7 +15,7 @@ func TestEcho(t *testing.T) {
 		"!echo onetwo    three": "onetwo    three",
 	}
 
-	a := NewEchoAction()
+	a := NewEchoBehavior()
 	for input, expected := range cases {
 		t.Run(input, func(t *testing.T) {
 			e := newMessageEvent(input)
@@ -37,7 +37,7 @@ func TestEchoPassthrough(t *testing.T) {
 		"",
 	}
 
-	a := NewEchoAction()
+	a := NewEchoBehavior()
 	for _, c := range cases {
 		t.Run(c, func(t *testing.T) {
 			e := newMessageEvent(c)

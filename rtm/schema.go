@@ -7,7 +7,8 @@ import (
 	"github.com/quintilesims/slackbot/utils"
 )
 
-type ActionSchema struct {
+// todo: should this have a Validate() error function?
+type BehaviorSchema struct {
 	Name           string
 	Usage          string
 	Help           string
@@ -15,30 +16,35 @@ type ActionSchema struct {
 	OnMessageEvent func(e *slack.MessageEvent, w io.Writer) error
 }
 
-type Actions []*ActionSchema
+type Behaviors []*BehaviorSchema
 
-func (ac Actions) Init() error {
+func (bh Behaviors) Do(f func(*BehaviorSchema) error) error {
 	errs := []error{}
-	for _, a := range ac {
-		if a.Init != nil {
-			if err := a.Init(); err != nil {
-				errs = append(errs, err)
-			}
+	for _, b := range bh {
+		if err := f(b); err != nil {
+			errs = append(errs, err)
 		}
 	}
 
 	return utils.MultiError(errs)
 }
 
-func (ac Actions) OnMessageEvent(e *slack.MessageEvent, w io.Writer) error {
-	errs := []error{}
-	for _, a := range ac {
-		if a.OnMessageEvent != nil {
-			if err := a.OnMessageEvent(e, w); err != nil {
-				errs = append(errs, err)
-			}
+func (bh Behaviors) Init() error {
+	return bh.Do(func(b *BehaviorSchema) error {
+		if b.Init != nil {
+			return b.Init()
 		}
-	}
 
-	return utils.MultiError(errs)
+		return nil
+	})
+}
+
+func (bh Behaviors) OnMessageEvent(e *slack.MessageEvent, w io.Writer) error {
+	return bh.Do(func(b *BehaviorSchema) error {
+		if b.OnMessageEvent != nil {
+			return b.OnMessageEvent(e, w)
+		}
+
+		return nil
+	})
 }

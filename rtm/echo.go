@@ -7,8 +7,8 @@ import (
 	"github.com/nlopes/slack"
 )
 
-func NewEchoAction() *ActionSchema {
-	return &ActionSchema{
+func NewEchoBehavior() *BehaviorSchema {
+	return &BehaviorSchema{
 		Name:  "echo",
 		Usage: "echo `[args...]`",
 		Help:  "Display the given message.",

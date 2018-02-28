@@ -11,13 +11,13 @@ import (
 
 const StoreKeyKarma = "karma"
 
-func NewKarmaAction(store db.Store) *ActionSchema {
-	return &ActionSchema{
+func NewKarmaBehavior(store db.Store) *BehaviorSchema {
+	return &BehaviorSchema{
 		Name:  "karma",
 		Usage: "!karma `id`",
-		Help:  "Show karma for the specified ID.\nAdd or subtract karma by typing `++` or `--` after the ID (e.g. `dogs++`).",
+		Help:  "Show karma for the specified `id`.\nAdd or subtract karma by typing `++` or `--` after the `id` (e.g. `dogs++`).",
 		Init: func() error {
-			var karma map[string]int
+			karma := map[string]int{}
 			if err := store.Read(StoreKeyKarma, &karma); err != nil {
 				if _, ok := err.(db.MissingEntryError); ok {
 					return store.Write(StoreKeyKarma, karma)
@@ -53,7 +53,7 @@ func NewKarmaAction(store db.Store) *ActionSchema {
 					return err
 				}
 
-				// strip the '++' or '--' from the id
+				// strip '++' or '--' from the id
 				id := args[0][:len(args[0])-2]
 				karma[id] = update(karma[id])
 				return store.Write(StoreKeyKarma, karma)

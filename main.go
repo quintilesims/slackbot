@@ -63,7 +63,7 @@ func main() {
 		r := api.NewRTM()
 		defer r.Disconnect()
 
-		controller := controllers.NewHireController()
+		controller := controllers.NewHireController(token)
 		routes := fireball.Decorate(
 			controller.Routes(),
 			fireball.LogDecorator())
@@ -80,12 +80,12 @@ func main() {
 		 */
 
 		s := db.NewMemoryStore()
-		actions := rtm.Actions{
-			rtm.NewEchoAction(),
-			rtm.NewKarmaAction(s),
+		behaviors := rtm.Behaviors{
+			rtm.NewEchoBehavior(),
+			rtm.NewKarmaBehavior(s),
 		}
 
-		if err := actions.Init(); err != nil {
+		if err := behaviors.Init(); err != nil {
 			return err
 		}
 
@@ -104,7 +104,7 @@ func main() {
 				log.Printf("[INFO] Slack connection successful!")
 			case *slack.MessageEvent:
 				w := newChannelWriter(event.Msg.Channel)
-				if err := actions.OnMessageEvent(event, w); err != nil {
+				if err := behaviors.OnMessageEvent(event, w); err != nil {
 					w.Write([]byte(err.Error()))
 				}
 			case *slack.RTMError:

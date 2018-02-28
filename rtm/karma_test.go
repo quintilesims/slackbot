@@ -12,7 +12,7 @@ import (
 
 func TestKarmaInit(t *testing.T) {
 	s := db.NewMemoryStore()
-	if err := NewKarmaAction(s).Init(); err != nil {
+	if err := NewKarmaBehavior(s).Init(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -41,7 +41,7 @@ func TestKarmaDisplay(t *testing.T) {
 	currentKarma["red"] = 0
 	currentKarma["blue"] = 0
 
-	a := NewKarmaAction(s)
+	a := NewKarmaBehavior(s)
 	for id, karma := range currentKarma {
 		t.Run(id, func(t *testing.T) {
 			e := newMessageEvent(fmt.Sprintf("!karma %s", id))
@@ -56,7 +56,7 @@ func TestKarmaDisplay(t *testing.T) {
 	}
 }
 
-func TestKarmaDisplayErrors(t *testing.T){
+func TestKarmaDisplayErrors(t *testing.T) {
 	// todo: error with no args, > 1 args
 }
 
@@ -88,7 +88,7 @@ func TestKarmaUpdate(t *testing.T) {
 		newMessageEvent("sleep++"),
 	}
 
-	a := NewKarmaAction(s)
+	a := NewKarmaBehavior(s)
 	for _, e := range events {
 		if err := a.OnMessageEvent(e, nil); err != nil {
 			t.Fatal(err)
@@ -112,6 +112,6 @@ func TestKarmaUpdate(t *testing.T) {
 	assert.Equal(t, expected, result)
 }
 
-func TestKarmaPassthrough(t *testing.T){
-        // todo
+func TestKarmaPassthrough(t *testing.T) {
+	// todo
 }
