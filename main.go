@@ -4,18 +4,14 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/nlopes/slack"
-	"github.com/quintilesims/slackbot/controllers"
 	"github.com/quintilesims/slackbot/db"
 	"github.com/quintilesims/slackbot/logging"
 	"github.com/quintilesims/slackbot/rtm"
-	"github.com/quintilesims/slackbot/slash"
 	"github.com/quintilesims/slackbot/utils"
 	"github.com/urfave/cli"
-	"github.com/zpatrick/fireball"
 )
 
 var Version string
@@ -29,11 +25,6 @@ func main() {
 	slackbot.Name = "slackbot"
 	slackbot.Version = Version
 	slackbot.Flags = []cli.Flag{
-		cli.IntFlag{
-			Name:  "p, port",
-			Usage: "- todo - ",
-			Value: 9090,
-		},
 		cli.BoolFlag{
 			Name:  "d, debug",
 			Usage: "- todo -",
@@ -48,8 +39,6 @@ func main() {
 	slackbot.Before = func(c *cli.Context) error {
 		debug := c.Bool("debug")
 		log.SetOutput(logging.NewLogWriter(debug))
-		logger := log.New(os.Stdout, "[DEBUG] ", log.Flags())
-		slack.SetLogger(logger)
 
 		return nil
 	}
@@ -60,42 +49,22 @@ func main() {
 			return fmt.Errorf("Token is not set!")
 		}
 
+		store := db.NewMemoryStore()
 		api := slack.New(token)
-		r := api.NewRTM()
-		defer r.Disconnect()
+		api.SetDebug(c.Bool("debug"))
 
-		slashCommands := []*slash.CommandSchema{
-			slash.NewInterviewCommand(),
-		}
-
-		for _, cmd := range slashCommands {
-			if err := cmd.Validate(); err != nil {
-				return err
-			}
-		}
-
-		controller := controllers.NewSlashCommandController(&r.Client, token, slashCommands...)
-		routes := fireball.Decorate(
-			controller.Routes(),
-			fireball.LogDecorator())
-
-		a := fireball.NewApp(routes)
-		a.ErrorHandler = controllers.ErrorHandler
-		port := fmt.Sprintf(":%d", c.Int("port"))
-		log.Printf("[INFO] Listening on port %s", port)
-		go http.ListenAndServe(port, a)
-
-		s := db.NewMemoryStore()
 		behaviors := rtm.Behaviors{
 			rtm.NewEchoBehavior(),
-			rtm.NewKarmaBehavior(s),
+			rtm.NewKarmaBehavior(store),
 		}
 
 		behaviors = append(behaviors, rtm.NewHelpBehavior(behaviors...))
-
 		if err := behaviors.Init(); err != nil {
 			return err
 		}
+
+		r := api.NewRTM()
+		defer r.Disconnect()
 
 		newChannelWriter := func(channelID string) io.Writer {
 			return utils.WriterFunc(func(b []byte) (n int, err error) {
