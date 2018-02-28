@@ -63,12 +63,13 @@ func main() {
 		r := api.NewRTM()
 		defer r.Disconnect()
 
-		controller := controllers.NewHireController(token)
+		controller := controllers.NewSlashCommandController(&r.Client, token)
 		routes := fireball.Decorate(
 			controller.Routes(),
 			fireball.LogDecorator())
 
 		a := fireball.NewApp(routes)
+		a.ErrorHandler = controllers.ErrorHandler
 		port := fmt.Sprintf(":%d", c.Int("port"))
 		log.Printf("[INFO] Listening on port %s", port)
 		go http.ListenAndServe(port, a)
