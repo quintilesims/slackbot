@@ -10,7 +10,6 @@ import (
 // todo: should this have a Validate() error function?
 type BehaviorSchema struct {
 	Name           string
-	Usage          string
 	Help           string
 	Init           func() error
 	OnMessageEvent func(e *slack.MessageEvent, w io.Writer) error

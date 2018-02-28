@@ -46,9 +46,6 @@ func (s *SlashCommandController) Routes() []*fireball.Route {
 	return routes
 }
 
-// todo: slack will only show the responses with a 200 status, so we should detect
-// if/when we should send back error messages with a 200 response
-
 // todo: validate token: https://github.com/nlopes/slack/blob/master/examples/slash/slash.go
 func (s *SlashCommandController) run(c *fireball.Context) (fireball.Response, error) {
 	req, err := slack.SlashCommandParse(c.Request)
@@ -58,6 +55,12 @@ func (s *SlashCommandController) run(c *fireball.Context) (fireball.Response, er
 
 	for _, cmd := range s.commands {
 		if cmd.Name == req.Command {
+			args := strings.Split(req.Text, " ")
+			if len(args) == 1 && args[0] == "help" {
+				msg := slack.Msg{Text: cmd.Help}
+				return fireball.NewJSONResponse(200, msg)
+			}
+
 			msg, err := cmd.Run(s.client, req)
 			if err != nil {
 				return nil, err
@@ -67,7 +70,7 @@ func (s *SlashCommandController) run(c *fireball.Context) (fireball.Response, er
 		}
 	}
 
-	return nil, slash.NewSlackMessageError(true, "This bot is currently not setup to handle the '%s' command!", req.Command)
+	return nil, slash.NewSlackMessageError("This bot is currently not setup to handle the '%s' command!", req.Command)
 }
 
 func (s *SlashCommandController) callback(c *fireball.Context) (fireball.Response, error) {

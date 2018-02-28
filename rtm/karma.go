@@ -13,9 +13,8 @@ const StoreKeyKarma = "karma"
 
 func NewKarmaBehavior(store db.Store) *BehaviorSchema {
 	return &BehaviorSchema{
-		Name:  "karma",
-		Usage: "!karma `id`",
-		Help:  "Show karma for the specified `id`.\nAdd or subtract karma by typing `++` or `--` after the `id` (e.g. `dogs++`).",
+		Name: "karma",
+		Help: "Show karma using `!karma {id}`\nAdd or subtract karma by typing `{id}++` or `{id}--` (e.g. `dogs++`)",
 		Init: func() error {
 			karma := map[string]int{}
 			if err := store.Read(StoreKeyKarma, &karma); err != nil {

@@ -12,6 +12,7 @@ import (
 	"github.com/quintilesims/slackbot/db"
 	"github.com/quintilesims/slackbot/logging"
 	"github.com/quintilesims/slackbot/rtm"
+	"github.com/quintilesims/slackbot/slash"
 	"github.com/quintilesims/slackbot/utils"
 	"github.com/urfave/cli"
 	"github.com/zpatrick/fireball"
@@ -63,7 +64,17 @@ func main() {
 		r := api.NewRTM()
 		defer r.Disconnect()
 
-		controller := controllers.NewSlashCommandController(&r.Client, token)
+		slashCommands := []*slash.CommandSchema{
+			slash.NewInterviewCommand(),
+		}
+
+		for _, cmd := range slashCommands {
+			if err := cmd.Validate(); err != nil {
+				return err
+			}
+		}
+
+		controller := controllers.NewSlashCommandController(&r.Client, token, slashCommands...)
 		routes := fireball.Decorate(
 			controller.Routes(),
 			fireball.LogDecorator())
@@ -74,17 +85,13 @@ func main() {
 		log.Printf("[INFO] Listening on port %s", port)
 		go http.ListenAndServe(port, a)
 
-		/*
-
-
-
-		 */
-
 		s := db.NewMemoryStore()
 		behaviors := rtm.Behaviors{
 			rtm.NewEchoBehavior(),
 			rtm.NewKarmaBehavior(s),
 		}
+
+		behaviors = append(behaviors, rtm.NewHelpBehavior(behaviors...))
 
 		if err := behaviors.Init(); err != nil {
 			return err

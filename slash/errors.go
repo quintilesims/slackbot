@@ -10,19 +10,13 @@ type SlackMessageError struct {
 	*slack.Msg
 }
 
-func NewSlackMessageError(ephemeral bool, format string, tokens ...interface{}) *SlackMessageError {
-	responseType := "ephemeral"
-	if !ephemeral {
-		responseType = "in_channel"
+func NewSlackMessageError(format string, tokens ...interface{}) *SlackMessageError {
+	return &SlackMessageError{
+		&slack.Msg{
+			ResponseType: "ephemeral",
+			Text:         fmt.Sprintf(format, tokens...),
+		},
 	}
-
-	msg := &slack.Msg{
-		ResponseType: responseType,
-		Text:         fmt.Sprintf(format, tokens...),
-	}
-
-	msg.Text += "\nPlease contact the bot administrator"
-	return &SlackMessageError{msg}
 }
 
 func (s *SlackMessageError) Error() string {

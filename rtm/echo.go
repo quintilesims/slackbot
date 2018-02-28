@@ -9,9 +9,8 @@ import (
 
 func NewEchoBehavior() *BehaviorSchema {
 	return &BehaviorSchema{
-		Name:  "echo",
-		Usage: "echo `[args...]`",
-		Help:  "Display the given message.",
+		Name: "echo",
+		Help: "Display the given message using `echo [args...]`",
 		OnMessageEvent: func(e *slack.MessageEvent, w io.Writer) error {
 			args := strings.Split(e.Msg.Text, " ")
 			if len(args) == 0 || args[0] != "!echo" {

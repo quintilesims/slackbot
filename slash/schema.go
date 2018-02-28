@@ -8,12 +8,10 @@ import (
 )
 
 type CommandSchema struct {
-	Name string
-	Run  func(client *slack.Client, req slack.SlashCommand) (*slack.Msg, error)
-	// so slash commands have the first 'get'-like response, when the user enters like /command
-	// then, it can handle up to 5 callbacks
-	// a simple way to do this is to just have 2 functions for each schema:
-	//
+	Name     string
+	Help     string
+	Run      func(client *slack.Client, req slack.SlashCommand) (*slack.Msg, error)
+	Callback func(client *slack.Client, req slack.SlashCommand) (*slack.Msg, error)
 }
 
 func (s *CommandSchema) Validate() error {
@@ -21,6 +19,17 @@ func (s *CommandSchema) Validate() error {
 		return fmt.Errorf("Invalid Name '%s'. Names for slash commands must start with /", s.Name)
 	}
 
-	// todo: ensure both the 'get' function and 'callbvack' function is not nil
+	if s.Help == "" {
+		return fmt.Errorf("Command '%s' cannot have an empty help field!", s.Help)
+	}
+
+	if s.Run == nil {
+		return fmt.Errorf("Command '%s' cannot have a nil Run field!", s.Name)
+	}
+
+	if s.Callback == nil {
+		return fmt.Errorf("Command '%s' cannot have a nil Callback field!", s.Name)
+	}
+
 	return nil
 }
