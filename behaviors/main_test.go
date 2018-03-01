@@ -1,11 +1,15 @@
 package behaviors
 
-import "github.com/nlopes/slack"
+import (
+	"fmt"
 
-func newMessageRTMEvent(text string) slack.RTMEvent {
+	"github.com/nlopes/slack"
+)
+
+func newMessageRTMEvent(format string, tokens ...interface{}) slack.RTMEvent {
 	return slack.RTMEvent{
 		Data: &slack.MessageEvent{
-			Msg: slack.Msg{Text: text},
+			Msg: slack.Msg{Text: fmt.Sprintf(format, tokens...)},
 		},
 	}
 }

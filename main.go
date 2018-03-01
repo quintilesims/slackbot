@@ -28,41 +28,46 @@ func main() {
 	slackbot.Version = Version
 	slackbot.Flags = []cli.Flag{
 		cli.BoolFlag{
-			Name:  "d, debug",
-			Usage: "- todo -",
+			Name:   "d, debug",
+			Usage:  "enable debug logging",
+			EnvVar: "SB_DEBUG",
 		},
 		cli.StringFlag{
 			Name:   "token",
-			Usage:  "- todo -",
+			Usage:  "authentication token for the slack bot",
 			EnvVar: "SB_TOKEN",
 		},
 	}
+
+	var api *slack.Client
+	var store db.Store
+	var behavs []behaviors.Behavior
 
 	slackbot.Before = func(c *cli.Context) error {
 		debug := c.Bool("debug")
 		log.SetOutput(utils.NewLogWriter(debug))
 
-		return nil
-	}
-
-	slackbot.Action = func(c *cli.Context) error {
 		token := c.String("token")
 		if token == "" {
 			return fmt.Errorf("Token is not set!")
 		}
 
-		api := slack.New(token)
-		api.SetDebug(c.Bool("debug"))
-		store := db.NewMemoryStore()
+		api = slack.New(token)
+		api.SetDebug(debug)
 
-		behaviors := []behaviors.Behavior{
-			behaviors.NewKarmaTrackingBehavior(store),
-		}
-
+		store = db.NewMemoryStore()
 		if err := common.Init(store); err != nil {
 			return err
 		}
 
+		behavs = []behaviors.Behavior{
+			behaviors.NewKarmaTrackingBehavior(store),
+		}
+
+		return nil
+	}
+
+	slackbot.Action = func(c *cli.Context) error {
 		rtm := api.NewRTM()
 		defer rtm.Disconnect()
 
@@ -76,7 +81,7 @@ func main() {
 
 		go rtm.ManageConnection()
 		for event := range rtm.IncomingEvents {
-			for _, b := range behaviors {
+			for _, b := range behavs {
 				if err := b(event); err != nil {
 					log.Printf("[ERROR] %v", err)
 				}
@@ -103,10 +108,7 @@ func main() {
 					commands.NewKarmaCommand(store, w),
 				}
 
-				fmt.Printf("msg: '%s'\n", e.Msg.Text)
 				args := append([]string{""}, utils.ParseShell(e.Msg.Text)...)
-
-				fmt.Println(args)
 				if err := eventApp.Run(args); err != nil {
 					w.Write([]byte(err.Error()))
 				}

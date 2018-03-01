@@ -27,6 +27,8 @@ func TestKarmaTrackingBehavior(t *testing.T) {
 		newMessageRTMEvent("dogs++"),
 		newMessageRTMEvent("sleep++"),
 		newMessageRTMEvent("tacos++"),
+		newMessageRTMEvent("sunday naps++"),
+		newMessageRTMEvent("blah blah blah"),
 		slack.RTMEvent{},
 	}
 
@@ -43,10 +45,11 @@ func TestKarmaTrackingBehavior(t *testing.T) {
 	}
 
 	expected := map[string]int{
-		"dogs":  7,
-		"cats":  -3,
-		"sleep": 1,
-		"tacos": 1,
+		"dogs":        7,
+		"cats":        -3,
+		"sleep":       1,
+		"tacos":       1,
+		"sunday naps": 1,
 	}
 
 	assert.Equal(t, expected, result)
