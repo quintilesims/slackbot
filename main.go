@@ -39,7 +39,7 @@ func main() {
 		},
 	}
 
-	var api *slack.Client
+	var client *slack.Client
 	var store db.Store
 	var behavs []behaviors.Behavior
 
@@ -52,8 +52,8 @@ func main() {
 			return fmt.Errorf("Token is not set!")
 		}
 
-		api = slack.New(token)
-		api.SetDebug(debug)
+		client = slack.New(token)
+		client.SetDebug(debug)
 
 		store = db.NewMemoryStore()
 		if err := common.Init(store); err != nil {
@@ -68,7 +68,7 @@ func main() {
 	}
 
 	slackbot.Action = func(c *cli.Context) error {
-		rtm := api.NewRTM()
+		rtm := client.NewRTM()
 		defer rtm.Disconnect()
 
 		newChannelWriter := func(channelID string) io.Writer {
