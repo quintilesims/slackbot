@@ -43,6 +43,8 @@ func main() {
 	var store db.Store
 	var behavs []behaviors.Behavior
 
+	// todo: daemons
+
 	slackbot.Before = func(c *cli.Context) error {
 		debug := c.Bool("debug")
 		log.SetOutput(utils.NewLogWriter(debug))
@@ -106,6 +108,7 @@ func main() {
 				eventApp.Commands = []cli.Command{
 					commands.NewEchoCommand(w),
 					commands.NewKarmaCommand(store, w),
+					commands.NewRemindersCommand(store, w),
 				}
 
 				args := append([]string{""}, utils.ParseShell(e.Msg.Text)...)
