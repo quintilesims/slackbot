@@ -20,12 +20,12 @@ func NewKarmaCommand(store db.Store, w io.Writer) cli.Command {
 				return fmt.Errorf("Arg KEY is required")
 			}
 
-			karma, err := readKarma(key, store)
-			if err != nil {
+			karma := map[string]int{}
+			if err := store.Read(common.StoreKeyKarma, &karma); err != nil {
 				return err
 			}
 
-			text := fmt.Sprintf("karma for '%s': %d", key, karma)
+			text := fmt.Sprintf("karma for '%s': %d", key, karma[key])
 			if _, err := w.Write([]byte(text)); err != nil {
 				return err
 			}
@@ -33,13 +33,4 @@ func NewKarmaCommand(store db.Store, w io.Writer) cli.Command {
 			return nil
 		},
 	}
-}
-
-func readKarma(key string, store db.Store) (int, error) {
-	karma := map[string]int{}
-	if err := store.Read(common.StoreKeyKarma, &karma); err != nil {
-		return 0, err
-	}
-
-	return karma[key], nil
 }

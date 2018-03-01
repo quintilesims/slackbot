@@ -12,7 +12,6 @@ import (
 	"github.com/quintilesims/slackbot/commands"
 	"github.com/quintilesims/slackbot/common"
 	"github.com/quintilesims/slackbot/db"
-	"github.com/quintilesims/slackbot/logging"
 	"github.com/quintilesims/slackbot/utils"
 	"github.com/urfave/cli"
 )
@@ -41,7 +40,7 @@ func main() {
 
 	slackbot.Before = func(c *cli.Context) error {
 		debug := c.Bool("debug")
-		log.SetOutput(logging.NewLogWriter(debug))
+		log.SetOutput(utils.NewLogWriter(debug))
 
 		return nil
 	}
@@ -105,7 +104,7 @@ func main() {
 				}
 
 				fmt.Printf("msg: '%s'\n", e.Msg.Text)
-				args := utils.ParseShell("slackbot " + e.Msg.Text)
+				args := append([]string{""}, utils.ParseShell(e.Msg.Text)...)
 
 				fmt.Println(args)
 				if err := eventApp.Run(args); err != nil {

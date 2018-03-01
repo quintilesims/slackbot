@@ -6,9 +6,6 @@ import (
 
 type MemoryStore struct {
 	data map[string][]byte
-	//Keys() ([]string, error)
-	//Read(key string, v interface{}) error
-	//Write(key string, v interface{}) error
 }
 
 func NewMemoryStore() *MemoryStore {
