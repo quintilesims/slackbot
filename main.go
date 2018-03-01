@@ -5,11 +5,14 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/nlopes/slack"
+	"github.com/quintilesims/slackbot/behaviors"
+	"github.com/quintilesims/slackbot/commands"
+	"github.com/quintilesims/slackbot/common"
 	"github.com/quintilesims/slackbot/db"
 	"github.com/quintilesims/slackbot/logging"
-	"github.com/quintilesims/slackbot/rtm"
 	"github.com/quintilesims/slackbot/utils"
 	"github.com/urfave/cli"
 )
@@ -49,49 +52,77 @@ func main() {
 			return fmt.Errorf("Token is not set!")
 		}
 
-		store := db.NewMemoryStore()
 		api := slack.New(token)
 		api.SetDebug(c.Bool("debug"))
+		store := db.NewMemoryStore()
 
-		behaviors := rtm.Behaviors{
-			rtm.NewEchoBehavior(),
-			rtm.NewKarmaBehavior(store),
+		behaviors := []behaviors.Behavior{
+			behaviors.NewKarmaTrackingBehavior(store),
 		}
 
-		behaviors = append(behaviors, rtm.NewHelpBehavior(behaviors...))
-		if err := behaviors.Init(); err != nil {
+		if err := common.Init(store); err != nil {
 			return err
 		}
 
-		r := api.NewRTM()
-		defer r.Disconnect()
+		rtm := api.NewRTM()
+		defer rtm.Disconnect()
 
 		newChannelWriter := func(channelID string) io.Writer {
 			return utils.WriterFunc(func(b []byte) (n int, err error) {
-				msg := r.NewOutgoingMessage(string(b), channelID)
-				r.SendMessage(msg)
+				msg := rtm.NewOutgoingMessage(string(b), channelID)
+				rtm.SendMessage(msg)
 				return len(b), nil
 			})
 		}
 
-		go r.ManageConnection()
-		for e := range r.IncomingEvents {
-			switch event := e.Data.(type) {
+		go rtm.ManageConnection()
+		for event := range rtm.IncomingEvents {
+			for _, b := range behaviors {
+				if err := b(event); err != nil {
+					log.Printf("[ERROR] %v", err)
+				}
+			}
+
+			switch e := event.Data.(type) {
 			case *slack.ConnectedEvent:
 				log.Printf("[INFO] Slack connection successful!")
 			case *slack.MessageEvent:
-				w := newChannelWriter(event.Msg.Channel)
-				if err := behaviors.OnMessageEvent(event, w); err != nil {
+				if !strings.HasPrefix(e.Msg.Text, "!") {
+					continue
+				}
+
+				w := newChannelWriter(e.Msg.Channel)
+				eventApp := cli.NewApp()
+				eventApp.Writer = w
+				eventApp.CommandNotFound = func(c *cli.Context, command string) {
+					text := fmt.Sprintf("Command '%s' does not exist", command)
+					w.Write([]byte(text))
+				}
+
+				eventApp.Commands = []cli.Command{
+					commands.NewEchoCommand(w),
+					commands.NewKarmaCommand(store, w),
+				}
+
+				fmt.Printf("msg: '%s'\n", e.Msg.Text)
+				args := utils.ParseShell("slackbot " + e.Msg.Text)
+
+				fmt.Println(args)
+				if err := eventApp.Run(args); err != nil {
 					w.Write([]byte(err.Error()))
 				}
 			case *slack.RTMError:
-				log.Printf("[ERROR] Unexected RTM error: %s", event.Msg)
+				log.Printf("[ERROR] Unexected RTM error: %s", e.Msg)
 			case *slack.AckErrorEvent:
-				log.Printf("[ERROR] Unexpected Ack error: %s", event.Error())
+				if e.Error() == "Code 2 - message text is missing" {
+					continue
+				}
+
+				log.Printf("[ERROR] Unexpected Ack error: %s", e.Error())
 			case *slack.InvalidAuthEvent:
 				return fmt.Errorf("The bot's auth token is invalid")
 			default:
-				log.Printf("[DEBUG] Unhandled event: %#v", e)
+				log.Printf("[DEBUG] Unhandled event: %#v", event)
 			}
 		}
 

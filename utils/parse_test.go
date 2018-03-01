@@ -1,36 +1,31 @@
 package utils
 
 import (
-	"fmt"
 	"testing"
 
-	"github.com/mgutz/str"
+	"github.com/stretchr/testify/assert"
 )
 
-// todo: we may want/need a way to parse args better than splitting by space
-//	https://play.golang.org/p/ztqfYiPSlv
-// https://github.com/mattn/go-shellwords
-/*
-
-OnMessageEvent(e, w) error {
-	args := utils.ParseShell(e.Text)
-	if args.Get(0) != "!cmdWithFlags" {
-		return nil
+func TestParseShell(t *testing.T) {
+	cases := map[string][]string{
+		"":                  []string{},
+		"one":               []string{"one"},
+		"one two":           []string{"one", "two"},
+		"\"one\"":           []string{"one"},
+		"'one'":             []string{"one"},
+		"one two three":     []string{"one", "two", "three"},
+		"one \"two\" three": []string{"one", "two", "three"},
+		"one \"two three\"": []string{"one", "two three"},
+		"one 'two three'":   []string{"one", "two three"},
+		"\"one two three\"": []string{"one two three"},
+		"'one two three'":   []string{"one two three"},
+		"‘one two three’":   []string{"one two three"},
+		"“one two three”":   []string{"one two three"},
 	}
 
-	f := flag.NewFlagSet("", 0)
-	size := flag.NewStringFlag("size", "large", nil)
-	f.Parse(args)
-	...
-
-	!! ok - so all I really need is utils.ParseShell()
-	since then I can just use f.Args(n) and other stuff if i want
-
-*/
-func TestParse(t *testing.T) {
-	input := `hello world "it is nice outhere"`
-
-	fmt.Println(str.ToArgv(input))
-
-	// first
+	for input, expected := range cases {
+		t.Run(input, func(t *testing.T) {
+			assert.Equal(t, expected, ParseShell(input))
+		})
+	}
 }
