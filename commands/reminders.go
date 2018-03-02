@@ -6,6 +6,7 @@ import (
 
 	"github.com/quintilesims/slackbot/common"
 	"github.com/quintilesims/slackbot/db"
+	"github.com/quintilesims/slackbot/utils"
 	"github.com/urfave/cli"
 )
 
@@ -64,7 +65,49 @@ func addReminder(c *cli.Context, store db.Store, w io.Writer) error {
 }
 
 func listReminders(c *cli.Context, store db.Store, w io.Writer) error {
-	return fmt.Errorf("List Reminders not implemented")
+	escapedUser := c.Args().Get(0)
+	if escapedUser == "" {
+		return fmt.Errorf("@USER is required")
+	}
+
+	userID, err := utils.ParseSlackUser(escapedUser)
+	if err != nil {
+		return err
+	}
+
+	reminders := common.Reminders{}
+	if err := store.Read(common.StoreKeyReminders, &reminders); err != nil {
+		return err
+	}
+
+	userReminders := map[string]common.Reminder{}
+	for reminderID, r := range reminders {
+		if r.UserID == userID {
+			userReminders[reminderID] = r
+		}
+	}
+
+	if len(userReminders) == 0 {
+		text := "That user doesn't have any reminders at the moment"
+		if _, err := w.Write([]byte(text)); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	// todo: convert to our time zone
+	text := "That user has the following reminders:\n"
+	for reminderID, r := range userReminders {
+		dateTime := r.Time.Format(fmt.Sprintf("%s on %s", TimeFormat, DateFormat))
+		text += fmt.Sprintf("Reminder `%s`: %s at %s\n", reminderID, r.Message, dateTime)
+	}
+
+	if _, err := w.Write([]byte(text)); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func removeReminder(c *cli.Context, store db.Store, w io.Writer) error {
