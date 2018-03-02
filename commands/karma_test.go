@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/quintilesims/slackbot/common"
 	"github.com/quintilesims/slackbot/db"
+	"github.com/quintilesims/slackbot/models"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestKarma(t *testing.T) {
-	karma := map[string]int{
+	karma := models.Karma{
 		"dogs":     9999,
 		"cats":     -9999,
 		"tacos":    50,
@@ -20,7 +20,7 @@ func TestKarma(t *testing.T) {
 	}
 
 	store := db.NewMemoryStore()
-	if err := store.Write(common.StoreKeyKarma, karma); err != nil {
+	if err := store.Write(models.StoreKeyKarma, karma); err != nil {
 		t.Fatal(err)
 	}
 

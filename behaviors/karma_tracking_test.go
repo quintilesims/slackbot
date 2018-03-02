@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/nlopes/slack"
-	"github.com/quintilesims/slackbot/common"
 	"github.com/quintilesims/slackbot/db"
+	"github.com/quintilesims/slackbot/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,7 +17,7 @@ func TestKarmaTrackingBehavior(t *testing.T) {
 		"sleep": 0,
 	}
 
-	if err := store.Write(common.StoreKeyKarma, karma); err != nil {
+	if err := store.Write(models.StoreKeyKarma, karma); err != nil {
 		t.Fatal(err)
 	}
 
@@ -40,7 +40,7 @@ func TestKarmaTrackingBehavior(t *testing.T) {
 	}
 
 	result := map[string]int{}
-	if err := store.Read(common.StoreKeyKarma, &result); err != nil {
+	if err := store.Read(models.StoreKeyKarma, &result); err != nil {
 		t.Fatal(err)
 	}
 

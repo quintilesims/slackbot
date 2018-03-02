@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/quintilesims/slackbot/common"
 	"github.com/quintilesims/slackbot/db"
+	"github.com/quintilesims/slackbot/models"
 	"github.com/quintilesims/slackbot/utils"
 	"github.com/urfave/cli"
 )
@@ -75,12 +75,12 @@ func listReminders(c *cli.Context, store db.Store, w io.Writer) error {
 		return err
 	}
 
-	reminders := common.Reminders{}
-	if err := store.Read(common.StoreKeyReminders, &reminders); err != nil {
+	reminders := models.Reminders{}
+	if err := store.Read(models.StoreKeyReminders, &reminders); err != nil {
 		return err
 	}
 
-	userReminders := map[string]common.Reminder{}
+	userReminders := models.Reminders{}
 	for reminderID, r := range reminders {
 		if r.UserID == userID {
 			userReminders[reminderID] = r
@@ -116,8 +116,8 @@ func removeReminder(c *cli.Context, store db.Store, w io.Writer) error {
 		return fmt.Errorf("REMINDER_ID is required")
 	}
 
-	reminders := common.Reminders{}
-	if err := store.Read(common.StoreKeyReminders, &reminders); err != nil {
+	reminders := models.Reminders{}
+	if err := store.Read(models.StoreKeyReminders, &reminders); err != nil {
 		return err
 	}
 
@@ -126,7 +126,7 @@ func removeReminder(c *cli.Context, store db.Store, w io.Writer) error {
 	}
 
 	delete(reminders, reminderID)
-	if err := store.Write(common.StoreKeyReminders, reminders); err != nil {
+	if err := store.Write(models.StoreKeyReminders, reminders); err != nil {
 		return err
 	}
 

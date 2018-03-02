@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/quintilesims/slackbot/common"
 	"github.com/quintilesims/slackbot/db"
+	"github.com/quintilesims/slackbot/models"
 	"github.com/urfave/cli"
 )
 
@@ -20,8 +20,8 @@ func NewKarmaCommand(store db.Store, w io.Writer) cli.Command {
 				return fmt.Errorf("Arg KEY is required")
 			}
 
-			karma := map[string]int{}
-			if err := store.Read(common.StoreKeyKarma, &karma); err != nil {
+			karma := models.Karma{}
+			if err := store.Read(models.StoreKeyKarma, &karma); err != nil {
 				return err
 			}
 

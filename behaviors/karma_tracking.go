@@ -4,8 +4,8 @@ import (
 	"strings"
 
 	"github.com/nlopes/slack"
-	"github.com/quintilesims/slackbot/common"
 	"github.com/quintilesims/slackbot/db"
+	"github.com/quintilesims/slackbot/models"
 )
 
 func NewKarmaTrackingBehavior(store db.Store) Behavior {
@@ -26,13 +26,13 @@ func NewKarmaTrackingBehavior(store db.Store) Behavior {
 		}
 
 		karma := map[string]int{}
-		if err := store.Read(common.StoreKeyKarma, &karma); err != nil {
+		if err := store.Read(models.StoreKeyKarma, &karma); err != nil {
 			return err
 		}
 
 		// strip '++' or '--'
 		key := d.Msg.Text[:len(d.Msg.Text)-2]
 		karma[key] = update(karma[key])
-		return store.Write(common.StoreKeyKarma, karma)
+		return store.Write(models.StoreKeyKarma, karma)
 	}
 }

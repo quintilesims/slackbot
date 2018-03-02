@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/quintilesims/slackbot/common"
 	"github.com/quintilesims/slackbot/db"
+	"github.com/quintilesims/slackbot/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,19 +18,19 @@ func TestRemindersAddErrors(t *testing.T) {
 }
 
 func TestRemindersList(t *testing.T) {
-	reminders := common.Reminders{
-		"r1": common.Reminder{
+	reminders := models.Reminders{
+		"r1": models.Reminder{
 			UserID:  "u1",
 			Message: "message one",
 			Time:    time.Date(0, 11, 5, 15, 45, 0, 0, time.UTC),
 		},
-		"r2": common.Reminder{
+		"r2": models.Reminder{
 			UserID: "u2",
 		},
 	}
 
 	store := db.NewMemoryStore()
-	if err := store.Write(common.StoreKeyReminders, reminders); err != nil {
+	if err := store.Write(models.StoreKeyReminders, reminders); err != nil {
 		t.Fatal(err)
 	}
 
@@ -52,7 +52,7 @@ func TestRemindersListErrors(t *testing.T) {
 	}
 
 	store := db.NewMemoryStore()
-	if err := store.Write(common.StoreKeyReminders, common.Reminders{}); err != nil {
+	if err := store.Write(models.StoreKeyReminders, models.Reminders{}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -67,13 +67,13 @@ func TestRemindersListErrors(t *testing.T) {
 }
 
 func TestRemindersRemove(t *testing.T) {
-	reminders := common.Reminders{
-		"r1": common.Reminder{},
-		"r2": common.Reminder{},
+	reminders := models.Reminders{
+		"r1": models.Reminder{},
+		"r2": models.Reminder{},
 	}
 
 	store := db.NewMemoryStore()
-	if err := store.Write(common.StoreKeyReminders, reminders); err != nil {
+	if err := store.Write(models.StoreKeyReminders, reminders); err != nil {
 		t.Fatal(err)
 	}
 
@@ -82,13 +82,13 @@ func TestRemindersRemove(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	result := common.Reminders{}
-	if err := store.Read(common.StoreKeyReminders, &result); err != nil {
+	result := models.Reminders{}
+	if err := store.Read(models.StoreKeyReminders, &result); err != nil {
 		t.Fatal(err)
 	}
 
-	expected := common.Reminders{
-		"r2": common.Reminder{},
+	expected := models.Reminders{
+		"r2": models.Reminder{},
 	}
 
 	assert.Equal(t, expected, result)
@@ -101,7 +101,7 @@ func TestRemindersRemoveErrors(t *testing.T) {
 	}
 
 	store := db.NewMemoryStore()
-	if err := store.Write(common.StoreKeyReminders, common.Reminders{}); err != nil {
+	if err := store.Write(models.StoreKeyReminders, models.Reminders{}); err != nil {
 		t.Fatal(err)
 	}
 

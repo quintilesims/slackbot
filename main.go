@@ -10,7 +10,6 @@ import (
 	"github.com/nlopes/slack"
 	"github.com/quintilesims/slackbot/behaviors"
 	"github.com/quintilesims/slackbot/commands"
-	"github.com/quintilesims/slackbot/common"
 	"github.com/quintilesims/slackbot/db"
 	"github.com/quintilesims/slackbot/utils"
 	"github.com/urfave/cli"
@@ -58,7 +57,7 @@ func main() {
 		client.SetDebug(debug)
 
 		store = db.NewMemoryStore()
-		if err := common.Init(store); err != nil {
+		if err := db.Init(store); err != nil {
 			return err
 		}
 
