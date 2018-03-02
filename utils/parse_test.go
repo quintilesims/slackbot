@@ -61,7 +61,7 @@ func TestParseSlackUserError(t *testing.T) {
 	for _, input := range inputs {
 		t.Run(input, func(t *testing.T) {
 			if _, err := ParseSlackUser(input); err == nil {
-				t.Fatalf("Error was nil")
+				t.Fatal("Error was nil")
 			}
 		})
 	}

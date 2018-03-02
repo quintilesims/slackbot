@@ -97,7 +97,7 @@ func TestRemindersAddErrors(t *testing.T) {
 		t.Run(input, func(t *testing.T) {
 			cmd := NewRemindersCommand(store, ioutil.Discard, nil)
 			if err := runTestApp(cmd, input); err == nil {
-				t.Fatalf("Error was nil!")
+				t.Fatal("Error was nil!")
 			}
 		})
 	}
@@ -142,7 +142,7 @@ func TestRemindersListErrors(t *testing.T) {
 	for _, input := range inputs {
 		t.Run(input, func(t *testing.T) {
 			if err := runTestApp(cmd, input); err == nil {
-				t.Fatalf("Error was nil!")
+				t.Fatal("Error was nil!")
 			}
 		})
 	}
@@ -187,7 +187,7 @@ func TestRemindersRemoveErrors(t *testing.T) {
 	for _, input := range inputs {
 		t.Run(input, func(t *testing.T) {
 			if err := runTestApp(cmd, input); err == nil {
-				t.Fatalf("Error was nil!")
+				t.Fatal("Error was nil!")
 			}
 		})
 	}

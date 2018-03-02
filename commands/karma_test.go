@@ -42,6 +42,6 @@ func TestKarmaError(t *testing.T) {
 	w := bytes.NewBuffer(nil)
 	cmd := NewKarmaCommand(store, w)
 	if err := runTestApp(cmd, "!karma"); err == nil {
-		t.Fatalf("Error was nil!")
+		t.Fatal("Error was nil!")
 	}
 }
