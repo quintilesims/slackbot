@@ -3,6 +3,8 @@ package commands
 import (
 	"fmt"
 	"io"
+	"strings"
+	"time"
 
 	"github.com/quintilesims/slackbot/db"
 	"github.com/quintilesims/slackbot/models"
@@ -15,7 +17,7 @@ const (
 	TimeFormat = "03:04PM"
 )
 
-func NewRemindersCommand(store db.Store, w io.Writer) cli.Command {
+func NewRemindersCommand(store db.Store, w io.Writer, newID func() string) cli.Command {
 	return cli.Command{
 		Name:  "!reminders",
 		Usage: "operations for reminders",
@@ -28,16 +30,16 @@ func NewRemindersCommand(store db.Store, w io.Writer) cli.Command {
 					cli.StringFlag{
 						Name:  "date",
 						Value: "today",
-						Usage: "the date of the reminder in mm/dd format (e.g. 03/15)",
+						Usage: "the date of the reminder in `mm/dd` format (e.g. `03/15`)",
 					},
 					cli.StringFlag{
 						Name:  "time",
 						Value: "09:00AM",
-						Usage: "the time of the reminder in HH:MM<AM|PM> format (e.g. 03:15PM)",
+						Usage: "the time of the reminder in `HH:MM<AM|PM>` format (e.g. `03:15PM`)",
 					},
 				},
 				Action: func(c *cli.Context) error {
-					return addReminder(c, store, w)
+					return addReminder(c, store, w, newID)
 				},
 			},
 			{
@@ -60,8 +62,58 @@ func NewRemindersCommand(store db.Store, w io.Writer) cli.Command {
 	}
 }
 
-func addReminder(c *cli.Context, store db.Store, w io.Writer) error {
-	return fmt.Errorf("Add Reminder not implemented")
+func addReminder(c *cli.Context, store db.Store, w io.Writer, newID func() string) error {
+	escapedUser := c.Args().Get(0)
+	if escapedUser == "" {
+		return fmt.Errorf("@USER is required")
+	}
+
+	userID, err := utils.ParseSlackUser(escapedUser)
+	if err != nil {
+		return err
+	}
+
+	message := c.Args().Get(1)
+	if message == "" {
+		return fmt.Errorf("MESSAGE is required")
+	}
+
+	date := c.String("date")
+	if date == "today" {
+		n := time.Now()
+		date = fmt.Sprintf("%.2d/%.2d", n.Day(), n.Month())
+	}
+
+	format := fmt.Sprintf("%s %s", DateFormat, TimeFormat)
+	input := fmt.Sprintf("%s %s", date, strings.ToUpper(c.String("time")))
+	t, err := time.Parse(format, input)
+	if err != nil {
+		return err
+	}
+
+	reminders := models.Reminders{}
+	if err := store.Read(models.StoreKeyReminders, &reminders); err != nil {
+		return err
+	}
+
+	reminderID := newID()
+	reminders[reminderID] = models.Reminder{
+		UserID:  userID,
+		Message: message,
+		Time:    t,
+	}
+
+	if err := store.Write(models.StoreKeyReminders, reminders); err != nil {
+		return err
+	}
+
+	format = fmt.Sprintf("%s at %s", DateFormat, TimeFormat)
+	text := fmt.Sprintf("Ok, I've added a new reminder for the specified user on %s", t.Format(format))
+	if _, err := w.Write([]byte(text)); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func listReminders(c *cli.Context, store db.Store, w io.Writer) error {
@@ -96,7 +148,6 @@ func listReminders(c *cli.Context, store db.Store, w io.Writer) error {
 		return nil
 	}
 
-	// todo: convert to our time zone
 	text := "That user has the following reminders:\n"
 	for reminderID, r := range userReminders {
 		dateTime := r.Time.Format(fmt.Sprintf("%s on %s", TimeFormat, DateFormat))

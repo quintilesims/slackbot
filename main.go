@@ -107,7 +107,7 @@ func main() {
 				eventApp.Commands = []cli.Command{
 					commands.NewEchoCommand(w),
 					commands.NewKarmaCommand(store, w),
-					commands.NewRemindersCommand(store, w),
+					commands.NewRemindersCommand(store, w, utils.NewGUID),
 				}
 
 				args := append([]string{""}, utils.ParseShell(e.Msg.Text)...)

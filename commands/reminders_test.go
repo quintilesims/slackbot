@@ -35,7 +35,7 @@ func TestRemindersList(t *testing.T) {
 	}
 
 	w := bytes.NewBuffer(nil)
-	cmd := NewRemindersCommand(store, w)
+	cmd := NewRemindersCommand(store, w, nil)
 	if err := runTestApp(cmd, "!reminders ls <@u1>"); err != nil {
 		t.Fatal(err)
 	}
@@ -56,7 +56,7 @@ func TestRemindersListErrors(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cmd := NewRemindersCommand(store, ioutil.Discard)
+	cmd := NewRemindersCommand(store, ioutil.Discard, nil)
 	for _, input := range inputs {
 		t.Run(input, func(t *testing.T) {
 			if err := runTestApp(cmd, input); err == nil {
@@ -77,7 +77,7 @@ func TestRemindersRemove(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cmd := NewRemindersCommand(store, ioutil.Discard)
+	cmd := NewRemindersCommand(store, ioutil.Discard, nil)
 	if err := runTestApp(cmd, "!reminders rm r1"); err != nil {
 		t.Fatal(err)
 	}
@@ -105,7 +105,7 @@ func TestRemindersRemoveErrors(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cmd := NewRemindersCommand(store, ioutil.Discard)
+	cmd := NewRemindersCommand(store, ioutil.Discard, nil)
 	for _, input := range inputs {
 		t.Run(input, func(t *testing.T) {
 			if err := runTestApp(cmd, input); err == nil {
