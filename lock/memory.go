@@ -10,7 +10,7 @@ func NewMemoryLock() *MemoryLock {
 
 func (m *MemoryLock) Lock(wait bool) error {
 	if m.isLocked && !wait {
-		return NewLockContentionError()
+		return NewLockContentionError("Lock is under contention")
 	}
 
 	for m.isLocked {

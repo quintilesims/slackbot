@@ -1,9 +1,9 @@
 package lock
 
-import "errors"
+import "fmt"
 
 type LockContentionError error
 
-func NewLockContentionError() LockContentionError {
-	return LockContentionError(errors.New("lock is under contention"))
+func NewLockContentionError(format string, tokens ...interface{}) LockContentionError {
+	return LockContentionError(fmt.Errorf(format, tokens...))
 }

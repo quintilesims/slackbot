@@ -8,7 +8,7 @@ build:
 	docker build -t $(CURRENT_DOCKER_IMAGE) .
 
 test:
-	go test ./...
+	go test ./... -v
 
 release: build
 	docker push $(CURRENT_DOCKER_IMAGE)

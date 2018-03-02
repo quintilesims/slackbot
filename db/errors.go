@@ -1,9 +1,9 @@
 package db
 
-import "errors"
+import "fmt"
 
 type MissingEntryError error
 
 func NewMissingEntryError(key string) MissingEntryError {
-	return MissingEntryError(errors.New("No entry for key '%s'", key))
+	return MissingEntryError(fmt.Errorf("No entry for key '%s'", key))
 }
