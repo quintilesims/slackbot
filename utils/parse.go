@@ -7,11 +7,12 @@ import (
 	"unicode"
 )
 
-func ParseShell(input string) []string {
+func ParseShell(input string) ([]string, error) {
 	// normalize quotation marks
 	r := strings.NewReplacer("‘", "'", "’", "'", "“", "\"", "”", "\"")
 	input = r.Replace(input)
 
+	count := 0
 	lastQuote := rune(0)
 	f := func(r rune) bool {
 		switch {
@@ -21,6 +22,10 @@ func ParseShell(input string) []string {
 		case lastQuote != rune(0):
 			return false
 		case unicode.Is(unicode.Quotation_Mark, r):
+			if r == '"' {
+				count++
+			}
+
 			lastQuote = r
 			return false
 		default:
@@ -30,21 +35,17 @@ func ParseShell(input string) []string {
 	}
 
 	args := strings.FieldsFunc(input, f)
+	if count%2 != 0 {
+		return nil, fmt.Errorf("Invalid command: command contains an unpaired quotation mark: '%v'", input)
+	}
+
 	for i := 0; i < len(args); i++ {
-		quotationMarks := regexp.MustCompile(`"`)
-		matches := quotationMarks.FindAllStringIndex(args[i], -1)
-
-		if len(matches)%2 == 1 {
-			// User has provided unpaired quotes in the command
-			return []string{}
-		}
-
 		trim := func(r rune) bool { return unicode.Is(unicode.Quotation_Mark, r) }
 		args[i] = strings.TrimLeftFunc(args[i], trim)
 		args[i] = strings.TrimRightFunc(args[i], trim)
 	}
 
-	return args
+	return args, nil
 }
 
 func ParseSlackUser(escaped string) (string, error) {

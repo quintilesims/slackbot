@@ -1,36 +1,55 @@
 package utils
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestParseShell(t *testing.T) {
-	//t.Skip("TODO: Fix")
+func M(args []string, err error) []interface{} {
+	return []interface{}{args, err}
+}
 
-	cases := map[string][]string{
-		"":                         []string{},
-		"one":                      []string{"one"},
-		"one two":                  []string{"one", "two"},
-		"\"one\"":                  []string{"one"},
-		"'one'":                    []string{"one"},
-		"one two three":            []string{"one", "two", "three"},
-		"one \"two\" three":        []string{"one", "two", "three"},
-		"one \"two three\"":        []string{"one", "two three"},
-		"one 'two three'":          []string{"one", "two three"},
-		"\"one two three\"":        []string{"one two three"},
-		"'one two three'":          []string{"one two three"},
-		"‘one two three’":          []string{"one two three"},
-		"“one two three”":          []string{"one two three"},
-		"one 'two three":           []string{"one 'two", "three"},
-		"one \"two three":          []string{},
-		"one \"let's have lunch\"": []string{"one", "let's have lunch"},
+type ParseShellOutput struct {
+	Args []string
+	Err  error
+}
+
+func TestParseShell(t *testing.T) {
+	cases := map[string]ParseShellOutput{
+		"":                         ParseShellOutput{[]string{}, nil},
+		"one":                      ParseShellOutput{[]string{"one"}, nil},
+		"one two":                  ParseShellOutput{[]string{"one", "two"}, nil},
+		"\"one\"":                  ParseShellOutput{[]string{"one"}, nil},
+		"'one'":                    ParseShellOutput{[]string{"one"}, nil},
+		"one two three":            ParseShellOutput{[]string{"one", "two", "three"}, nil},
+		"one \"two\" three":        ParseShellOutput{[]string{"one", "two", "three"}, nil},
+		"one \"two three\"":        ParseShellOutput{[]string{"one", "two three"}, nil},
+		"one 'two three'":          ParseShellOutput{[]string{"one", "two three"}, nil},
+		"\"one two three\"":        ParseShellOutput{[]string{"one two three"}, nil},
+		"'one two three'":          ParseShellOutput{[]string{"one two three"}, nil},
+		"‘one two three’":          ParseShellOutput{[]string{"one two three"}, nil},
+		"“one two three”":          ParseShellOutput{[]string{"one two three"}, nil},
+		"one 'two three":           ParseShellOutput{[]string{"one 'two", "three"}, nil},
+		"one \"let's have lunch\"": ParseShellOutput{[]string{"one", "let's have lunch"}, nil},
 	}
 
 	for input, expected := range cases {
 		t.Run(input, func(t *testing.T) {
-			assert.Equal(t, expected, ParseShell(input))
+			assert.Equal(t, M(expected.Args, expected.Err), M(ParseShell(input)))
+		})
+	}
+}
+
+func TestParseShell_UserInputError(t *testing.T) {
+	cases := map[string]ParseShellOutput{
+		"one \"two three": ParseShellOutput{[]string{}, fmt.Errorf("Invalid command: command contains an unpaired quotation mark: 'one \"two three'")},
+	}
+
+	for input, expected := range cases {
+		t.Run(input, func(t *testing.T) {
+			assert.Error(t, expected.Err, M(expected.Args, expected.Err), M(ParseShell(input)))
 		})
 	}
 }
