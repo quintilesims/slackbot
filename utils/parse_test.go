@@ -7,24 +7,25 @@ import (
 )
 
 func TestParseShell(t *testing.T) {
-	t.Skip("TODO: Fix")
+	//t.Skip("TODO: Fix")
 
 	cases := map[string][]string{
-		"":                  []string{},
-		"one":               []string{"one"},
-		"one two":           []string{"one", "two"},
-		"\"one\"":           []string{"one"},
-		"'one'":             []string{"one"},
-		"one two three":     []string{"one", "two", "three"},
-		"one \"two\" three": []string{"one", "two", "three"},
-		"one \"two three\"": []string{"one", "two three"},
-		"one 'two three'":   []string{"one", "two three"},
-		"\"one two three\"": []string{"one two three"},
-		"'one two three'":   []string{"one two three"},
-		"‘one two three’":   []string{"one two three"},
-		"“one two three”":   []string{"one two three"},
-		"one 'two three":    []string{"one", "'two", "three"},
-		"one \"two three":   []string{"one", "\"two", "three"},
+		"":                         []string{},
+		"one":                      []string{"one"},
+		"one two":                  []string{"one", "two"},
+		"\"one\"":                  []string{"one"},
+		"'one'":                    []string{"one"},
+		"one two three":            []string{"one", "two", "three"},
+		"one \"two\" three":        []string{"one", "two", "three"},
+		"one \"two three\"":        []string{"one", "two three"},
+		"one 'two three'":          []string{"one", "two three"},
+		"\"one two three\"":        []string{"one two three"},
+		"'one two three'":          []string{"one two three"},
+		"‘one two three’":          []string{"one two three"},
+		"“one two three”":          []string{"one two three"},
+		"one 'two three":           []string{"one 'two", "three"},
+		"one \"two three":          []string{},
+		"one \"let's have lunch\"": []string{"one", "let's have lunch"},
 	}
 
 	for input, expected := range cases {
