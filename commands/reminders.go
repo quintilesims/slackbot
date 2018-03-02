@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"io"
+	"log"
 	"strings"
 	"time"
 
@@ -62,6 +63,7 @@ func NewRemindersCommand(store db.Store, w io.Writer, newID func() string) cli.C
 	}
 }
 
+// todo: dissallow reminders that are before time.Now(), allow --year param
 func addReminder(c *cli.Context, store db.Store, w io.Writer, newID func() string) error {
 	escapedUser := c.Args().Get(0)
 	if escapedUser == "" {
@@ -84,7 +86,7 @@ func addReminder(c *cli.Context, store db.Store, w io.Writer, newID func() strin
 
 	date := c.String("date")
 	if date == "tomorrow" {
-		n := time.Now().UTC()
+		n := time.Now()
 		date = fmt.Sprintf("%.2d/%.2d", n.Month(), n.Day()+1)
 	}
 
@@ -104,9 +106,10 @@ func addReminder(c *cli.Context, store db.Store, w io.Writer, newID func() strin
 	reminders[reminderID] = models.Reminder{
 		UserID:  userID,
 		Message: message,
-		Time:    t,
+		Time:    time.Date(time.Now().Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), 0, 0, time.Local).UTC(),
 	}
 
+	log.Printf("[INFO] Added reminder %s", reminders[reminderID])
 	if err := store.Write(models.StoreKeyReminders, reminders); err != nil {
 		return err
 	}

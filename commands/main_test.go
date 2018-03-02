@@ -3,12 +3,17 @@ package commands
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"testing"
 
 	"github.com/quintilesims/slackbot/db"
 	"github.com/quintilesims/slackbot/utils"
 	"github.com/urfave/cli"
 )
+
+func init() {
+	log.SetOutput(ioutil.Discard)
+}
 
 func newMemoryStore(t *testing.T) *db.MemoryStore {
 	store := db.NewMemoryStore()

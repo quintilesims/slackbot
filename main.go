@@ -6,11 +6,14 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/nlopes/slack"
 	"github.com/quintilesims/slackbot/behaviors"
 	"github.com/quintilesims/slackbot/commands"
 	"github.com/quintilesims/slackbot/db"
+	"github.com/quintilesims/slackbot/lock"
+	"github.com/quintilesims/slackbot/runners"
 	"github.com/quintilesims/slackbot/utils"
 	"github.com/urfave/cli"
 )
@@ -34,15 +37,13 @@ func main() {
 		cli.StringFlag{
 			Name:   "token",
 			Usage:  "authentication token for the slack bot",
-			EnvVar: "SB_TOKEN",
+			EnvVar: "SB_SLACK_TOKEN",
 		},
 	}
 
 	var client *slack.Client
 	var store db.Store
 	var behavs []behaviors.Behavior
-
-	// todo: daemons
 
 	slackbot.Before = func(c *cli.Context) error {
 		debug := c.Bool("debug")
@@ -71,6 +72,10 @@ func main() {
 	slackbot.Action = func(c *cli.Context) error {
 		rtm := client.NewRTM()
 		defer rtm.Disconnect()
+
+		remindersRunner := runners.NewRemindersRunner(lock.NewMemoryLock(), store)
+		ticker := remindersRunner.RunEvery(time.Second * 5)
+		defer ticker.Stop()
 
 		newChannelWriter := func(channelID string) io.Writer {
 			return utils.WriterFunc(func(b []byte) (n int, err error) {

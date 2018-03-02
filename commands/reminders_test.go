@@ -16,42 +16,42 @@ func TestRemindersAdd(t *testing.T) {
 		"!reminders add <@u1> foo": models.Reminder{
 			UserID:  "u1",
 			Message: "foo",
-			Time:    time.Date(0, now.Month(), now.Day()+1, 9, 0, 0, 0, time.UTC),
+			Time:    time.Date(now.Year(), now.Month(), now.Day()+1, 9, 0, 0, 0, time.Local).UTC(),
 		},
 		"!reminders add <@u1> foo bar baz": models.Reminder{
 			UserID:  "u1",
 			Message: "foo bar baz",
-			Time:    time.Date(0, now.Month(), now.Day()+1, 9, 0, 0, 0, time.UTC),
+			Time:    time.Date(now.Year(), now.Month(), now.Day()+1, 9, 0, 0, 0, time.Local).UTC(),
 		},
 		"!reminders add --date 05/06 <@u1> foo": models.Reminder{
 			UserID:  "u1",
 			Message: "foo",
-			Time:    time.Date(0, 5, 6, 9, 0, 0, 0, time.UTC),
+			Time:    time.Date(now.Year(), 5, 6, 9, 0, 0, 0, time.Local).UTC(),
 		},
 		"!reminders add --date 12/31 <@u1> foo": models.Reminder{
 			UserID:  "u1",
 			Message: "foo",
-			Time:    time.Date(0, 12, 31, 9, 0, 0, 0, time.UTC),
+			Time:    time.Date(now.Year(), 12, 31, 9, 0, 0, 0, time.Local).UTC(),
 		},
 		"!reminders add --time 01:23AM <@u1> foo": models.Reminder{
 			UserID:  "u1",
 			Message: "foo",
-			Time:    time.Date(0, now.Month(), now.Day()+1, 1, 23, 0, 0, time.UTC),
+			Time:    time.Date(now.Year(), now.Month(), now.Day()+1, 1, 23, 0, 0, time.Local).UTC(),
 		},
 		"!reminders add --time 12:34PM <@u1> foo": models.Reminder{
 			UserID:  "u1",
 			Message: "foo",
-			Time:    time.Date(0, now.Month(), now.Day()+1, 12, 34, 0, 0, time.UTC),
+			Time:    time.Date(now.Year(), now.Month(), now.Day()+1, 12, 34, 0, 0, time.Local).UTC(),
 		},
 		"!reminders add --time 01:23PM <@u1> foo": models.Reminder{
 			UserID:  "u1",
 			Message: "foo",
-			Time:    time.Date(0, now.Month(), now.Day()+1, 13, 23, 0, 0, time.UTC),
+			Time:    time.Date(now.Year(), now.Month(), now.Day()+1, 13, 23, 0, 0, time.Local).UTC(),
 		},
 		"!reminders add --date 05/06 --time 01:23AM <@u1> foo": models.Reminder{
 			UserID:  "u1",
 			Message: "foo",
-			Time:    time.Date(0, 5, 6, 1, 23, 0, 0, time.UTC),
+			Time:    time.Date(now.Year(), 5, 6, 1, 23, 0, 0, time.Local).UTC(),
 		},
 	}
 
