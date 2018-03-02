@@ -6,15 +6,101 @@ import (
 	"testing"
 	"time"
 
-	"github.com/quintilesims/slackbot/db"
 	"github.com/quintilesims/slackbot/models"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestRemindersAdd(t *testing.T) {
+	now := time.Now()
+	cases := map[string]models.Reminder{
+		"!reminders add <@u1> foo": models.Reminder{
+			UserID:  "u1",
+			Message: "foo",
+			Time:    time.Date(0, now.Month(), now.Day()+1, 9, 0, 0, 0, time.UTC),
+		},
+		"!reminders add <@u1> foo bar baz": models.Reminder{
+			UserID:  "u1",
+			Message: "foo bar baz",
+			Time:    time.Date(0, now.Month(), now.Day()+1, 9, 0, 0, 0, time.UTC),
+		},
+		"!reminders add --date 05/06 <@u1> foo": models.Reminder{
+			UserID:  "u1",
+			Message: "foo",
+			Time:    time.Date(0, 5, 6, 9, 0, 0, 0, time.UTC),
+		},
+		"!reminders add --date 12/31 <@u1> foo": models.Reminder{
+			UserID:  "u1",
+			Message: "foo",
+			Time:    time.Date(0, 12, 31, 9, 0, 0, 0, time.UTC),
+		},
+		"!reminders add --time 01:23AM <@u1> foo": models.Reminder{
+			UserID:  "u1",
+			Message: "foo",
+			Time:    time.Date(0, now.Month(), now.Day()+1, 1, 23, 0, 0, time.UTC),
+		},
+		"!reminders add --time 12:34PM <@u1> foo": models.Reminder{
+			UserID:  "u1",
+			Message: "foo",
+			Time:    time.Date(0, now.Month(), now.Day()+1, 12, 34, 0, 0, time.UTC),
+		},
+		"!reminders add --time 01:23PM <@u1> foo": models.Reminder{
+			UserID:  "u1",
+			Message: "foo",
+			Time:    time.Date(0, now.Month(), now.Day()+1, 13, 23, 0, 0, time.UTC),
+		},
+		"!reminders add --date 05/06 --time 01:23AM <@u1> foo": models.Reminder{
+			UserID:  "u1",
+			Message: "foo",
+			Time:    time.Date(0, 5, 6, 1, 23, 0, 0, time.UTC),
+		},
+	}
+
+	newID := func() string { return "r1" }
+	for input, expected := range cases {
+		t.Run(input, func(t *testing.T) {
+			store := newMemoryStore(t)
+			cmd := NewRemindersCommand(store, ioutil.Discard, newID)
+			if err := runTestApp(cmd, input); err != nil {
+				t.Fatal(err)
+			}
+
+			reminders := models.Reminders{}
+			if err := store.Read(models.StoreKeyReminders, &reminders); err != nil {
+				t.Fatal(err)
+			}
+
+			// use string comparison since comparing time.Time objects is unreliable
+			assert.Equal(t, expected.String(), reminders["r1"].String())
+		})
+	}
 }
 
 func TestRemindersAddErrors(t *testing.T) {
+	inputs := []string{
+		"!reminders add",
+		"!reminders add <@user>",
+		"!reminders add user",
+		"!reminders add user message",
+		"!reminders --date 1/23 add <@user> message",
+		"!reminders --date 12/3 add <@user> message",
+		"!reminders --date 01:23 add <@user> message",
+		"!reminders --time 1pm add <@user> message",
+		"!reminders --time 1:00pm add <@user> message",
+		"!reminders --time 01:0pm add <@user> message",
+		"!reminders --time 01/00pm add <@user> message",
+		"!reminders --time 09:00 add <@user> message",
+		"!reminders --time 14:00 add <@user> message",
+	}
+
+	store := newMemoryStore(t)
+	for _, input := range inputs {
+		t.Run(input, func(t *testing.T) {
+			cmd := NewRemindersCommand(store, ioutil.Discard, nil)
+			if err := runTestApp(cmd, input); err == nil {
+				t.Fatalf("Error was nil!")
+			}
+		})
+	}
 }
 
 func TestRemindersList(t *testing.T) {
@@ -29,7 +115,7 @@ func TestRemindersList(t *testing.T) {
 		},
 	}
 
-	store := db.NewMemoryStore()
+	store := newMemoryStore(t)
 	if err := store.Write(models.StoreKeyReminders, reminders); err != nil {
 		t.Fatal(err)
 	}
@@ -51,11 +137,7 @@ func TestRemindersListErrors(t *testing.T) {
 		"!reminders ls user",
 	}
 
-	store := db.NewMemoryStore()
-	if err := store.Write(models.StoreKeyReminders, models.Reminders{}); err != nil {
-		t.Fatal(err)
-	}
-
+	store := newMemoryStore(t)
 	cmd := NewRemindersCommand(store, ioutil.Discard, nil)
 	for _, input := range inputs {
 		t.Run(input, func(t *testing.T) {
@@ -72,7 +154,7 @@ func TestRemindersRemove(t *testing.T) {
 		"r2": models.Reminder{},
 	}
 
-	store := db.NewMemoryStore()
+	store := newMemoryStore(t)
 	if err := store.Write(models.StoreKeyReminders, reminders); err != nil {
 		t.Fatal(err)
 	}
@@ -100,11 +182,7 @@ func TestRemindersRemoveErrors(t *testing.T) {
 		"!reminders rm r1",
 	}
 
-	store := db.NewMemoryStore()
-	if err := store.Write(models.StoreKeyReminders, models.Reminders{}); err != nil {
-		t.Fatal(err)
-	}
-
+	store := newMemoryStore(t)
 	cmd := NewRemindersCommand(store, ioutil.Discard, nil)
 	for _, input := range inputs {
 		t.Run(input, func(t *testing.T) {

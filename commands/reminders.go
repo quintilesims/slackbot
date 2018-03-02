@@ -29,7 +29,7 @@ func NewRemindersCommand(store db.Store, w io.Writer, newID func() string) cli.C
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "date",
-						Value: "today",
+						Value: "tomorrow",
 						Usage: "the date of the reminder in `mm/dd` format (e.g. `03/15`)",
 					},
 					cli.StringFlag{
@@ -78,10 +78,14 @@ func addReminder(c *cli.Context, store db.Store, w io.Writer, newID func() strin
 		return fmt.Errorf("MESSAGE is required")
 	}
 
+	if args := c.Args(); len(args) > 2 {
+		message = fmt.Sprintf("%s %s", message, strings.Join(args[2:], " "))
+	}
+
 	date := c.String("date")
-	if date == "today" {
-		n := time.Now()
-		date = fmt.Sprintf("%.2d/%.2d", n.Day(), n.Month())
+	if date == "tomorrow" {
+		n := time.Now().UTC()
+		date = fmt.Sprintf("%.2d/%.2d", n.Month(), n.Day()+1)
 	}
 
 	format := fmt.Sprintf("%s %s", DateFormat, TimeFormat)
@@ -150,8 +154,8 @@ func listReminders(c *cli.Context, store db.Store, w io.Writer) error {
 
 	text := "That user has the following reminders:\n"
 	for reminderID, r := range userReminders {
-		dateTime := r.Time.Format(fmt.Sprintf("%s on %s", TimeFormat, DateFormat))
-		text += fmt.Sprintf("Reminder `%s`: %s at %s\n", reminderID, r.Message, dateTime)
+		format := fmt.Sprintf("%s on %s", TimeFormat, DateFormat)
+		text += fmt.Sprintf("Reminder `%s`: %s at %s\n", reminderID, r.Message, r.Time.Format(format))
 	}
 
 	if _, err := w.Write([]byte(text)); err != nil {
