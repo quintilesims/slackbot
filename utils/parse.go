@@ -9,7 +9,7 @@ import (
 
 func ParseShell(input string) ([]string, error) {
 	// normalize quotation marks
-	r := strings.NewReplacer("‘", "'", "’", "'", "“", "\"", "”", "\"")
+	r := strings.NewReplacer("“", "\"", "”", "\"")
 	input = r.Replace(input)
 
 	count := 0
