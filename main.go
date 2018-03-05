@@ -74,7 +74,7 @@ func main() {
 		defer rtm.Disconnect()
 
 		remindersRunner := runners.NewRemindersRunner(lock.NewMemoryLock(), store, &rtm.Client)
-		ticker := remindersRunner.RunEvery(time.Second * 5)
+		ticker := remindersRunner.RunEvery(time.Minute)
 		defer ticker.Stop()
 
 		newChannelWriter := func(channelID string) io.Writer {

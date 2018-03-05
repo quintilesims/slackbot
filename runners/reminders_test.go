@@ -32,7 +32,7 @@ func TestReminders(t *testing.T) {
 		}
 
 		assert.Equal(t, "u1", query.Get("channel"))
-		assert.Equal(t, "some message", query.Get("text"))
+		assert.Equal(t, "REMINDER: some message", query.Get("text"))
 
 		resp := slack.SlackResponse{Ok: true}
 		if err := json.NewEncoder(w).Encode(resp); err != nil {

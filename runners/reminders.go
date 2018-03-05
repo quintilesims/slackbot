@@ -1,6 +1,7 @@
 package runners
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -33,7 +34,8 @@ func NewRemindersRunner(l lock.Lock, store db.Store, client *slack.Client) *Runn
 		for reminderID, r := range reminders {
 			if now.After(r.Time) {
 				log.Printf("[DEBUG] Sending reminder %s", reminderID)
-				if _, _, err := client.PostMessage(r.UserID, r.Message, slack.PostMessageParameters{}); err != nil {
+				text := fmt.Sprintf("REMINDER: %s", r.Message)
+				if _, _, err := client.PostMessage(r.UserID, text, slack.PostMessageParameters{}); err != nil {
 					errs = append(errs, err)
 				}
 
