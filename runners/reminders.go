@@ -30,10 +30,15 @@ func NewRemindersRunner(l lock.Lock, store db.Store, client *slack.Client) *Runn
 
 		errs := []error{}
 		now := time.Now().UTC()
-		for _, r := range reminders {
+		for reminderID, r := range reminders {
 			if now.After(r.Time) {
-				// todo: build message
+				log.Printf("[DEBUG] Sending reminder %s", reminderID)
 				if _, _, err := client.PostMessage(r.UserID, r.Message, slack.PostMessageParameters{}); err != nil {
+					errs = append(errs, err)
+				}
+
+				delete(reminders, reminderID)
+				if err := store.Write(models.StoreKeyReminders, reminders); err != nil {
 					errs = append(errs, err)
 				}
 			}
