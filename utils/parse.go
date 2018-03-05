@@ -24,9 +24,8 @@ func ParseShell(input string) ([]string, error) {
 		case unicode.Is(unicode.Quotation_Mark, r):
 			if r == '"' {
 				count++
+				lastQuote = r
 			}
-
-			lastQuote = r
 			return false
 		default:
 			return unicode.IsSpace(r)
@@ -36,7 +35,7 @@ func ParseShell(input string) ([]string, error) {
 
 	args := strings.FieldsFunc(input, f)
 	if count%2 != 0 {
-		return nil, fmt.Errorf("Invalid command: command contains an unpaired quotation mark: '%v'", input)
+		return nil, fmt.Errorf("Invalid command: command contains an unpaired quotation mark")
 	}
 
 	for i := 0; i < len(args); i++ {
