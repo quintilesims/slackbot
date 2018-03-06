@@ -12,8 +12,8 @@ import (
 	"github.com/quintilesims/slackbot/utils"
 )
 
-// NewRemindersRunner will create a new Runner object which will lookup all of the 
-// reminders in the specified store, and trigger any that need to execute     
+// NewRemindersRunner will create a new Runner object which will lookup all of the
+// reminders in the specified store, and trigger any that need to execute
 func NewRemindersRunner(l lock.Lock, store db.Store, client *slack.Client) *Runner {
 	return NewRunner("RemindersRunner", func() error {
 		if err := l.Lock(false); err != nil {

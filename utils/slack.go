@@ -11,7 +11,7 @@ import (
 // escaped slack user ID's are in the format <@id>
 type SlackUserParser func(escaped string) (*slack.User, error)
 
-// NewSlackUserParser returns a SlackUserParser that uses the specified client to lookup *slack.User objects 
+// NewSlackUserParser returns a SlackUserParser that uses the specified client to lookup *slack.User objects
 func NewSlackUserParser(client *slack.Client) SlackUserParser {
 	return func(escaped string) (*slack.User, error) {
 		// escaped user format: '<@ABC123>'

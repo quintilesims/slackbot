@@ -17,9 +17,9 @@ func TestUnmarshalAppend(t *testing.T) {
 	page := "5"
 	limit := "20"
 	item := map[string]*dynamodb.AttributeValue{
-		"UserID": &dynamodb.AttributeValue{N: &id},
-		"Page":   &dynamodb.AttributeValue{N: &page},
-		"Limit":  &dynamodb.AttributeValue{N: &limit},
+		"UserID": {N: &id},
+		"Page":   {N: &page},
+		"Limit":  {N: &limit},
 	}
 
 	for range [15]struct{}{} {

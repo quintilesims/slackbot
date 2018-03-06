@@ -29,7 +29,7 @@ func TestKarmaTrackingBehavior(t *testing.T) {
 		newMessageRTMEvent("tacos++"),
 		newMessageRTMEvent("sunday naps++"),
 		newMessageRTMEvent("blah blah blah"),
-		slack.RTMEvent{},
+		{},
 	}
 
 	b := NewKarmaTrackingBehavior(store)

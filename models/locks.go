@@ -1,5 +1,6 @@
 package models
 
+// StoreKeyLocks is the canonical store key for locks
 const StoreKeyLocks = "locks"
 
 // Locks track lock acquisition

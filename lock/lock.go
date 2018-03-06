@@ -1,6 +1,6 @@
 package lock
 
-// Lock objects are used as a point of synchronization 
+// Lock objects are used as a point of synchronization
 type Lock interface {
 	// Lock will attempt to acquire the Lock
 	// If wait is true, the function will block until the lock is next available

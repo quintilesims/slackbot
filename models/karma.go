@@ -1,5 +1,6 @@
 package models
 
+// StoreKeyKarma is the canonical store key for karma
 const StoreKeyKarma = "karma"
 
 // Karma tracks karma scores

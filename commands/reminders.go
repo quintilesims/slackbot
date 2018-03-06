@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	DateFormat = "01/02"
-	TimeFormat = "03:04PM"
+	dateFormat = "01/02"
+	timeFormat = "03:04PM"
 )
 
 // NewRemindersCommand returns a cli.Command that manages !reminders
@@ -97,7 +97,7 @@ func addReminder(
 		date = fmt.Sprintf("%.2d/%.2d", n.Month(), n.Day()+1)
 	}
 
-	format := fmt.Sprintf("%s %s", DateFormat, TimeFormat)
+	format := fmt.Sprintf("%s %s", dateFormat, timeFormat)
 	input := fmt.Sprintf("%s %s", date, strings.ToUpper(c.String("time")))
 	t, err := time.Parse(format, input)
 	if err != nil {
@@ -127,7 +127,7 @@ func addReminder(
 		return err
 	}
 
-	format = fmt.Sprintf("%s at %s", DateFormat, TimeFormat)
+	format = fmt.Sprintf("%s at %s", dateFormat, timeFormat)
 	text := fmt.Sprintf("Ok, I've added a new reminder for %s on %s", user.Name, t.Format(format))
 	if _, err := w.Write([]byte(text)); err != nil {
 		return err
@@ -170,7 +170,7 @@ func listReminders(c *cli.Context, store db.Store, w io.Writer, userParser utils
 
 	text := fmt.Sprintf("%s has the following reminders:\n", user.Name)
 	for reminderID, r := range userReminders {
-		format := fmt.Sprintf("%s on %s", TimeFormat, DateFormat)
+		format := fmt.Sprintf("%s on %s", timeFormat, dateFormat)
 		text += fmt.Sprintf("Reminder `%s`: %s at %s\n", reminderID, r.Message, r.Time.Format(format))
 	}
 

@@ -5,9 +5,10 @@ import (
 	"time"
 )
 
+// StoreKeyReminders is the canonical store key for reminders
 const StoreKeyReminders = "reminders"
 
-// Reminders hold information about a reminder
+// Reminder hold information about a reminder
 type Reminder struct {
 	UserID   string
 	UserName string

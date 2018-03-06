@@ -14,7 +14,7 @@ type StoreLock struct {
 }
 
 // NewStoreLock creates a new StoreLock object with the specified key and store
-// The key is used to manage the lock, so multiple instances of StoreLock objects 
+// The key is used to manage the lock, so multiple instances of StoreLock objects
 // can share the same store
 func NewStoreLock(key string, store db.Store) *StoreLock {
 	return &StoreLock{

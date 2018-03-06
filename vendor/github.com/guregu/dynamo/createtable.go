@@ -135,7 +135,7 @@ func (ct *CreateTable) Project(index string, projection IndexProjection, include
 func (ct *CreateTable) Index(index Index) *CreateTable {
 	ct.add(index.HashKey, string(index.HashKeyType))
 	ks := []*dynamodb.KeySchemaElement{
-		&dynamodb.KeySchemaElement{
+		{
 			AttributeName: &index.HashKey,
 			KeyType:       aws.String(string(index.HashKeyType)),
 		},
