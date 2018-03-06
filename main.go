@@ -8,6 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/nlopes/slack"
 	"github.com/quintilesims/slackbot/behaviors"
 	"github.com/quintilesims/slackbot/commands"
@@ -40,26 +43,26 @@ func main() {
 			EnvVar: "SB_SLACK_TOKEN",
 		},
 		cli.StringFlag{
-                        Name:   "aws-region",
-                        Usage:  "region for aws api",
-			Value: "us-west-2",
-                        EnvVar: "SB_AWS_REGION",
-                },
+			Name:   "aws-region",
+			Usage:  "region for aws api",
+			Value:  "us-west-2",
+			EnvVar: "SB_AWS_REGION",
+		},
 		cli.StringFlag{
-                        Name:   "aws-access-key",
-                        Usage:  "access key for aws api",
-                        EnvVar: "SB_AWS_ACCESS_KEY",
-                },
+			Name:   "aws-access-key",
+			Usage:  "access key for aws api",
+			EnvVar: "SB_AWS_ACCESS_KEY",
+		},
 		cli.StringFlag{
-                        Name:   "secret-key",
-                        Usage:  "secret key for aws api",
-                        EnvVar: "SB_AWS_SECRET_KEY",
-                },
+			Name:   "aws-secret-key",
+			Usage:  "secret key for aws api",
+			EnvVar: "SB_AWS_SECRET_KEY",
+		},
 		cli.StringFlag{
-                        Name:   "dynamodb-table",
-                        Usage:  "name of the dynamodb table",
-                        EnvVar: "SB_DYNAMODB_TABLE",
-                },		
+			Name:   "dynamodb-table",
+			Usage:  "name of the dynamodb table",
+			EnvVar: "SB_DYNAMODB_TABLE",
+		},
 	}
 
 	var client *slack.Client
@@ -78,7 +81,32 @@ func main() {
 		client = slack.New(token)
 		client.SetDebug(debug)
 
-		store = db.NewMemoryStore()
+		accessKey := c.String("aws-access-key")
+		if accessKey == "" {
+			return fmt.Errorf("AWS Access Key is not set!")
+		}
+
+		secretKey := c.String("aws-secret-key")
+		if secretKey == "" {
+			return fmt.Errorf("AWS Secret Key is not set!")
+		}
+
+		region := c.String("aws-region")
+		if region == "" {
+			return fmt.Errorf("AWS Region is not set!")
+		}
+
+		table := c.String("dynamodb-table")
+		if table == "" {
+			return fmt.Errorf("DynamoDB Table is not set!")
+		}
+
+		config := &aws.Config{
+			Credentials: credentials.NewStaticCredentials(accessKey, secretKey, ""),
+			Region:      aws.String(region),
+		}
+
+		store = db.NewDynamoDBStore(session.New(config), table)
 		if err := db.Init(store); err != nil {
 			return err
 		}

@@ -26,7 +26,7 @@ func TestDynamoDBStore(t *testing.T) {
 	}
 
 	table := os.Getenv("SB_DYNAMODB_TEST_TABLE")
-	if accessKey == "" {
+	if table == "" {
 		t.Skip("Skipping test, dynamodb test table is not set")
 	}
 
