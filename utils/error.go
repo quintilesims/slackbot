@@ -2,6 +2,7 @@ package utils
 
 import "fmt"
 
+// MultiError will convert a slice of errors into a single error 
 func MultiError(errs []error) error {
 	switch len(errs) {
 	case 0:

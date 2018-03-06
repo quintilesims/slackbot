@@ -5,6 +5,9 @@ import (
 	"unicode"
 )
 
+// ParseShell takes a string input and parses it into a []string of arguments
+// anything wrapped in quotation marks will be treated as a single object
+// if there is an odd number of quotation marks, an error will be returned
 func ParseShell(input string) []string {
 	// normalize quotation marks
 	r := strings.NewReplacer("‘", "'", "’", "'", "“", "\"", "”", "\"")

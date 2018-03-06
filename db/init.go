@@ -2,6 +2,7 @@ package db
 
 import "github.com/quintilesims/slackbot/models"
 
+// Init will initialize the table entries for the specified store
 func Init(store Store) error {
 	if err := initKarmaStore(store); err != nil {
 		return err

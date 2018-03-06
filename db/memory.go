@@ -4,16 +4,19 @@ import (
 	"encoding/json"
 )
 
+// MemoryStore reads and writes data to memory
 type MemoryStore struct {
 	data map[string][]byte
 }
 
+// NewMemoryStore creates a new MemoryStore
 func NewMemoryStore() *MemoryStore {
 	return &MemoryStore{
 		data: map[string][]byte{},
 	}
 }
 
+// Keys lists all of the keys in the table
 func (m *MemoryStore) Keys() ([]string, error) {
 	keys := make([]string, 0, len(m.data))
 	for k, _ := range m.data {
@@ -23,6 +26,7 @@ func (m *MemoryStore) Keys() ([]string, error) {
 	return keys, nil
 }
 
+// Read will populate v with the entry at the specified key
 func (m *MemoryStore) Read(key string, v interface{}) error {
 	d, ok := m.data[key]
 	if !ok {
@@ -32,6 +36,7 @@ func (m *MemoryStore) Read(key string, v interface{}) error {
 	return json.Unmarshal(d, &v)
 }
 
+// Write will populate the entry at the specified key with v
 func (m *MemoryStore) Write(key string, v interface{}) error {
 	d, err := json.Marshal(v)
 	if err != nil {
