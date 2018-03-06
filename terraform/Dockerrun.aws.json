@@ -1,0 +1,37 @@
+{
+    "AWSEBDockerrunVersion": 2,
+    "containerDefinitions": [
+        {
+            "name": "slackbot",
+            "image": "${docker_image}",
+            "essential": true,
+            "memory": 128,
+            "environment": [
+                {
+                    "name": "SB_DEBUG",
+                    "value": "true"
+                },
+                {
+                    "name": "SB_SLACK_TOKEN",
+                    "value": "${slack_token}"
+                },   
+                {
+                    "name": "SB_AWS_ACCESS_KEY",
+                    "value": "${aws_access_key}"
+                },
+                {
+                    "name": "SB_AWS_SECRET_KEY",
+                    "value": "${aws_secret_key}"
+                },
+                {
+                    "name": "SB_AWS_REGION",
+                    "value": "${aws_region}"
+                },
+                {
+                    "name": "SB_DYNAMODB_TABLE",
+                    "value": "${dynamodb_table}"
+                }
+            ]
+        }
+    ]
+}
