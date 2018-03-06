@@ -11,7 +11,7 @@ import (
 
 func TestKarmaTrackingBehavior(t *testing.T) {
 	store := db.NewMemoryStore()
-	karma := map[string]int{
+	karma := models.Karma{
 		"dogs":  5,
 		"cats":  -2,
 		"sleep": 0,
@@ -39,12 +39,12 @@ func TestKarmaTrackingBehavior(t *testing.T) {
 		}
 	}
 
-	result := map[string]int{}
+	result := models.Karma{}
 	if err := store.Read(models.StoreKeyKarma, &result); err != nil {
 		t.Fatal(err)
 	}
 
-	expected := map[string]int{
+	expected := models.Karma{
 		"dogs":        7,
 		"cats":        -3,
 		"sleep":       1,
