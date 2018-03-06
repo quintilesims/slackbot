@@ -9,6 +9,7 @@ import (
 	"github.com/urfave/cli"
 )
 
+// NewKarmaCommand returns a cli.Command that manages !karma
 func NewKarmaCommand(store db.Store, w io.Writer) cli.Command {
 	return cli.Command{
 		Name:      "!karma",

@@ -18,6 +18,7 @@ const (
 	TimeFormat = "03:04PM"
 )
 
+// NewRemindersCommand returns a cli.Command that manages !reminders
 func NewRemindersCommand(
 	store db.Store,
 	w io.Writer,
