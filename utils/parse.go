@@ -4,47 +4,50 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"unicode"
 )
 
 func ParseShell(input string) ([]string, error) {
 	// normalize quotation marks
-	r := strings.NewReplacer("“", "\"", "”", "\"")
+	r := strings.NewReplacer("‘", "'", "’", "'", "“", "\"", "”", "\"")
 	input = r.Replace(input)
 
-	count := 0
-	lastQuote := rune(0)
-	f := func(r rune) bool {
-		switch {
-		case r == lastQuote:
-			lastQuote = rune(0)
-			return false
-		case lastQuote != rune(0):
-			return false
-		case unicode.Is(unicode.Quotation_Mark, r):
-			if r == '"' {
-				count++
-				lastQuote = r
-			}
-			return false
-		default:
-			return unicode.IsSpace(r)
-
-		}
-	}
-
-	args := strings.FieldsFunc(input, f)
-	if count%2 != 0 {
+	if strings.Count(input, "\"")%2 == 1 {
 		return nil, fmt.Errorf("Invalid command: command contains an unpaired quotation mark")
 	}
 
-	for i := 0; i < len(args); i++ {
-		trim := func(r rune) bool { return unicode.Is(unicode.Quotation_Mark, r) }
-		args[i] = strings.TrimLeftFunc(args[i], trim)
-		args[i] = strings.TrimRightFunc(args[i], trim)
+	result := []string{}
+	var quoting bool
+	var current string
+	for _, c := range input {
+		switch c {
+		case '"':
+			quoting = !quoting
+			if current != "" {
+				result = append(result, current)
+			}
+
+			current = ""
+		case ' ':
+			if quoting {
+				current += " "
+			} else {
+				if current != "" {
+					result = append(result, current)
+				}
+
+				current = ""
+			}
+		default:
+			current += string(c)
+		}
 	}
 
-	return args, nil
+	// End of string, append the last argument if it exists
+	if current != "" {
+		result = append(result, current)
+	}
+
+	return result, nil
 }
 
 func ParseSlackUser(escaped string) (string, error) {

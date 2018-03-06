@@ -111,7 +111,11 @@ func main() {
 					commands.NewRemindersCommand(store, w),
 				}
 
-				args := append([]string{""}, utils.ParseShell(e.Msg.Text)...)
+				args, err := utils.ParseShell(e.Msg.Text)
+				if err != nil {
+					return err
+				}
+
 				if err := eventApp.Run(args); err != nil {
 					w.Write([]byte(err.Error()))
 				}
