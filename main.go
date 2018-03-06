@@ -6,12 +6,17 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/nlopes/slack"
 	"github.com/quintilesims/slackbot/behaviors"
 	"github.com/quintilesims/slackbot/commands"
-	"github.com/quintilesims/slackbot/common"
 	"github.com/quintilesims/slackbot/db"
+	"github.com/quintilesims/slackbot/lock"
+	"github.com/quintilesims/slackbot/runners"
 	"github.com/quintilesims/slackbot/utils"
 	"github.com/urfave/cli"
 )
@@ -33,9 +38,30 @@ func main() {
 			EnvVar: "SB_DEBUG",
 		},
 		cli.StringFlag{
-			Name:   "token",
+			Name:   "slack-token",
 			Usage:  "authentication token for the slack bot",
-			EnvVar: "SB_TOKEN",
+			EnvVar: "SB_SLACK_TOKEN",
+		},
+		cli.StringFlag{
+			Name:   "aws-region",
+			Usage:  "region for aws api",
+			Value:  "us-west-2",
+			EnvVar: "SB_AWS_REGION",
+		},
+		cli.StringFlag{
+			Name:   "aws-access-key",
+			Usage:  "access key for aws api",
+			EnvVar: "SB_AWS_ACCESS_KEY",
+		},
+		cli.StringFlag{
+			Name:   "aws-secret-key",
+			Usage:  "secret key for aws api",
+			EnvVar: "SB_AWS_SECRET_KEY",
+		},
+		cli.StringFlag{
+			Name:   "dynamodb-table",
+			Usage:  "name of the dynamodb table",
+			EnvVar: "SB_DYNAMODB_TABLE",
 		},
 	}
 
@@ -43,13 +69,11 @@ func main() {
 	var store db.Store
 	var behavs []behaviors.Behavior
 
-	// todo: daemons
-
 	slackbot.Before = func(c *cli.Context) error {
 		debug := c.Bool("debug")
 		log.SetOutput(utils.NewLogWriter(debug))
 
-		token := c.String("token")
+		token := c.String("slack-token")
 		if token == "" {
 			return fmt.Errorf("Token is not set!")
 		}
@@ -57,8 +81,33 @@ func main() {
 		client = slack.New(token)
 		client.SetDebug(debug)
 
-		store = db.NewMemoryStore()
-		if err := common.Init(store); err != nil {
+		accessKey := c.String("aws-access-key")
+		if accessKey == "" {
+			return fmt.Errorf("AWS Access Key is not set!")
+		}
+
+		secretKey := c.String("aws-secret-key")
+		if secretKey == "" {
+			return fmt.Errorf("AWS Secret Key is not set!")
+		}
+
+		region := c.String("aws-region")
+		if region == "" {
+			return fmt.Errorf("AWS Region is not set!")
+		}
+
+		table := c.String("dynamodb-table")
+		if table == "" {
+			return fmt.Errorf("DynamoDB Table is not set!")
+		}
+
+		config := &aws.Config{
+			Credentials: credentials.NewStaticCredentials(accessKey, secretKey, ""),
+			Region:      aws.String(region),
+		}
+
+		store = db.NewDynamoDBStore(session.New(config), table)
+		if err := db.Init(store); err != nil {
 			return err
 		}
 
@@ -72,6 +121,10 @@ func main() {
 	slackbot.Action = func(c *cli.Context) error {
 		rtm := client.NewRTM()
 		defer rtm.Disconnect()
+
+		remindersRunner := runners.NewRemindersRunner(lock.NewStoreLock("reminders", store), store, &rtm.Client)
+		ticker := remindersRunner.RunEvery(time.Minute)
+		defer ticker.Stop()
 
 		newChannelWriter := func(channelID string) io.Writer {
 			return utils.WriterFunc(func(b []byte) (n int, err error) {
@@ -105,10 +158,12 @@ func main() {
 					w.Write([]byte(text))
 				}
 
+				generateID := utils.NewGUIDGenerator()
+				userParser := utils.NewSlackUserParser(&rtm.Client)
 				eventApp.Commands = []cli.Command{
 					commands.NewEchoCommand(w),
 					commands.NewKarmaCommand(store, w),
-					commands.NewRemindersCommand(store, w),
+					commands.NewRemindersCommand(store, w, generateID, userParser),
 				}
 
 				args, err := utils.ParseShell(e.Msg.Text)

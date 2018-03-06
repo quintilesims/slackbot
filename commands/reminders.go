@@ -3,9 +3,12 @@ package commands
 import (
 	"fmt"
 	"io"
+	"log"
+	"strings"
+	"time"
 
-	"github.com/quintilesims/slackbot/common"
 	"github.com/quintilesims/slackbot/db"
+	"github.com/quintilesims/slackbot/models"
 	"github.com/quintilesims/slackbot/utils"
 	"github.com/urfave/cli"
 )
@@ -15,7 +18,13 @@ const (
 	TimeFormat = "03:04PM"
 )
 
-func NewRemindersCommand(store db.Store, w io.Writer) cli.Command {
+// NewRemindersCommand returns a cli.Command that manages !reminders
+func NewRemindersCommand(
+	store db.Store,
+	w io.Writer,
+	generateID utils.IDGenerator,
+	userParser utils.SlackUserParser,
+) cli.Command {
 	return cli.Command{
 		Name:  "!reminders",
 		Usage: "operations for reminders",
@@ -27,17 +36,17 @@ func NewRemindersCommand(store db.Store, w io.Writer) cli.Command {
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "date",
-						Value: "today",
-						Usage: "the date of the reminder in mm/dd format (e.g. 03/15)",
+						Value: "tomorrow",
+						Usage: "the date of the reminder in `mm/dd` format (e.g. `03/15`)",
 					},
 					cli.StringFlag{
 						Name:  "time",
 						Value: "09:00AM",
-						Usage: "the time of the reminder in HH:MM<AM|PM> format (e.g. 03:15PM)",
+						Usage: "the time of the reminder in `HH:MM<AM|PM>` format (e.g. `03:15PM`)",
 					},
 				},
 				Action: func(c *cli.Context) error {
-					return addReminder(c, store, w)
+					return addReminder(c, store, w, generateID, userParser)
 				},
 			},
 			{
@@ -45,7 +54,7 @@ func NewRemindersCommand(store db.Store, w io.Writer) cli.Command {
 				Usage:     "list reminders for a user",
 				ArgsUsage: "@USER",
 				Action: func(c *cli.Context) error {
-					return listReminders(c, store, w)
+					return listReminders(c, store, w, userParser)
 				},
 			},
 			{
@@ -60,35 +69,98 @@ func NewRemindersCommand(store db.Store, w io.Writer) cli.Command {
 	}
 }
 
-func addReminder(c *cli.Context, store db.Store, w io.Writer) error {
-	return fmt.Errorf("Add Reminder not implemented")
-}
-
-func listReminders(c *cli.Context, store db.Store, w io.Writer) error {
+// todo: dissallow reminders that are before time.Now(), allow --year param
+func addReminder(
+	c *cli.Context,
+	store db.Store,
+	w io.Writer,
+	generateID utils.IDGenerator,
+	userParser utils.SlackUserParser,
+) error {
 	escapedUser := c.Args().Get(0)
 	if escapedUser == "" {
 		return fmt.Errorf("@USER is required")
 	}
 
-	userID, err := utils.ParseSlackUser(escapedUser)
+	message := c.Args().Get(1)
+	if message == "" {
+		return fmt.Errorf("MESSAGE is required")
+	}
+
+	if args := c.Args(); len(args) > 2 {
+		message = fmt.Sprintf("%s %s", message, strings.Join(args[2:], " "))
+	}
+
+	date := c.String("date")
+	if date == "tomorrow" {
+		n := time.Now()
+		date = fmt.Sprintf("%.2d/%.2d", n.Month(), n.Day()+1)
+	}
+
+	format := fmt.Sprintf("%s %s", DateFormat, TimeFormat)
+	input := fmt.Sprintf("%s %s", date, strings.ToUpper(c.String("time")))
+	t, err := time.Parse(format, input)
 	if err != nil {
 		return err
 	}
 
-	reminders := common.Reminders{}
-	if err := store.Read(common.StoreKeyReminders, &reminders); err != nil {
+	user, err := userParser(escapedUser)
+	if err != nil {
 		return err
 	}
 
-	userReminders := map[string]common.Reminder{}
+	reminders := models.Reminders{}
+	if err := store.Read(models.StoreKeyReminders, &reminders); err != nil {
+		return err
+	}
+
+	reminderID := generateID()
+	reminders[reminderID] = models.Reminder{
+		UserID:   user.ID,
+		UserName: user.Name,
+		Message:  message,
+		Time:     time.Date(time.Now().Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), 0, 0, time.Local).UTC(),
+	}
+
+	log.Printf("[INFO] Added reminder %s", reminders[reminderID])
+	if err := store.Write(models.StoreKeyReminders, reminders); err != nil {
+		return err
+	}
+
+	format = fmt.Sprintf("%s at %s", DateFormat, TimeFormat)
+	text := fmt.Sprintf("Ok, I've added a new reminder for %s on %s", user.Name, t.Format(format))
+	if _, err := w.Write([]byte(text)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func listReminders(c *cli.Context, store db.Store, w io.Writer, userParser utils.SlackUserParser) error {
+	escapedUser := c.Args().Get(0)
+	if escapedUser == "" {
+		return fmt.Errorf("@USER is required")
+	}
+
+	user, err := userParser(escapedUser)
+	if err != nil {
+		return err
+	}
+
+	reminders := models.Reminders{}
+	if err := store.Read(models.StoreKeyReminders, &reminders); err != nil {
+		return err
+	}
+
+	userReminders := models.Reminders{}
 	for reminderID, r := range reminders {
-		if r.UserID == userID {
+		if r.UserID == user.ID {
 			userReminders[reminderID] = r
 		}
 	}
 
 	if len(userReminders) == 0 {
-		text := "That user doesn't have any reminders at the moment"
+		text := fmt.Sprintf("%s doesn't have any reminders at the moment", user.Name)
 		if _, err := w.Write([]byte(text)); err != nil {
 			return err
 		}
@@ -96,11 +168,10 @@ func listReminders(c *cli.Context, store db.Store, w io.Writer) error {
 		return nil
 	}
 
-	// todo: convert to our time zone
-	text := "That user has the following reminders:\n"
+	text := fmt.Sprintf("%s has the following reminders:\n", user.Name)
 	for reminderID, r := range userReminders {
-		dateTime := r.Time.Format(fmt.Sprintf("%s on %s", TimeFormat, DateFormat))
-		text += fmt.Sprintf("Reminder `%s`: %s at %s\n", reminderID, r.Message, dateTime)
+		format := fmt.Sprintf("%s on %s", TimeFormat, DateFormat)
+		text += fmt.Sprintf("Reminder `%s`: %s at %s\n", reminderID, r.Message, r.Time.Format(format))
 	}
 
 	if _, err := w.Write([]byte(text)); err != nil {
@@ -116,8 +187,8 @@ func removeReminder(c *cli.Context, store db.Store, w io.Writer) error {
 		return fmt.Errorf("REMINDER_ID is required")
 	}
 
-	reminders := common.Reminders{}
-	if err := store.Read(common.StoreKeyReminders, &reminders); err != nil {
+	reminders := models.Reminders{}
+	if err := store.Read(models.StoreKeyReminders, &reminders); err != nil {
 		return err
 	}
 
@@ -126,7 +197,7 @@ func removeReminder(c *cli.Context, store db.Store, w io.Writer) error {
 	}
 
 	delete(reminders, reminderID)
-	if err := store.Write(common.StoreKeyReminders, reminders); err != nil {
+	if err := store.Write(models.StoreKeyReminders, reminders); err != nil {
 		return err
 	}
 

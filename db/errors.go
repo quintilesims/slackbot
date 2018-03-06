@@ -1,9 +1,11 @@
 package db
 
-import "github.com/quintilesims/layer0/common/errors"
+import "fmt"
 
+// MissingEntryError occurs when a Read operation runs with a key that has no corresponding entry
 type MissingEntryError error
 
+// NewMissingEntryError creates a new MissingEntryError object
 func NewMissingEntryError(key string) MissingEntryError {
-	return MissingEntryError(errors.Newf("No entry for key '%s'", key))
+	return MissingEntryError(fmt.Errorf("No entry for key '%s'", key))
 }

@@ -4,10 +4,12 @@ import (
 	"strings"
 
 	"github.com/nlopes/slack"
-	"github.com/quintilesims/slackbot/common"
 	"github.com/quintilesims/slackbot/db"
+	"github.com/quintilesims/slackbot/models"
 )
 
+// NewKarmaTrackingBehavior will update karma in the provided store
+// Karma updates are triggered by the presence of '++' or '--' at the end of a message
 func NewKarmaTrackingBehavior(store db.Store) Behavior {
 	return func(e slack.RTMEvent) error {
 		d, ok := e.Data.(*slack.MessageEvent)
@@ -25,14 +27,14 @@ func NewKarmaTrackingBehavior(store db.Store) Behavior {
 			return nil
 		}
 
-		karma := map[string]int{}
-		if err := store.Read(common.StoreKeyKarma, &karma); err != nil {
+		karma := models.Karma{}
+		if err := store.Read(models.StoreKeyKarma, &karma); err != nil {
 			return err
 		}
 
 		// strip '++' or '--'
 		key := d.Msg.Text[:len(d.Msg.Text)-2]
 		karma[key] = update(karma[key])
-		return store.Write(common.StoreKeyKarma, karma)
+		return store.Write(models.StoreKeyKarma, karma)
 	}
 }
