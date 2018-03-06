@@ -31,8 +31,8 @@ func TestReminders(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		assert.Equal(t, "u1", query.Get("channel"))
-		assert.Equal(t, "REMINDER: some message", query.Get("text"))
+		assert.Equal(t, "uid", query.Get("channel"))
+		assert.Contains(t, query.Get("text"), "some message")
 
 		resp := slack.SlackResponse{Ok: true}
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
@@ -42,15 +42,17 @@ func TestReminders(t *testing.T) {
 	defer close()
 
 	reminders := models.Reminders{
-		"r1": {
-			UserID:  "u1",
-			Message: "some message",
-			Time:    time.Now().UTC(),
+		"rid1": {
+			UserID:   "uid",
+			UserName: "uname",
+			Message:  "some message",
+			Time:     time.Now().UTC(),
 		},
-		"r2": {
-			UserID:  "u2",
-			Message: "some other message",
-			Time:    time.Now().Add(time.Hour).UTC(),
+		"rid2": {
+			UserID:   "uid",
+			UserName: "uname",
+			Message:  "some other message",
+			Time:     time.Now().Add(time.Hour).UTC(),
 		},
 	}
 
