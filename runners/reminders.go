@@ -34,7 +34,7 @@ func NewRemindersRunner(l lock.Lock, store db.Store, client *slack.Client) *Runn
 		for reminderID, r := range reminders {
 			if now.After(r.Time) {
 				log.Printf("[DEBUG] [RemindersRunner] Sending reminder %s", reminderID)
-				text := fmt.Sprintf("Hi %s! This is your reminder for %s", r.UserName, r.Message)
+				text := fmt.Sprintf("Hi %s! Sending you a friendly reminder to: %s", r.UserName, r.Message)
 				if _, _, err := client.PostMessage(r.UserID, text, slack.PostMessageParameters{}); err != nil {
 					log.Printf("[ERROR] [RemindersRunner] Failed to send reminder %s: %v", reminderID, err)
 					errs = append(errs, err)

@@ -15,7 +15,7 @@ type Reminder struct {
 }
 
 func (r Reminder) String() string {
-	return fmt.Sprintf("%v %v %v", r.UserID, r.Message, r.Time)
+	return fmt.Sprintf("%v %v %v %v", r.UserID, r.UserName, r.Message, r.Time)
 }
 
 type Reminders map[string]Reminder

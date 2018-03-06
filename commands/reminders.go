@@ -159,7 +159,7 @@ func listReminders(c *cli.Context, store db.Store, w io.Writer, userParser utils
 	}
 
 	if len(userReminders) == 0 {
-		text := "That user doesn't have any reminders at the moment"
+		text := fmt.Sprintf("%s doesn't have any reminders at the moment", user.Name)
 		if _, err := w.Write([]byte(text)); err != nil {
 			return err
 		}

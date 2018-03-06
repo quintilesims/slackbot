@@ -109,10 +109,12 @@ func main() {
 					w.Write([]byte(text))
 				}
 
+				generateID := utils.NewGUIDGenerator()
+				userParser := utils.NewSlackUserParser(&rtm.Client)
 				eventApp.Commands = []cli.Command{
 					commands.NewEchoCommand(w),
 					commands.NewKarmaCommand(store, w),
-					commands.NewRemindersCommand(store, w, utils.NewGUID),
+					commands.NewRemindersCommand(store, w, generateID, userParser),
 				}
 
 				args := append([]string{""}, utils.ParseShell(e.Msg.Text)...)
