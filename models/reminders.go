@@ -8,9 +8,10 @@ import (
 const StoreKeyReminders = "reminders"
 
 type Reminder struct {
-	UserID  string
-	Message string
-	Time    time.Time
+	UserID   string
+	UserName string
+	Message  string
+	Time     time.Time
 }
 
 func (r Reminder) String() string {
