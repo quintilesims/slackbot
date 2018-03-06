@@ -15,6 +15,7 @@ func (m *MemoryLock) Lock(wait bool) error {
 
 	for m.isLocked {
 	}
+
 	m.isLocked = true
 	return nil
 }

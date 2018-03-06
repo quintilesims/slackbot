@@ -122,7 +122,7 @@ func main() {
 		rtm := client.NewRTM()
 		defer rtm.Disconnect()
 
-		remindersRunner := runners.NewRemindersRunner(lock.NewMemoryLock(), store, &rtm.Client)
+		remindersRunner := runners.NewRemindersRunner(lock.NewStoreLock("reminders", store), store, &rtm.Client)
 		ticker := remindersRunner.RunEvery(time.Minute)
 		defer ticker.Stop()
 

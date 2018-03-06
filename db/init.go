@@ -7,6 +7,10 @@ func Init(store Store) error {
 		return err
 	}
 
+	if err := initLocksStore(store); err != nil {
+		return err
+	}
+
 	if err := initRemindersStore(store); err != nil {
 		return err
 	}
@@ -19,6 +23,19 @@ func initKarmaStore(store Store) error {
 	if err := store.Read(models.StoreKeyKarma, &karma); err != nil {
 		if _, ok := err.(MissingEntryError); ok {
 			return store.Write(models.StoreKeyKarma, karma)
+		}
+
+		return err
+	}
+
+	return nil
+}
+
+func initLocksStore(store Store) error {
+	locks := models.Locks{}
+	if err := store.Read(models.StoreKeyLocks, &locks); err != nil {
+		if _, ok := err.(MissingEntryError); ok {
+			return store.Write(models.StoreKeyLocks, locks)
 		}
 
 		return err
