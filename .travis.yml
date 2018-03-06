@@ -1,7 +1,10 @@
 notifications:
   email: false
+
 sudo: required
+
 language: go
+
 go:
   - 1.9
 
