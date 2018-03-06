@@ -35,10 +35,31 @@ func main() {
 			EnvVar: "SB_DEBUG",
 		},
 		cli.StringFlag{
-			Name:   "token",
+			Name:   "slack-token",
 			Usage:  "authentication token for the slack bot",
 			EnvVar: "SB_SLACK_TOKEN",
 		},
+		cli.StringFlag{
+                        Name:   "aws-region",
+                        Usage:  "region for aws api",
+			Value: "us-west-2",
+                        EnvVar: "SB_AWS_REGION",
+                },
+		cli.StringFlag{
+                        Name:   "aws-access-key",
+                        Usage:  "access key for aws api",
+                        EnvVar: "SB_AWS_ACCESS_KEY",
+                },
+		cli.StringFlag{
+                        Name:   "secret-key",
+                        Usage:  "secret key for aws api",
+                        EnvVar: "SB_AWS_SECRET_KEY",
+                },
+		cli.StringFlag{
+                        Name:   "dynamodb-table",
+                        Usage:  "name of the dynamodb table",
+                        EnvVar: "SB_DYNAMODB_TABLE",
+                },		
 	}
 
 	var client *slack.Client
@@ -49,7 +70,7 @@ func main() {
 		debug := c.Bool("debug")
 		log.SetOutput(utils.NewLogWriter(debug))
 
-		token := c.String("token")
+		token := c.String("slack-token")
 		if token == "" {
 			return fmt.Errorf("Token is not set!")
 		}
