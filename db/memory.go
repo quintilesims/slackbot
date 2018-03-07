@@ -16,7 +16,7 @@ func NewMemoryStore() *MemoryStore {
 	}
 }
 
-// Keys lists all of the keys in the table
+// Keys lists all of the keys in the store
 func (m *MemoryStore) Keys() ([]string, error) {
 	keys := make([]string, 0, len(m.data))
 	for k := range m.data {

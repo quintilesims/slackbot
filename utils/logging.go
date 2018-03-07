@@ -6,8 +6,8 @@ import (
 	"strings"
 )
 
-// NewLogWriter will return an io.Writer that writes to stdout
-// if debug is false, messages that begin with [DEBUG] will not be written
+// NewLogWriter will return an io.Writer that writes to stdout.
+// If debug is false, messages that begin with [DEBUG] will not be written
 func NewLogWriter(debug bool) io.Writer {
 	return WriterFunc(func(p []byte) (n int, err error) {
 		if !debug && strings.Contains(string(p), "[DEBUG]") {

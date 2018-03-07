@@ -7,8 +7,8 @@ import (
 	"github.com/nlopes/slack"
 )
 
-// SlackUserParser will take an escaped slack user ID and convert it to a *slack.User object
-// escaped slack user ID's are in the format <@id>
+// SlackUserParser will take an escaped slack user ID and convert it to a *slack.User.
+// Escaped slack user ID's are in the format "<@id>"
 type SlackUserParser func(escaped string) (*slack.User, error)
 
 // NewSlackUserParser returns a SlackUserParser that uses the specified client to lookup *slack.User objects

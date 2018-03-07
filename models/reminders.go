@@ -5,9 +5,6 @@ import (
 	"time"
 )
 
-// StoreKeyReminders is the canonical store key for reminders
-const StoreKeyReminders = "reminders"
-
 // Reminder hold information about a reminder
 type Reminder struct {
 	UserID   string
@@ -22,5 +19,4 @@ func (r Reminder) String() string {
 }
 
 // Reminders track Reminder objects using the reminder's ID as the key
-// This should be used to read/write reminders to/from a db.Store
 type Reminders map[string]Reminder

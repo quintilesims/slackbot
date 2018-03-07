@@ -13,9 +13,9 @@ type StoreLock struct {
 	store db.Store
 }
 
-// NewStoreLock creates a new StoreLock object with the specified key and store
+// NewStoreLock creates a new StoreLock object with the specified key and store.
 // The key is used to manage the lock, so multiple instances of StoreLock objects
-// can share the same store
+// can share the same store.
 func NewStoreLock(key string, store db.Store) *StoreLock {
 	return &StoreLock{
 		key:   key,
@@ -32,9 +32,9 @@ func (s *StoreLock) read() (models.Locks, error) {
 	return locks, nil
 }
 
-// Lock will attempt to acquire the lock
-// If wait is true, the function will block until the lock is next available
-// If wait is false, the function will either acquire the lock or throw a LockContentionError
+// Lock will attempt to acquire the lock.
+// If wait is true, the function will block until the lock is released.
+// If wait is false, the function will either acquire the lock or throw a LockContentionError.
 func (s *StoreLock) Lock(wait bool) error {
 	// todo: use time multiplier
 	for ; ; time.Sleep(time.Second) {
