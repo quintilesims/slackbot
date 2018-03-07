@@ -165,6 +165,7 @@ func main() {
 					commands.NewEchoCommand(w),
 					commands.NewKarmaCommand(store, w),
 					commands.NewRemindersCommand(store, w, generateID, userParser),
+					commands.NewGifCommand(w),
 				}
 
 				args, err := utils.ParseShell(e.Msg.Text)
