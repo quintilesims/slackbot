@@ -35,6 +35,12 @@ func newTestApp(cmd cli.Command) *cli.App {
 func runTestApp(cmd cli.Command, format string, tokens ...interface{}) error {
 	app := newTestApp(cmd)
 	input := fmt.Sprintf(format, tokens...)
-	args := append([]string{""}, utils.ParseShell(input)...)
+	args, err := utils.ParseShell(input)
+	if err != nil {
+		return err
+	}
+
+	args = append([]string{""}, args...)
+
 	return app.Run(args)
 }
