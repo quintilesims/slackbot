@@ -19,7 +19,6 @@ func TestParseShell(t *testing.T) {
 		"one 'two three'":            []string{"one", "'two", "three'"},
 		"\"one two three\"":          []string{"one two three"},
 		"'one two three'":            []string{"'one", "two", "three'"},
-		"‘one two three’":            []string{"'one", "two", "three'"},
 		"“one two three”":            []string{"one two three"},
 		"one 'two three":             []string{"one", "'two", "three"},
 		"one\" two\" three":          []string{"one", " two", "three"},

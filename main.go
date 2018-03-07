@@ -166,9 +166,14 @@ func main() {
 					commands.NewRemindersCommand(store, w, generateID, userParser),
 				}
 
-				args, err := utils.ParseShell(e.Msg.Text)
+				parseOutput, err := utils.ParseShell(e.Msg.Text)
 				if err != nil {
 					return err
+				}
+
+				args := []string{""}
+				for _, arg := range parseOutput {
+					args = append(args, arg)
 				}
 
 				if err := eventApp.Run(args); err != nil {

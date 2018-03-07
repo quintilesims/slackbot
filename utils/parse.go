@@ -32,13 +32,14 @@ func ParseShell(input string) ([]string, error) {
 		case ' ':
 			if quoting {
 				current += " "
-			} else {
-				if current != "" {
-					result = append(result, current)
-				}
-
-				current = ""
+				continue
 			}
+
+			if current != "" {
+				result = append(result, current)
+			}
+
+			current = ""
 		default:
 			current += string(c)
 		}
