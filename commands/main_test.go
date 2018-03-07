@@ -40,5 +40,7 @@ func runTestApp(cmd cli.Command, format string, tokens ...interface{}) error {
 		return err
 	}
 
+	args = append([]string{""}, args...)
+
 	return app.Run(args)
 }
