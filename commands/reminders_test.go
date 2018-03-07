@@ -14,49 +14,49 @@ import (
 func TestRemindersAdd(t *testing.T) {
 	now := time.Now()
 	cases := map[string]models.Reminder{
-		"!reminders add <@uid> foo": models.Reminder{
+		"!reminders add <@uid> foo": {
 			UserID:   "uid",
 			UserName: "uname",
 			Message:  "foo",
 			Time:     time.Date(now.Year(), now.Month(), now.Day()+1, 9, 0, 0, 0, time.Local).UTC(),
 		},
-		"!reminders add <@uid> foo bar baz": models.Reminder{
+		"!reminders add <@uid> foo bar baz": {
 			UserID:   "uid",
 			UserName: "uname",
 			Message:  "foo bar baz",
 			Time:     time.Date(now.Year(), now.Month(), now.Day()+1, 9, 0, 0, 0, time.Local).UTC(),
 		},
-		"!reminders add --date 05/06 <@uid> foo": models.Reminder{
+		"!reminders add --date 05/06 <@uid> foo": {
 			UserID:   "uid",
 			UserName: "uname",
 			Message:  "foo",
 			Time:     time.Date(now.Year(), 5, 6, 9, 0, 0, 0, time.Local).UTC(),
 		},
-		"!reminders add --date 12/31 <@uid> foo": models.Reminder{
+		"!reminders add --date 12/31 <@uid> foo": {
 			UserID:   "uid",
 			UserName: "uname",
 			Message:  "foo",
 			Time:     time.Date(now.Year(), 12, 31, 9, 0, 0, 0, time.Local).UTC(),
 		},
-		"!reminders add --time 01:23AM <@uid> foo": models.Reminder{
+		"!reminders add --time 01:23AM <@uid> foo": {
 			UserID:   "uid",
 			UserName: "uname",
 			Message:  "foo",
 			Time:     time.Date(now.Year(), now.Month(), now.Day()+1, 1, 23, 0, 0, time.Local).UTC(),
 		},
-		"!reminders add --time 12:34PM <@uid> foo": models.Reminder{
+		"!reminders add --time 12:34PM <@uid> foo": {
 			UserID:   "uid",
 			UserName: "uname",
 			Message:  "foo",
 			Time:     time.Date(now.Year(), now.Month(), now.Day()+1, 12, 34, 0, 0, time.Local).UTC(),
 		},
-		"!reminders add --time 01:23PM <@uid> foo": models.Reminder{
+		"!reminders add --time 01:23PM <@uid> foo": {
 			UserID:   "uid",
 			UserName: "uname",
 			Message:  "foo",
 			Time:     time.Date(now.Year(), now.Month(), now.Day()+1, 13, 23, 0, 0, time.Local).UTC(),
 		},
-		"!reminders add --date 05/06 --time 01:23AM <@uid> foo": models.Reminder{
+		"!reminders add --date 05/06 --time 01:23AM <@uid> foo": {
 			UserID:   "uid",
 			UserName: "uname",
 			Message:  "foo",

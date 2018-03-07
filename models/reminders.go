@@ -5,9 +5,7 @@ import (
 	"time"
 )
 
-const StoreKeyReminders = "reminders"
-
-// Reminders hold information about a reminder
+// Reminder hold information about a reminder
 type Reminder struct {
 	UserID   string
 	UserName string
@@ -21,5 +19,4 @@ func (r Reminder) String() string {
 }
 
 // Reminders track Reminder objects using the reminder's ID as the key
-// This should be used to read/write reminders to/from a db.Store
 type Reminders map[string]Reminder

@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// Runner objects manage running operations asynchronously, similar to a daemon   
+// Runner objects manage running operations asynchronously, similar to a daemon
 type Runner struct {
 	Name string
 	run  func() error

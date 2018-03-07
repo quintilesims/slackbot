@@ -21,6 +21,7 @@ import (
 	"github.com/urfave/cli"
 )
 
+// Version of the application
 var Version string
 
 func main() {

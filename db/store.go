@@ -4,10 +4,10 @@ package db
 type Store interface {
 	// Keys lists all of the keys in the store
 	Keys() ([]string, error)
-	
-	// Read will read the value at the specified key into v 
+
+	// Read will read the value at the specified key into v
 	Read(key string, v interface{}) error
 
-	// Write will write v into the store at the specified key 
+	// Write will write v into the store at the specified key
 	Write(key string, v interface{}) error
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-// NewEchoCommand returns a cli.Command that manages !echo 
+// NewEchoCommand returns a cli.Command that manages !echo
 func NewEchoCommand(w io.Writer) cli.Command {
 	return cli.Command{
 		Name:      "!echo",

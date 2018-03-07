@@ -12,11 +12,7 @@ func Init(store Store) error {
 		return err
 	}
 
-	if err := initRemindersStore(store); err != nil {
-		return err
-	}
-
-	return nil
+	return initRemindersStore(store)
 }
 
 func initKarmaStore(store Store) error {
