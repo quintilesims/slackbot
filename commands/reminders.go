@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	dateFormat = "01/02"
+	dateFormat = "01/02 2006"
 	timeFormat = "03:04PM"
 )
 
@@ -36,13 +36,16 @@ func NewRemindersCommand(
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "date",
-						Value: "tomorrow",
-						Usage: "the date of the reminder in `mm/dd` format (e.g. `03/15`)",
+						Usage: "the date of the reminder in `mm/dd` format (e.g. `03/15`) (default: <tomorrow>)",
 					},
 					cli.StringFlag{
 						Name:  "time",
 						Value: "09:00AM",
 						Usage: "the time of the reminder in `HH:MM<AM|PM>` format (e.g. `03:15PM`)",
+					},
+					cli.IntFlag{
+						Name:  "year",
+						Usage: "the year of the reminder (e.g. `2015`) (default: <current year>)",
 					},
 				},
 				Action: func(c *cli.Context) error {
@@ -69,7 +72,6 @@ func NewRemindersCommand(
 	}
 }
 
-// todo: dissallow reminders that are before time.Now(), allow --year param
 func addReminder(
 	c *cli.Context,
 	store db.Store,
@@ -92,16 +94,25 @@ func addReminder(
 	}
 
 	date := c.String("date")
-	if date == "tomorrow" {
+	if date == "" {
 		n := time.Now()
 		date = fmt.Sprintf("%.2d/%.2d", n.Month(), n.Day()+1)
 	}
 
+	year := c.Int("year")
+	if year == 0 {
+		year = time.Now().Year()
+	}
+
 	format := fmt.Sprintf("%s %s", dateFormat, timeFormat)
-	input := fmt.Sprintf("%s %s", date, strings.ToUpper(c.String("time")))
+	input := fmt.Sprintf("%s %.4d %s", date, year, strings.ToUpper(c.String("time")))
 	t, err := time.Parse(format, input)
 	if err != nil {
 		return err
+	}
+
+	if t.Before(time.Now()) {
+		return fmt.Errorf("Cannot create a reminder in the past!")
 	}
 
 	user, err := userParser(escapedUser)
@@ -119,7 +130,7 @@ func addReminder(
 		UserID:   user.ID,
 		UserName: user.Name,
 		Message:  message,
-		Time:     time.Date(time.Now().Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), 0, 0, time.Local).UTC(),
+		Time:     time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), 0, 0, time.Local).UTC(),
 	}
 
 	log.Printf("[INFO] Added reminder %s", reminders[reminderID])
