@@ -128,15 +128,16 @@ func main() {
 		defer ticker.Stop()
 
 		go rtm.ManageConnection()
-		channel := ""
-
 		for event := range rtm.IncomingEvents {
-			buf := bytes.NewBuffer(nil)
 			for _, b := range behavs {
 				if err := b(event); err != nil {
 					log.Printf("[ERROR] %v", err)
 				}
 			}
+
+			buf := bytes.NewBuffer(nil)
+			channel := ""
+			isHelp := false
 
 			switch e := event.Data.(type) {
 			case *slack.ConnectedEvent:
@@ -148,6 +149,7 @@ func main() {
 
 				eventApp := cli.NewApp()
 				eventApp.Writer = utils.WriterFunc(func(b []byte) (n int, err error) {
+					isHelp = true
 					buf.Write(b)
 					return len(b), nil
 				})
@@ -170,27 +172,11 @@ func main() {
 					return err
 				}
 
-				args = append([]string{""}, args...)
-
-				isHelp := false
-				for _, arg := range args {
-					if arg == "-h" || arg == "--help" {
-						// Format help usage as codeblock
-						isHelp = true
-						buf.Write([]byte("```\n"))
-						break
-					}
-				}
-
 				channel = e.Msg.Channel
 
+				args = append([]string{""}, args...)
 				if err := eventApp.Run(args); err != nil {
 					buf.Write([]byte(err.Error()))
-				}
-
-				if isHelp {
-					// End help usage codeblock
-					buf.Write([]byte("```"))
 				}
 			case *slack.RTMError:
 				log.Printf("[ERROR] Unexected RTM error: %s", e.Msg)
@@ -209,7 +195,12 @@ func main() {
 			if buf.Len() > 0 && channel != "" {
 				pmp := slack.NewPostMessageParameters()
 				pmp.Username = "IQVBOT"
-				rtm.Client.PostMessage(channel, buf.String(), pmp)
+				text := buf.String()
+				if isHelp {
+					text = fmt.Sprintf("```\n%s```", text)
+				}
+
+				rtm.Client.PostMessage(channel, text, pmp)
 			}
 		}
 
