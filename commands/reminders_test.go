@@ -56,11 +56,23 @@ func TestRemindersAdd(t *testing.T) {
 			Message:  "foo",
 			Time:     time.Date(now.Year(), now.Month(), now.Day()+1, 13, 23, 0, 0, time.Local).UTC(),
 		},
+		"!reminders add --year 2050 <@uid> foo": {
+			UserID:   "uid",
+			UserName: "uname",
+			Message:  "foo",
+			Time:     time.Date(2050, now.Month(), now.Day()+1, 9, 0, 0, 0, time.Local).UTC(),
+		},
 		"!reminders add --date 05/06 --time 01:23AM <@uid> foo": {
 			UserID:   "uid",
 			UserName: "uname",
 			Message:  "foo",
 			Time:     time.Date(now.Year(), 5, 6, 1, 23, 0, 0, time.Local).UTC(),
+		},
+		"!reminders add --year 2050 --date 05/06 --time 01:23AM <@uid> foo": {
+			UserID:   "uid",
+			UserName: "uname",
+			Message:  "foo",
+			Time:     time.Date(2050, 5, 6, 1, 23, 0, 0, time.Local).UTC(),
 		},
 	}
 
@@ -89,15 +101,17 @@ func TestRemindersAddErrors(t *testing.T) {
 	inputs := []string{
 		"!reminders add",
 		"!reminders add user",
-		"!reminders --date 1/23 add <@user> message",
-		"!reminders --date 12/3 add <@user> message",
-		"!reminders --date 01:23 add <@user> message",
-		"!reminders --time 1pm add <@user> message",
-		"!reminders --time 1:00pm add <@user> message",
-		"!reminders --time 01:0pm add <@user> message",
-		"!reminders --time 01/00pm add <@user> message",
-		"!reminders --time 09:00 add <@user> message",
-		"!reminders --time 14:00 add <@user> message",
+		"!reminders add --date 1/23 <@user> message",
+		"!reminders add --date 12/3 <@user> message",
+		"!reminders add --date 01:23 <@user> message",
+		"!reminders add --time 1pm <@user> message",
+		"!reminders add --time 1:00pm <@user> message",
+		"!reminders add --time 01:0pm <@user> message",
+		"!reminders add --time 01/00pm <@user> message",
+		"!reminders add --time 09:00 <@user> message",
+		"!reminders add --time 14:00 <@user> message",
+		"!reminders add --year 50 <@user> message",
+		"!reminders add --year 2010 <@user> message",
 	}
 
 	store := newMemoryStore(t)
@@ -117,7 +131,7 @@ func TestRemindersList(t *testing.T) {
 			UserID:   "uid",
 			UserName: "uname",
 			Message:  "some message",
-			Time:     time.Date(0, 11, 5, 15, 45, 0, 0, time.UTC),
+			Time:     time.Date(2010, 11, 5, 15, 45, 0, 0, time.UTC),
 		},
 		"r2": models.Reminder{
 			UserID: "uid2",
@@ -137,7 +151,7 @@ func TestRemindersList(t *testing.T) {
 	}
 
 	expected := "uname has the following reminders:\n"
-	expected += "Reminder `rid`: some message at 03:45PM on 11/05\n"
+	expected += "Reminder `rid`: some message at 03:45PM on 11/05 2010\n"
 	assert.Equal(t, expected, w.String())
 }
 
