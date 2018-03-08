@@ -1,8 +1,8 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"strings"
@@ -127,16 +127,13 @@ func main() {
 		ticker := remindersRunner.RunEvery(time.Minute)
 		defer ticker.Stop()
 
-		newChannelWriter := func(channelID string) io.Writer {
-			return utils.WriterFunc(func(b []byte) (n int, err error) {
-				msg := rtm.NewOutgoingMessage(string(b), channelID)
-				rtm.SendMessage(msg)
-				return len(b), nil
-			})
-		}
-
 		go rtm.ManageConnection()
+		channel := ""
+
+		log.Printf("[DEBUG] IncomingEvents: %#v\n", rtm.IncomingEvents)
+
 		for event := range rtm.IncomingEvents {
+			buf := bytes.NewBuffer(nil)
 			for _, b := range behavs {
 				if err := b(event); err != nil {
 					log.Printf("[ERROR] %v", err)
@@ -151,20 +148,23 @@ func main() {
 					continue
 				}
 
-				w := newChannelWriter(e.Msg.Channel)
 				eventApp := cli.NewApp()
-				eventApp.Writer = w
+				eventApp.Writer = utils.WriterFunc(func(b []byte) (n int, err error) {
+					buf.Write(b)
+					return len(b), nil
+				})
+
 				eventApp.CommandNotFound = func(c *cli.Context, command string) {
 					text := fmt.Sprintf("Command '%s' does not exist", command)
-					w.Write([]byte(text))
+					buf.Write([]byte(text))
 				}
 
 				generateID := utils.NewGUIDGenerator()
 				userParser := utils.NewSlackUserParser(&rtm.Client)
 				eventApp.Commands = []cli.Command{
-					commands.NewEchoCommand(w),
-					commands.NewKarmaCommand(store, w),
-					commands.NewRemindersCommand(store, w, generateID, userParser),
+					commands.NewEchoCommand(buf),
+					commands.NewKarmaCommand(store, buf),
+					commands.NewRemindersCommand(store, buf, generateID, userParser),
 				}
 
 				args, err := utils.ParseShell(e.Msg.Text)
@@ -174,8 +174,25 @@ func main() {
 
 				args = append([]string{""}, args...)
 
+				isHelp := false
+				for _, arg := range args {
+					if arg == "-h" || arg == "--help" {
+						// Format help usage as codeblock
+						isHelp = true
+						buf.Write([]byte("```\n"))
+						break
+					}
+				}
+
+				channel = e.Msg.Channel
+
 				if err := eventApp.Run(args); err != nil {
-					w.Write([]byte(err.Error()))
+					buf.Write([]byte(err.Error()))
+				}
+
+				if isHelp {
+					// End help usage codeblock
+					buf.Write([]byte("```"))
 				}
 			case *slack.RTMError:
 				log.Printf("[ERROR] Unexected RTM error: %s", e.Msg)
@@ -189,6 +206,12 @@ func main() {
 				return fmt.Errorf("The bot's auth token is invalid")
 			default:
 				log.Printf("[DEBUG] Unhandled event: %#v", event)
+			}
+
+			if buf.Len() > 0 && channel != "" {
+				pmp := slack.NewPostMessageParameters()
+				pmp.Username = "IQVBOT"
+				rtm.Client.PostMessage(channel, buf.String(), pmp)
 			}
 		}
 
