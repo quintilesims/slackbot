@@ -150,8 +150,7 @@ func main() {
 				eventApp := cli.NewApp()
 				eventApp.Writer = utils.WriterFunc(func(b []byte) (n int, err error) {
 					isHelp = true
-					buf.Write(b)
-					return len(b), nil
+					return buf.Write(b)
 				})
 
 				eventApp.CommandNotFound = func(c *cli.Context, command string) {
