@@ -130,8 +130,6 @@ func main() {
 		go rtm.ManageConnection()
 		channel := ""
 
-		log.Printf("[DEBUG] IncomingEvents: %#v\n", rtm.IncomingEvents)
-
 		for event := range rtm.IncomingEvents {
 			buf := bytes.NewBuffer(nil)
 			for _, b := range behavs {
