@@ -4,68 +4,27 @@ import "github.com/quintilesims/slackbot/models"
 
 // Init will initialize the table entries for the specified store
 func Init(store Store) error {
-	if err := initCallbacksStore(store); err != nil {
-		return err
+	entries := map[string]interface{}{
+		models.StoreKeyCallbacks:  models.Callbacks{},
+		models.StoreKeyChecklists: models.Checklists{},
+		models.StoreKeyInterviews: models.Interviews{},
+		models.StoreKeyLocks:      models.Locks{},
+		models.StoreKeyReminders:  models.Reminders{},
 	}
 
-	if err := initKarmaStore(store); err != nil {
-		return err
-	}
+	for key := range entries {
+		v := entries[key]
+		if err := store.Read(key, &v); err != nil {
+			if _, ok := err.(MissingEntryError); ok {
+				if err := store.Write(key, v); err != nil {
+					return err
+				}
 
-	if err := initLocksStore(store); err != nil {
-		return err
-	}
+				continue
+			}
 
-	return initRemindersStore(store)
-}
-
-func initCallbacksStore(store Store) error {
-	callbacks := models.Callbacks{}
-	if err := store.Read(models.StoreKeyCallbacks, &callbacks); err != nil {
-		if _, ok := err.(MissingEntryError); ok {
-			return store.Write(models.StoreKeyCallbacks, callbacks)
+			return err
 		}
-
-		return err
-	}
-
-	return nil
-}
-
-func initKarmaStore(store Store) error {
-	karma := models.Karma{}
-	if err := store.Read(models.StoreKeyKarma, &karma); err != nil {
-		if _, ok := err.(MissingEntryError); ok {
-			return store.Write(models.StoreKeyKarma, karma)
-		}
-
-		return err
-	}
-
-	return nil
-}
-
-func initLocksStore(store Store) error {
-	locks := models.Locks{}
-	if err := store.Read(models.StoreKeyLocks, &locks); err != nil {
-		if _, ok := err.(MissingEntryError); ok {
-			return store.Write(models.StoreKeyLocks, locks)
-		}
-
-		return err
-	}
-
-	return nil
-}
-
-func initRemindersStore(store Store) error {
-	reminders := models.Reminders{}
-	if err := store.Read(models.StoreKeyReminders, &reminders); err != nil {
-		if _, ok := err.(MissingEntryError); ok {
-			return store.Write(models.StoreKeyReminders, reminders)
-		}
-
-		return err
 	}
 
 	return nil

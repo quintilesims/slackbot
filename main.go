@@ -127,15 +127,13 @@ func main() {
 		rtm := client.NewRTM()
 		defer rtm.Disconnect()
 
-		routes := controllers.NewSlashCommandController().Routes()
-		routes = fireball.Decorate(routes, fireball.LogDecorator())
-
 		go func() {
 			slashCommands := []*slash.CommandSchema{
-				slash.NewTODOCommand(),
+				slash.NewChecklistCommand(store),
+				slash.NewInterviewCommand(store),
 			}
 
-			routes := controllers.NewSlashCommandController(slashCommands...).Routes()
+			routes := controllers.NewSlashCommandController(store, slashCommands...).Routes()
 			routes = fireball.Decorate(routes, fireball.LogDecorator())
 			app := fireball.NewApp(routes)
 			app.ErrorHandler = controllers.ErrorHandler
