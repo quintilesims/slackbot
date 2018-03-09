@@ -2,7 +2,6 @@ package slash
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -78,22 +77,45 @@ func interviewsShow(store db.Store) (*slack.Message, error) {
 	return msg, nil
 }
 
+func addInterviewChecklistItems(store db.Store, interviewID string, interview models.Interview) error {
+	checklists := models.Checklists{}
+	if err := store.Read(models.StoreKeyChecklists, &checklists); err != nil {
+		return err
+	}
+
+	checklist, ok := checklists[interview.ManagerID]
+	if !ok {
+		checklist = models.Checklist{}
+	}
+
+	// todo: use guuiid generator
+	// todo: have a time for reminders, or print reminders every day
+	checklist = append(checklist,
+		models.ChecklistItem{
+			ID:     strconv.Itoa(int(time.Now().UnixNano())),
+			Text:   fmt.Sprintf("Pre-interview stuff for %s", interview.Interviewee),
+			Source: interviewID,
+		},
+		models.ChecklistItem{
+			ID:     strconv.Itoa(int(time.Now().UnixNano())),
+			Text:   fmt.Sprintf("Post-interview stuff for %s", interview.Interviewee),
+			Source: interviewID,
+		},
+	)
+
+	checklists[interview.ManagerID] = checklist
+	return store.Write(models.StoreKeyChecklists, checklists)
+}
+
 func interviewAdd(store db.Store, args []string) (*slack.Message, error) {
 	if len(args) < 3 {
 		return nil, NewSlackMessageError("@MANAGER DATE and INTERVIEWEE are required")
 	}
 
-	// escaped format:  <@U1234|user>
-	escapedManager := args[0]
-	r := regexp.MustCompile("\\<\\@[a-zA-Z0-9]+|[a-zA-Z0-9]+\\>")
-	if !r.MatchString(escapedManager) {
+	managerID, managerName, err := parseEscapedUser(args[0])
+	if err != nil {
 		return nil, NewSlackMessageError("Invalid MANAGER: specify a manager by typing `@<username>`")
 	}
-
-	// strip '<@' from the front and '>' from the end
-	split := strings.SplitN(escapedManager[2:len(escapedManager)-1], "|", 2)
-	managerID := split[0]
-	managerName := split[1]
 
 	date, err := time.Parse(dateFormat, args[1])
 	if err != nil {
@@ -107,25 +129,52 @@ func interviewAdd(store db.Store, args []string) (*slack.Message, error) {
 
 	// todo: use guid generator
 	interviewID := strconv.Itoa(int(time.Now().UnixNano()))
-	interviewee := strings.Join(args[2:], " ")
-	interviews[interviewID] = models.Interview{
+	interview := models.Interview{
 		ManagerID:   managerID,
 		ManagerName: managerName,
-		Interviewee: interviewee,
+		Interviewee: strings.Join(args[2:], " "),
 		Date:        date,
 	}
 
+	interviews[interviewID] = interview
 	if err := store.Write(models.StoreKeyInterviews, interviews); err != nil {
+		return nil, err
+	}
+
+	if err := addInterviewChecklistItems(store, interviewID, interview); err != nil {
 		return nil, err
 	}
 
 	msg := &slack.Message{
 		Msg: slack.Msg{
-			Text: fmt.Sprintf("Ok, I've added an interview for %s on %s", interviewee, date.Format(dateFormat)),
+			Text: fmt.Sprintf("Ok, I've added an interview for %s on %s", interview.Interviewee, date.Format(dateFormat)),
 		},
 	}
 
 	return msg, nil
+}
+
+// this function is idempotent
+func deleteInterviewChecklistItems(store db.Store, managerID, interviewID string) error {
+	checklists := models.Checklists{}
+	if err := store.Read(models.StoreKeyChecklists, &checklists); err != nil {
+		return err
+	}
+
+	checklist, ok := checklists[managerID]
+	if !ok {
+		return nil
+	}
+
+	for i := 0; i < len(checklist); i++ {
+		if checklist[i].Source == interviewID {
+			checklist = append(checklist[:i], checklist[i+1:]...)
+			i--
+		}
+	}
+
+	checklists[managerID] = checklist
+	return store.Write(models.StoreKeyChecklists, checklists)
 }
 
 func newInterviewCallback(store db.Store) func(slack.AttachmentActionCallback) (*slack.Message, error) {
@@ -138,14 +187,19 @@ func newInterviewCallback(store db.Store) func(slack.AttachmentActionCallback) (
 			return nil, err
 		}
 
-		if _, ok := interviews[interviewID]; !ok {
+		interview, ok := interviews[interviewID]
+		if !ok {
 			return nil, NewSlackMessageError("That interview no longer exists!")
+		}
+
+		if err := deleteInterviewChecklistItems(store, interview.ManagerID, interviewID); err != nil {
+			return nil, err
 		}
 
 		delete(interviews, interviewID)
 		if err := store.Write(models.StoreKeyInterviews, interviews); err != nil {
-                        return nil, err
-                }
+			return nil, err
+		}
 
 		return interviewsShow(store)
 	}

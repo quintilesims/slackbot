@@ -4,6 +4,7 @@ package models
 type ChecklistItem struct {
 	ID        string
 	Text      string
+	Source    string
 	IsChecked bool
 }
 
