@@ -161,11 +161,12 @@ func main() {
 
 				generateID := utils.NewGUIDGenerator()
 				userParser := utils.NewSlackUserParser(&rtm.Client)
+				client := commands.NewGoogleClient()
 				eventApp.Commands = []cli.Command{
 					commands.NewEchoCommand(w),
 					commands.NewKarmaCommand(store, w),
 					commands.NewRemindersCommand(store, w, generateID, userParser),
-					commands.NewGifCommand(w),
+					commands.NewGifCommand(w, client, "http://google.com"),
 				}
 
 				args, err := utils.ParseShell(e.Msg.Text)
