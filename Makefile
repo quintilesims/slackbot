@@ -10,9 +10,12 @@ build:
 test:
 	go test ./... -v
 
+run:
+	ngrok http 9090
+
 release: build
 	docker push $(CURRENT_DOCKER_IMAGE)
 	docker tag  $(CURRENT_DOCKER_IMAGE) $(LATEST_DOCKER_IMAGE)
 	docker push $(LATEST_DOCKER_IMAGE)
 
-.PHONY: build test release
+.PHONY: build test run release
