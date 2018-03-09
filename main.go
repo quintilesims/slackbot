@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -14,11 +15,14 @@ import (
 	"github.com/nlopes/slack"
 	"github.com/quintilesims/slackbot/behaviors"
 	"github.com/quintilesims/slackbot/commands"
+	"github.com/quintilesims/slackbot/controllers"
 	"github.com/quintilesims/slackbot/db"
 	"github.com/quintilesims/slackbot/lock"
 	"github.com/quintilesims/slackbot/runners"
+	"github.com/quintilesims/slackbot/slash"
 	"github.com/quintilesims/slackbot/utils"
 	"github.com/urfave/cli"
+	"github.com/zpatrick/fireball"
 )
 
 // Version of the application
@@ -122,6 +126,22 @@ func main() {
 	slackbot.Action = func(c *cli.Context) error {
 		rtm := client.NewRTM()
 		defer rtm.Disconnect()
+
+		routes := controllers.NewSlashCommandController().Routes()
+		routes = fireball.Decorate(routes, fireball.LogDecorator())
+
+		go func() {
+			slashCommands := []*slash.CommandSchema{
+				slash.NewTODOCommand(),
+			}
+
+			routes := controllers.NewSlashCommandController(slashCommands...).Routes()
+			routes = fireball.Decorate(routes, fireball.LogDecorator())
+			app := fireball.NewApp(routes)
+			app.ErrorHandler = controllers.ErrorHandler
+			log.Println("Running on port 9090")
+			log.Fatal(http.ListenAndServe(":9090", app))
+		}()
 
 		remindersRunner := runners.NewRemindersRunner(lock.NewStoreLock("reminders", store), store, &rtm.Client)
 		ticker := remindersRunner.RunEvery(time.Minute)
