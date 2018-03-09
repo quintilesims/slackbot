@@ -64,6 +64,16 @@ func (s *SlashCommandController) run(c *fireball.Context) (fireball.Response, er
 		return nil, slash.NewSlackMessageError("No matching handler found for '%s'", req.Command)
 	}
 
+	if args := strings.Split(req.Text, " "); len(args) == 1 && args[0] == "help" {
+		msg := &slack.Message{
+			Msg: slack.Msg{
+				Text: cmd.Help,
+			},
+		}
+
+		return fireball.NewJSONResponse(200, msg)
+	}
+
 	msg, err := cmd.Run(req)
 	if err != nil {
 		return nil, err

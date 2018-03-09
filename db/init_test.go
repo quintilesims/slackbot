@@ -7,23 +7,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestInitCallbacksStore(t *testing.T) {
-        store := NewMemoryStore()
-        if err := initCallbacksStore(store); err != nil {
-                t.Fatal(err)
-        }
-
-        keys, err := store.Keys()
-        if err != nil {
-                t.Fatal(err)
-        }
-
-        assert.Contains(t, keys, models.StoreKeyCallbacks)
-}
-
-func TestInitKarmaStore(t *testing.T) {
+func TestInit(t *testing.T) {
 	store := NewMemoryStore()
-	if err := initKarmaStore(store); err != nil {
+	if err := Init(store); err != nil {
 		t.Fatal(err)
 	}
 
@@ -32,19 +18,13 @@ func TestInitKarmaStore(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Contains(t, keys, models.StoreKeyKarma)
-}
-
-func TestInitRemindersStore(t *testing.T) {
-	store := NewMemoryStore()
-	if err := initRemindersStore(store); err != nil {
-		t.Fatal(err)
+	expected := []string{
+		models.StoreKeyCallbacks,
+		models.StoreKeyChecklists,
+		models.StoreKeyInterviews,
+		models.StoreKeyLocks,
+		models.StoreKeyReminders,
 	}
 
-	keys, err := store.Keys()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	assert.Contains(t, keys, models.StoreKeyReminders)
+	assert.ElementsMatch(t, expected, keys)
 }
