@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -17,8 +16,6 @@ import (
 	"github.com/quintilesims/slackbot/commands"
 	"github.com/quintilesims/slackbot/controllers"
 	"github.com/quintilesims/slackbot/db"
-	"github.com/quintilesims/slackbot/lock"
-	"github.com/quintilesims/slackbot/runners"
 	"github.com/quintilesims/slackbot/slash"
 	"github.com/quintilesims/slackbot/utils"
 	"github.com/urfave/cli"
@@ -141,10 +138,6 @@ func main() {
 			log.Fatal(http.ListenAndServe(":9090", app))
 		}()
 
-		remindersRunner := runners.NewRemindersRunner(lock.NewStoreLock("reminders", store), store, &rtm.Client)
-		ticker := remindersRunner.RunEvery(time.Minute)
-		defer ticker.Stop()
-
 		go rtm.ManageConnection()
 		for event := range rtm.IncomingEvents {
 			for _, b := range behavs {
@@ -176,12 +169,9 @@ func main() {
 					buf.Write([]byte(text))
 				}
 
-				generateID := utils.NewGUIDGenerator()
-				userParser := utils.NewSlackUserParser(&rtm.Client)
 				eventApp.Commands = []cli.Command{
 					commands.NewEchoCommand(buf),
 					commands.NewKarmaCommand(store, buf),
-					commands.NewRemindersCommand(store, buf, generateID, userParser),
 				}
 
 				args, err := utils.ParseShell(e.Msg.Text)
