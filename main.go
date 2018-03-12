@@ -47,6 +47,11 @@ func main() {
 			EnvVar: "SB_SLACK_TOKEN",
 		},
 		cli.StringFlag{
+			Name:   "giphy-token",
+			Usage:  "authentication token for the Giphy API",
+			EnvVar: "SB_GIPHY_TOKEN",
+		},
+		cli.StringFlag{
 			Name:   "aws-region",
 			Usage:  "region for aws api",
 			Value:  "us-west-2",
@@ -184,6 +189,7 @@ func main() {
 
 				eventApp.Commands = []cli.Command{
 					commands.NewEchoCommand(buf),
+					commands.NewGIFCommand(commands.GiphyAPIEndpoint, c.String("giphy-token"), buf),
 					commands.NewKarmaCommand(store, buf),
 				}
 
