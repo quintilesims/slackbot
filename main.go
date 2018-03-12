@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -16,6 +17,7 @@ import (
 	"github.com/quintilesims/slackbot/commands"
 	"github.com/quintilesims/slackbot/controllers"
 	"github.com/quintilesims/slackbot/db"
+	"github.com/quintilesims/slackbot/runners"
 	"github.com/quintilesims/slackbot/slash"
 	"github.com/quintilesims/slackbot/utils"
 	"github.com/urfave/cli"
@@ -123,6 +125,17 @@ func main() {
 	slackbot.Action = func(c *cli.Context) error {
 		rtm := client.NewRTM()
 		defer rtm.Disconnect()
+
+		go func() {
+			// sleep until 9:00AM, then run every 24 hours
+			for ; time.Now().Hour() != 9; time.Sleep(time.Minute) {
+			}
+
+			checklistRunner := runners.NewChecklistRunner(store, client)
+			checklistRunner.Run()
+			ticker := checklistRunner.RunEvery(time.Hour * 24)
+			defer ticker.Stop()
+		}()
 
 		go func() {
 			slashCommands := []*slash.CommandSchema{
