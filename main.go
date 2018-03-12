@@ -19,6 +19,7 @@ import (
 	"github.com/quintilesims/slackbot/runners"
 	"github.com/quintilesims/slackbot/utils"
 	"github.com/urfave/cli"
+	cache "github.com/zpatrick/go-cache"
 )
 
 // Version of the application
@@ -161,11 +162,12 @@ func main() {
 				generateID := utils.NewGUIDGenerator()
 				userParser := utils.NewSlackUserParser(&rtm.Client)
 				client := commands.NewGoogleClient()
+				gifCache := cache.New()
 				eventApp.Commands = []cli.Command{
 					commands.NewEchoCommand(buf),
 					commands.NewKarmaCommand(store, buf),
 					commands.NewRemindersCommand(store, buf, generateID, userParser),
-					commands.NewGifCommand(buf, client, "http://google.com"),
+					commands.NewGifCommand(buf, client, gifCache, "http://google.com"),
 				}
 
 				args, err := utils.ParseShell(e.Msg.Text)

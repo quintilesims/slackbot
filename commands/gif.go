@@ -7,25 +7,57 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
-	"github.com/quintilesims/slackbot/models"
 	"github.com/urfave/cli"
+	cache "github.com/zpatrick/go-cache"
 )
 
+type GoogleClient struct {
+	Client *http.Client
+}
+
+type Gif struct {
+	ContentURL string
+}
+
 // NewGifCommand returns a cli.Command that manages !gif
-func NewGifCommand(w io.Writer, client *GoogleClient, url string) cli.Command {
+func NewGifCommand(w io.Writer, client *GoogleClient, cache *cache.Cache, url string) cli.Command {
+	// Set Cache
+	cache.ClearEvery(time.Hour * 24)
+
 	return cli.Command{
 		Name:      "!gif",
 		Usage:     "display gif for given search query",
 		ArgsUsage: "[args...]",
 		Action: func(c *cli.Context) error {
 			if searchTerm := strings.Join(c.Args(), "+"); searchTerm != "" {
+				// Check Cache
+				if gif := cache.Get(searchTerm); gif != nil {
+					gif, ok := gif.(*Gif)
+
+					if !ok {
+						return fmt.Errorf("Cache error")
+					}
+
+					if _, err := w.Write([]byte(gif.ContentURL)); err != nil {
+						return err
+					}
+					return nil
+				}
+
 				req, err := newGoogleRequest(url, searchTerm)
 				if err != nil {
 					return err
 				}
 
-				return lookupGif(w, client, req)
+				gif, err := lookupGif(w, client, req)
+				if gif != nil {
+					cache.Add(searchTerm, gif)
+				}
+				if err != nil {
+					return err
+				}
 			}
 
 			// TODO: Return help gif or funny one
@@ -34,42 +66,39 @@ func NewGifCommand(w io.Writer, client *GoogleClient, url string) cli.Command {
 	}
 }
 
-func lookupGif(w io.Writer, client *GoogleClient, req *http.Request) error {
+func lookupGif(w io.Writer, client *GoogleClient, req *http.Request) (*Gif, error) {
 	resp, err := client.Client.Do(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("Status: %s, Code: %d", resp.Status, resp.StatusCode)
+		return nil, fmt.Errorf("Status: %s, Code: %d", resp.Status, resp.StatusCode)
 	}
 
-	bodyBytes, _ := ioutil.ReadAll(resp.Body)
-	bodyString := string(bodyBytes)
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	var regexFindContent = regexp.MustCompile(`var u=\'.*?(http.*?)\'`)
 	var regexFindURL = regexp.MustCompile(`http.*\w`)
 
-	matches := regexFindContent.FindAllString(bodyString, -1)
+	matches := regexFindContent.FindAllString(string(bodyBytes), -1)
 	if len(matches) <= 0 {
-		return fmt.Errorf("No gifs found for search")
+		return nil, fmt.Errorf("No gifs found for search")
 	}
 
-	Gifs := make([]models.Gif, len(matches))
+	Gifs := make([]*Gif, len(matches))
 	for i, match := range matches {
 		Gifs[i].ContentURL = regexFindURL.FindString(match)
 	}
 
-	// TODO: Cache response
 	if _, err := w.Write([]byte(Gifs[0].ContentURL)); err != nil {
-		return err
+		return nil, err
 	}
-	return nil
-}
-
-type GoogleClient struct {
-	Client *http.Client
+	return Gifs[0], nil
 }
 
 func NewGoogleClient() *GoogleClient {
