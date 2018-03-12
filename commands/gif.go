@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/urfave/cli"
 	cache "github.com/zpatrick/go-cache"
@@ -23,9 +22,6 @@ type Gif struct {
 
 // NewGifCommand returns a cli.Command that manages !gif
 func NewGifCommand(w io.Writer, client *GoogleClient, cache *cache.Cache, url string) cli.Command {
-	// Set Cache
-	cache.ClearEvery(time.Hour * 24)
-
 	return cli.Command{
 		Name:      "!gif",
 		Usage:     "display gif for given search query",
@@ -35,7 +31,6 @@ func NewGifCommand(w io.Writer, client *GoogleClient, cache *cache.Cache, url st
 				// Check Cache
 				if gif := cache.Get(searchTerm); gif != nil {
 					gif, ok := gif.(*Gif)
-
 					if !ok {
 						return fmt.Errorf("Cache error")
 					}
@@ -58,6 +53,7 @@ func NewGifCommand(w io.Writer, client *GoogleClient, cache *cache.Cache, url st
 				if err != nil {
 					return err
 				}
+				return nil
 			}
 
 			// TODO: Return help gif or funny one
@@ -90,7 +86,7 @@ func lookupGif(w io.Writer, client *GoogleClient, req *http.Request) (*Gif, erro
 		return nil, fmt.Errorf("No gifs found for search")
 	}
 
-	Gifs := make([]*Gif, len(matches))
+	Gifs := make([]Gif, len(matches))
 	for i, match := range matches {
 		Gifs[i].ContentURL = regexFindURL.FindString(match)
 	}
@@ -98,7 +94,7 @@ func lookupGif(w io.Writer, client *GoogleClient, req *http.Request) (*Gif, erro
 	if _, err := w.Write([]byte(Gifs[0].ContentURL)); err != nil {
 		return nil, err
 	}
-	return Gifs[0], nil
+	return &Gifs[0], nil
 }
 
 func NewGoogleClient() *GoogleClient {

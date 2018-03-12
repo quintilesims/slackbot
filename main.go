@@ -163,6 +163,7 @@ func main() {
 				userParser := utils.NewSlackUserParser(&rtm.Client)
 				client := commands.NewGoogleClient()
 				gifCache := cache.New()
+				gifCache.ClearEvery(time.Hour * 24)
 				eventApp.Commands = []cli.Command{
 					commands.NewEchoCommand(buf),
 					commands.NewKarmaCommand(store, buf),
