@@ -11,6 +11,7 @@ func NewPingCommand(w io.Writer) cli.Command {
 	return cli.Command{
 		Name:  "!ping",
 		Usage: "ping the slackbot",
+		ArgsUsage: " ",
 		Action: func(c *cli.Context) error {
 			if _, err := w.Write([]byte("pong")); err != nil {
 				return err
