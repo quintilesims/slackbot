@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-	"net/http"
+	"math/rand"
 	"os"
 	"strings"
 	"time"
@@ -13,15 +13,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/nlopes/slack"
-	"github.com/quintilesims/slackbot/behaviors"
+	"github.com/quintilesims/slackbot/bot"
 	"github.com/quintilesims/slackbot/commands"
-	"github.com/quintilesims/slackbot/controllers"
 	"github.com/quintilesims/slackbot/db"
-	"github.com/quintilesims/slackbot/runners"
-	"github.com/quintilesims/slackbot/slash"
 	"github.com/quintilesims/slackbot/utils"
 	"github.com/urfave/cli"
-	"github.com/zpatrick/fireball"
 )
 
 // Version of the application
@@ -42,9 +38,14 @@ func main() {
 			EnvVar: "SB_DEBUG",
 		},
 		cli.StringFlag{
-			Name:   "slack-token",
+			Name:   "slack-bot-token",
 			Usage:  "authentication token for the slack bot",
-			EnvVar: "SB_SLACK_TOKEN",
+			EnvVar: "SB_SLACK_BOT_TOKEN",
+		},
+		cli.StringFlag{
+			Name:   "slack-app-token",
+			Usage:  "authentication token for the slack application",
+			EnvVar: "SB_SLACK_APP_TOKEN",
 		},
 		cli.StringFlag{
 			Name:   "giphy-token",
@@ -74,21 +75,32 @@ func main() {
 		},
 	}
 
-	var client *slack.Client
+	var appClient *slack.Client
+	var botClient *slack.Client
 	var store db.Store
-	var behavs []behaviors.Behavior
+	var behaviors []bot.Behavior
 
 	slackbot.Before = func(c *cli.Context) error {
+		rand.Seed(time.Now().UnixNano())
+
 		debug := c.Bool("debug")
 		log.SetOutput(utils.NewLogWriter(debug))
 
-		token := c.String("slack-token")
-		if token == "" {
-			return fmt.Errorf("Token is not set!")
+		botToken := c.String("slack-bot-token")
+		if botToken == "" {
+			return fmt.Errorf("Bot Token is not set!")
 		}
 
-		client = slack.New(token)
-		client.SetDebug(debug)
+		botClient = slack.New(botToken)
+		botClient.SetDebug(debug)
+
+		appToken := c.String("slack-app-token")
+		if appToken == "" {
+			return fmt.Errorf("App Token is not set!")
+		}
+
+		appClient = slack.New(appToken)
+		appClient.SetDebug(debug)
 
 		accessKey := c.String("aws-access-key")
 		if accessKey == "" {
@@ -120,53 +132,24 @@ func main() {
 			return err
 		}
 
-		behavs = []behaviors.Behavior{
-			behaviors.NewKarmaTrackingBehavior(store),
+		behaviors = []bot.Behavior{
+			bot.NewKarmaTrackingBehavior(store),
 		}
 
 		return nil
 	}
 
 	slackbot.Action = func(c *cli.Context) error {
-		rtm := client.NewRTM()
+		rtm := botClient.NewRTM()
 		defer rtm.Disconnect()
-
-		go func() {
-			// sleep until 9:00AM, then run every 24 hours
-			for ; time.Now().Hour() != 9; time.Sleep(time.Minute) {
-			}
-
-			checklistRunner := runners.NewChecklistRunner(store, client)
-			checklistRunner.Run()
-			ticker := checklistRunner.RunEvery(time.Hour * 24)
-			defer ticker.Stop()
-		}()
-
-		go func() {
-			slashCommands := []*slash.CommandSchema{
-				slash.NewChecklistCommand(store),
-				slash.NewInterviewCommand(store),
-			}
-
-			routes := controllers.NewSlashCommandController(store, slashCommands...).Routes()
-			routes = fireball.Decorate(routes, fireball.LogDecorator())
-			app := fireball.NewApp(routes)
-			app.ErrorHandler = controllers.ErrorHandler
-			log.Println("Running on port 9090")
-			log.Fatal(http.ListenAndServe(":9090", app))
-		}()
 
 		go rtm.ManageConnection()
 		for event := range rtm.IncomingEvents {
-			for _, b := range behavs {
-				if err := b(event); err != nil {
+			for _, behavior := range behaviors {
+				if err := behavior(event); err != nil {
 					log.Printf("[ERROR] %v", err)
 				}
 			}
-
-			buf := bytes.NewBuffer(nil)
-			channel := ""
-			isHelp := false
 
 			switch e := event.Data.(type) {
 			case *slack.ConnectedEvent:
@@ -176,57 +159,44 @@ func main() {
 					continue
 				}
 
-				eventApp := cli.NewApp()
-				eventApp.Writer = utils.WriterFunc(func(b []byte) (n int, err error) {
-					isHelp = true
-					return buf.Write(b)
-				})
-
-				eventApp.CommandNotFound = func(c *cli.Context, command string) {
-					text := fmt.Sprintf("Command '%s' does not exist", command)
-					buf.Write([]byte(text))
-				}
-
-				eventApp.Commands = []cli.Command{
-					commands.NewEchoCommand(buf),
-					commands.NewGIFCommand(commands.GiphyAPIEndpoint, c.String("giphy-token"), buf),
-					commands.NewKarmaCommand(store, buf),
-				}
-
-				args, err := utils.ParseShell(e.Msg.Text)
+				args, err := utils.ParseShell("slackbot " + e.Msg.Text)
 				if err != nil {
-					return err
-				}
-
-				channel = e.Msg.Channel
-
-				args = append([]string{""}, args...)
-				if err := eventApp.Run(args); err != nil {
-					buf.Write([]byte(err.Error()))
-				}
-			case *slack.RTMError:
-				log.Printf("[ERROR] Unexected RTM error: %s", e.Msg)
-			case *slack.AckErrorEvent:
-				if e.Error() == "Code 2 - message text is missing" {
+					msg := rtm.NewOutgoingMessage(err.Error(), e.Channel)
+					rtm.SendMessage(msg)
 					continue
 				}
 
-				log.Printf("[ERROR] Unexpected Ack error: %s", e.Error())
+				w := bytes.NewBuffer(nil)
+				app := cli.NewApp()
+				app.Writer = utils.WriterFunc(func(b []byte) (n int, err error) {
+					text := fmt.Sprintf("```%s```", string(b))
+					return w.Write([]byte(text))
+				})
+
+				app.CommandNotFound = func(c *cli.Context, command string) {
+					text := fmt.Sprintf("Command '%s' does not exist", command)
+					w.Write([]byte(text))
+				}
+
+				app.Commands = []cli.Command{
+					commands.NewEchoCommand(w),
+					//commands.NewGIFCommand(commands.GiphyAPIEndpoint, c.String("giphy-token"), w),
+					commands.NewKarmaCommand(store, w),
+					commands.NewPingCommand(w),
+					//commands.NewUndoCommand(botClient, e.Channel, info.User.Name),
+				}
+
+				if err := app.Run(args); err != nil {
+					log.Printf("[ERROR] %v", err)
+					w.Write([]byte(err.Error()))
+				}
+
+				msg := rtm.NewOutgoingMessage(w.String(), e.Channel)
+				rtm.SendMessage(msg)
 			case *slack.InvalidAuthEvent:
 				return fmt.Errorf("The bot's auth token is invalid")
 			default:
 				log.Printf("[DEBUG] Unhandled event: %#v", event)
-			}
-
-			if buf.Len() > 0 && channel != "" {
-				pmp := slack.NewPostMessageParameters()
-				pmp.Username = "IQVBOT"
-				text := buf.String()
-				if isHelp {
-					text = fmt.Sprintf("```\n%s```", text)
-				}
-
-				rtm.Client.PostMessage(channel, text, pmp)
 			}
 		}
 
