@@ -77,7 +77,6 @@ func main() {
 	var appClient *slack.Client
 	var botClient *slack.Client
 	var store db.Store
-	var behaviors []bot.Behavior
 
 	slackbot.Before = func(c *cli.Context) error {
 		rand.Seed(time.Now().UnixNano())
@@ -131,23 +130,22 @@ func main() {
 			return err
 		}
 
-		behaviors = []bot.Behavior{
-			bot.NewKarmaTrackingBehavior(store),
-		}
-
 		return nil
 	}
 
 	slackbot.Action = func(c *cli.Context) error {
+		behaviors := bot.Behaviors{
+			bot.NewKarmaTrackingBehavior(store),
+		}
+
+		// initiate the RTM websocket connection
 		rtm := botClient.NewRTM()
 		defer rtm.Disconnect()
-
 		go rtm.ManageConnection()
+
 		for event := range rtm.IncomingEvents {
-			for _, behavior := range behaviors {
-				if err := behavior(event); err != nil {
-					log.Printf("[ERROR] %v", err)
-				}
+			if err := behaviors.Run(event); err != nil {
+				log.Printf("[ERROR] %v", err)
 			}
 
 			switch e := event.Data.(type) {
@@ -165,11 +163,12 @@ func main() {
 					continue
 				}
 
+				var isDisplayingHelp bool
 				w := bytes.NewBuffer(nil)
 				app := cli.NewApp()
 				app.Writer = utils.WriterFunc(func(b []byte) (n int, err error) {
-					text := fmt.Sprintf("```%s```", string(b))
-					return w.Write([]byte(text))
+					isDisplayingHelp = true
+					return w.Write(b)
 				})
 
 				app.CommandNotFound = func(c *cli.Context, command string) {
@@ -187,7 +186,12 @@ func main() {
 					w.Write([]byte(err.Error()))
 				}
 
-				msg := rtm.NewOutgoingMessage(w.String(), e.Channel)
+				text := w.String()
+				if isDisplayingHelp {
+					text = fmt.Sprintf("```%s```", text)
+				}
+
+				msg := rtm.NewOutgoingMessage(text, e.Channel)
 				rtm.SendMessage(msg)
 			case *slack.InvalidAuthEvent:
 				return fmt.Errorf("The bot's auth token is invalid")
