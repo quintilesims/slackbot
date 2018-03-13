@@ -6,7 +6,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/nlopes/slack"
+	"github.com/quintilesims/slack"
 	"github.com/quintilesims/slackbot/db"
 	"github.com/quintilesims/slackbot/utils"
 	"github.com/urfave/cli"
@@ -33,14 +33,6 @@ func newTestApp(cmd cli.Command) *cli.App {
 	return app
 }
 
-func newSlackMessageEvent(format string, tokens ...interface{}) slack.RTMEvent {
-	return slack.RTMEvent{
-		Data: &slack.MessageEvent{
-			Msg: slack.Msg{Text: fmt.Sprintf(format, tokens...)},
-		},
-	}
-}
-
 func runTestApp(cmd cli.Command, format string, tokens ...interface{}) error {
 	app := newTestApp(cmd)
 	input := fmt.Sprintf(format, tokens...)
@@ -50,4 +42,12 @@ func runTestApp(cmd cli.Command, format string, tokens ...interface{}) error {
 	}
 
 	return app.Run(args)
+}
+
+func newSlackMessageEvent(format string, tokens ...interface{}) slack.RTMEvent {
+	return slack.RTMEvent{
+		Data: &slack.MessageEvent{
+			Msg: slack.Msg{Text: fmt.Sprintf(format, tokens...)},
+		},
+	}
 }

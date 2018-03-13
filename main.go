@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/nlopes/slack"
+	"github.com/quintilesims/slack"
 	"github.com/quintilesims/slackbot/bot"
 	"github.com/quintilesims/slackbot/db"
 	"github.com/quintilesims/slackbot/utils"
@@ -173,18 +173,18 @@ func main() {
 
 				app.CommandNotFound = func(c *cli.Context, command string) {
 					text := fmt.Sprintf("Command '%s' does not exist", command)
-					w.Write([]byte(text))
+					w.WriteString(text)
 				}
 
 				app.Commands = []cli.Command{
 					bot.NewEchoCommand(w),
-					bot.NewInterviewCommand(appClient, store, w),
+					bot.NewInterviewCommand(appClient, store, e.User, w),
 					bot.NewPingCommand(w),
 				}
 
 				if err := app.Run(args); err != nil {
 					log.Printf("[ERROR] %v", err)
-					w.Write([]byte(err.Error()))
+					w.WriteString(err.Error())
 				}
 
 				text := w.String()

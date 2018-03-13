@@ -3,7 +3,7 @@ package bot
 import (
 	"testing"
 
-	"github.com/nlopes/slack"
+	"github.com/quintilesims/slack"
 	"github.com/quintilesims/slackbot/db"
 	"github.com/quintilesims/slackbot/models"
 	"github.com/stretchr/testify/assert"
@@ -11,24 +11,23 @@ import (
 
 func TestKarmaTrackingBehavior(t *testing.T) {
 	store := db.NewMemoryStore()
-	karma := models.Karma{
-		"dogs":  5,
-		"cats":  -2,
-		"sleep": 0,
+	karmas := models.Karmas{
+		"dogs": models.Karma{Upvotes: 10, Downvotes: 0},
+		"cats": models.Karma{Upvotes: 0, Downvotes: 10},
 	}
 
-	if err := store.Write(models.StoreKeyKarma, karma); err != nil {
+	if err := store.Write(db.KarmasKey, karmas); err != nil {
 		t.Fatal(err)
 	}
 
 	events := []slack.RTMEvent{
 		newSlackMessageEvent("dogs++"),
-		newSlackMessageEvent("cats--"),
 		newSlackMessageEvent("dogs++"),
-		newSlackMessageEvent("sleep++"),
-		newSlackMessageEvent("tacos++"),
-		newSlackMessageEvent("sunday naps++"),
-		newSlackMessageEvent("blah blah blah"),
+		newSlackMessageEvent("cats--"),
+		newSlackMessageEvent("cats--"),
+		newSlackMessageEvent("new++"),
+		newSlackMessageEvent("new--"),
+		newSlackMessageEvent("blah blah"),
 		{},
 	}
 
@@ -39,17 +38,15 @@ func TestKarmaTrackingBehavior(t *testing.T) {
 		}
 	}
 
-	result := models.Karma{}
-	if err := store.Read(models.StoreKeyKarma, &result); err != nil {
+	result := models.Karmas{}
+	if err := store.Read(db.KarmasKey, &result); err != nil {
 		t.Fatal(err)
 	}
 
-	expected := models.Karma{
-		"dogs":        7,
-		"cats":        -3,
-		"sleep":       1,
-		"tacos":       1,
-		"sunday naps": 1,
+	expected := models.Karmas{
+		"dogs": models.Karma{Upvotes: 12, Downvotes: 0},
+		"cats": models.Karma{Upvotes: 0, Downvotes: 12},
+		"new":  models.Karma{Upvotes: 1, Downvotes: 1},
 	}
 
 	assert.Equal(t, expected, result)
