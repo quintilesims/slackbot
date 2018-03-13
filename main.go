@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/nlopes/slack"
 	"github.com/quintilesims/slackbot/bot"
-	"github.com/quintilesims/slackbot/commands"
 	"github.com/quintilesims/slackbot/db"
 	"github.com/quintilesims/slackbot/utils"
 	"github.com/urfave/cli"
@@ -179,11 +178,8 @@ func main() {
 				}
 
 				app.Commands = []cli.Command{
-					commands.NewEchoCommand(w),
-					//commands.NewGIFCommand(commands.GiphyAPIEndpoint, c.String("giphy-token"), w),
-					commands.NewKarmaCommand(store, w),
-					commands.NewPingCommand(w),
-					//commands.NewUndoCommand(botClient, e.Channel, info.User.Name),
+					bot.NewEchoCommand(w),
+					bot.NewPingCommand(w),
 				}
 
 				if err := app.Run(args); err != nil {
