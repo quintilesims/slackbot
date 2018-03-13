@@ -3,7 +3,6 @@ package db
 import (
 	"testing"
 
-	"github.com/quintilesims/slackbot/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,11 +18,8 @@ func TestInit(t *testing.T) {
 	}
 
 	expected := []string{
-		models.StoreKeyCallbacks,
-		models.StoreKeyChecklists,
-		models.StoreKeyInterviews,
-		models.StoreKeyLocks,
-		models.StoreKeyReminders,
+		InterviewsKey,
+		KarmasKey,
 	}
 
 	assert.ElementsMatch(t, expected, keys)

@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// Interview hold information about an interview
+// Interview models hold information about a single interview instance
 type Interview struct {
 	ManagerID   string
 	ManagerName string
@@ -12,5 +12,5 @@ type Interview struct {
 	Date        time.Time
 }
 
-// Interviews track Interview objects using the interview's ID as the key
+// The Interviews object is used to manage Interview instances in a db.Store
 type Interviews map[string]Interview
