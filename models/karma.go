@@ -2,7 +2,7 @@ package models
 
 // Karma models hold information about a specific karma instance
 type Karma struct {
-	Upvotes int
+	Upvotes   int
 	Downvotes int
 }
 

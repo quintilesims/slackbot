@@ -3,7 +3,7 @@ package bot
 import (
 	"strings"
 
-	"github.com/nlopes/slack"
+	"github.com/quintilesims/slack"
 	"github.com/quintilesims/slackbot/db"
 	"github.com/quintilesims/slackbot/models"
 )
@@ -17,24 +17,24 @@ func NewKarmaTrackingBehavior(store db.Store) Behavior {
 			return nil
 		}
 
-		var update func(i int) int
+		var update func(k models.Karma) models.Karma
 		switch {
 		case strings.HasSuffix(d.Msg.Text, "++"):
-			update = func(i int) int { return i + 1 }
+			update = func(k models.Karma) models.Karma { k.Upvotes += 1; return k }
 		case strings.HasSuffix(d.Msg.Text, "--"):
-			update = func(i int) int { return i - 1 }
+			update = func(k models.Karma) models.Karma { k.Downvotes += 1; return k }
 		default:
 			return nil
 		}
 
-		karma := models.Karma{}
-		if err := store.Read(models.StoreKeyKarma, &karma); err != nil {
+		karmas := models.Karmas{}
+		if err := store.Read(db.KarmasKey, &karmas); err != nil {
 			return err
 		}
 
-		// strip '++' or '--'
+		// strip '++' or '--' from key
 		key := d.Msg.Text[:len(d.Msg.Text)-2]
-		karma[key] = update(karma[key])
-		return store.Write(models.StoreKeyKarma, karma)
+		karmas[key] = update(karmas[key])
+		return store.Write(db.KarmasKey, karmas)
 	}
 }

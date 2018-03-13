@@ -1,7 +1,7 @@
 package bot
 
 import (
-	"github.com/nlopes/slack"
+	"github.com/quintilesims/slack"
 	"github.com/quintilesims/slackbot/utils"
 )
 
