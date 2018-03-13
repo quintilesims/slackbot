@@ -1,4 +1,4 @@
-package behaviors
+package bot
 
 import "github.com/nlopes/slack"
 

@@ -45,12 +45,7 @@ func NewGIFCommand(endpoint, token string, w io.Writer) cli.Command {
 			}
 
 			if len(response.Gifs) == 0 {
-				text := fmt.Sprintf("No gifs matching query '%s'", query.Get("q"))
-				if _, err := w.Write([]byte(text)); err != nil {
-					return err
-				}
-
-				return nil
+				return fmt.Errorf("No gifs matching query '%s'", query.Get("q"))
 			}
 
 			gif := response.Gifs[rand.Intn(len(response.Gifs))]

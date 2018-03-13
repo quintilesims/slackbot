@@ -1,4 +1,4 @@
-package behaviors
+package bot
 
 import (
 	"testing"
