@@ -22,13 +22,13 @@ func TestKarmaTrackingBehavior(t *testing.T) {
 	}
 
 	events := []slack.RTMEvent{
-		newMessageRTMEvent("dogs++"),
-		newMessageRTMEvent("cats--"),
-		newMessageRTMEvent("dogs++"),
-		newMessageRTMEvent("sleep++"),
-		newMessageRTMEvent("tacos++"),
-		newMessageRTMEvent("sunday naps++"),
-		newMessageRTMEvent("blah blah blah"),
+		newSlackMessageEvent("dogs++"),
+		newSlackMessageEvent("cats--"),
+		newSlackMessageEvent("dogs++"),
+		newSlackMessageEvent("sleep++"),
+		newSlackMessageEvent("tacos++"),
+		newSlackMessageEvent("sunday naps++"),
+		newSlackMessageEvent("blah blah blah"),
 		{},
 	}
 
