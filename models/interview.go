@@ -6,7 +6,7 @@ import (
 
 // Interview models hold information about a single interview instance
 type Interview struct {
-	ManagerID   string
+	Manager     User
 	Interviewee string
 	Date        time.Time
 }

@@ -8,6 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	slack "github.com/quintilesims/slack"
 )
 
 // MockSlackClient is a mock of SlackClient interface
@@ -43,4 +44,17 @@ func (m *MockSlackClient) AddReminder(arg0, arg1, arg2, arg3 string) error {
 // AddReminder indicates an expected call of AddReminder
 func (mr *MockSlackClientMockRecorder) AddReminder(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddReminder", reflect.TypeOf((*MockSlackClient)(nil).AddReminder), arg0, arg1, arg2, arg3)
+}
+
+// GetUserInfo mocks base method
+func (m *MockSlackClient) GetUserInfo(arg0 string) (*slack.User, error) {
+	ret := m.ctrl.Call(m, "GetUserInfo", arg0)
+	ret0, _ := ret[0].(*slack.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserInfo indicates an expected call of GetUserInfo
+func (mr *MockSlackClientMockRecorder) GetUserInfo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserInfo", reflect.TypeOf((*MockSlackClient)(nil).GetUserInfo), arg0)
 }
