@@ -178,7 +178,7 @@ func main() {
 
 				app.Commands = []cli.Command{
 					bot.NewEchoCommand(w),
-					bot.NewInterviewCommand(appClient, store, e.User, w),
+					bot.NewInterviewCommand(appClient, store, w),
 					bot.NewPingCommand(w),
 				}
 
