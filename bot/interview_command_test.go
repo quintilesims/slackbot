@@ -2,6 +2,7 @@ package bot
 
 import (
 	"bytes"
+	"io/ioutil"
 	"testing"
 	"time"
 
@@ -51,6 +52,32 @@ func TestInterviewAdd(t *testing.T) {
 	assert.Equal(t, expected, result)
 }
 
+func TestInterviewAddErrors(t *testing.T) {
+	inputs := []string{
+		"!interview add",
+		"!interview add manager",
+		"!interview add <@manager>",
+		"!interview add --date 15/01 <@manager> John",
+		"!interview add --date 3/19 <@manager> John",
+		"!interview add --time 9am <@manager> John",
+		"!interview add --time 9a.m. <@manager> John",
+		"!interview add --time 9:00am <@manager> John",
+		"!interview add --time 09:00 <@manager> John",
+	}
+
+	for _, input := range inputs {
+		t.Run(input, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			cmd := NewInterviewCommand(mock.NewMockSlackClient(ctrl), newMemoryStore(t), ioutil.Discard)
+			if err := runTestApp(cmd, input); err == nil {
+				t.Fatal("Error was nil!")
+			}
+		})
+	}
+}
+
 func TestInterviewList(t *testing.T) {
 	interviews := models.Interviews{
 		{Interviewee: "John Doe"},
@@ -70,6 +97,16 @@ func TestInterviewList(t *testing.T) {
 
 	assert.Contains(t, w.String(), "John Doe")
 	assert.Contains(t, w.String(), "Jane Doe")
+}
+
+func TestInterviewListError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	cmd := NewInterviewCommand(mock.NewMockSlackClient(ctrl), newMemoryStore(t), ioutil.Discard)
+	if err := runTestApp(cmd, "!interview ls"); err == nil {
+		t.Fatal("Error was nil!")
+	}
 }
 
 func TestInterviewRemove(t *testing.T) {
@@ -108,4 +145,25 @@ func TestInterviewRemove(t *testing.T) {
 	}
 
 	assert.Equal(t, expected, result)
+}
+
+func TestInterviewRemoveErrors(t *testing.T) {
+	inputs := []string{
+		"!interview rm",
+		"!interview rm John",
+		"!interview rm John 15/01",
+		"!interview rm John 3/19",
+	}
+
+	for _, input := range inputs {
+		t.Run(input, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			cmd := NewInterviewCommand(mock.NewMockSlackClient(ctrl), newMemoryStore(t), ioutil.Discard)
+			if err := runTestApp(cmd, input); err == nil {
+				t.Fatal("Error was nil!")
+			}
+		})
+	}
 }
