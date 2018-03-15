@@ -187,6 +187,7 @@ func main() {
 
 				app.Commands = []cli.Command{
 					bot.NewEchoCommand(w),
+					bot.NewGIFCommand(bot.GiphyAPIEndpoint, c.String("giphy-token"), w),
 					bot.NewInterviewCommand(appClient, store, w),
 					bot.NewKarmaCommand(store, w),
 					bot.NewPingCommand(w),

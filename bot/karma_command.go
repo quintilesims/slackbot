@@ -58,22 +58,6 @@ func NewKarmaCommand(store db.Store, w io.Writer) cli.Command {
 				}
 			}
 
-			// returns keys in order of greatest tfo least
-
-			/*
-				upvotes := karmas[key].Upvotes
-				downvotes := karmas[key].Downvotes
-				text := fmt.Sprintf("karma for '%s': %d (upvotes: %d, downvotes: %d)",
-					key,
-					upvotes-downvotes,
-					upvotes,
-					downvotes)
-
-				if _, err := w.Write([]byte(text)); err != nil {
-					return err
-				}
-			*/
-
 			return nil
 		},
 	}
