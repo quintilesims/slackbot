@@ -15,6 +15,7 @@ import (
 	"github.com/quintilesims/slack"
 	"github.com/quintilesims/slackbot/bot"
 	"github.com/quintilesims/slackbot/db"
+	"github.com/quintilesims/slackbot/runner"
 	"github.com/quintilesims/slackbot/utils"
 	"github.com/urfave/cli"
 )
@@ -137,6 +138,10 @@ func main() {
 		behaviors := bot.Behaviors{
 			bot.NewKarmaTrackingBehavior(store),
 		}
+
+		runner := runner.NewInterviewCleanupRunner(store)
+		ticker := runner.RunEvery(time.Hour * 24)
+		defer ticker.Stop()
 
 		// initiate the RTM websocket connection
 		rtm := botClient.NewRTM()
