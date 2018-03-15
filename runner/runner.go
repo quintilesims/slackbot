@@ -21,6 +21,8 @@ func NewRunner(name string, run func() error) *Runner {
 
 // Run executes the runner's function
 func (r *Runner) Run() error {
+	log.Printf("[INFO] [%s] Starting run", r.Name)
+	defer log.Printf("[INFO] [%s] Run complete", r.Name)
 	return r.run()
 }
 
@@ -28,13 +30,10 @@ func (r *Runner) Run() error {
 func (r *Runner) RunEvery(d time.Duration) *time.Ticker {
 	ticker := time.NewTicker(d)
 	go func() {
-		for ; true; <-ticker.C {
-			log.Printf("[INFO] [%s] Starting run", r.Name)
+		for range ticker.C {
 			if err := r.Run(); err != nil {
 				log.Printf("[ERROR] [%s] %v", r.Name, err)
 			}
-
-			log.Printf("[INFO] [%s] Run complete", r.Name)
 		}
 	}()
 

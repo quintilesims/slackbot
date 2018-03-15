@@ -140,6 +140,10 @@ func main() {
 		}
 
 		runner := runner.NewInterviewCleanupRunner(store)
+		if err := runner.Run(); err != nil {
+			return err
+		}
+
 		ticker := runner.RunEvery(time.Hour * 24)
 		defer ticker.Stop()
 
@@ -184,6 +188,7 @@ func main() {
 				app.Commands = []cli.Command{
 					bot.NewEchoCommand(w),
 					bot.NewInterviewCommand(appClient, store, w),
+					bot.NewKarmaCommand(store, w),
 					bot.NewPingCommand(w),
 				}
 
