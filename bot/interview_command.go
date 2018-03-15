@@ -69,15 +69,15 @@ func newInterviewAddAction(client slack.SlackClient, store db.Store, w io.Writer
 			interviewee = strings.Join(args[1:], " ")
 		}
 
-		manager, err := parseSlackUser(client, escapedManager)
-		if err != nil {
-			return fmt.Errorf("Invalid argument for @MANAGER: %v", err)
-		}
-
 		dateTimeInput := strings.ToUpper(c.String("date") + c.String("time"))
 		date, err := time.ParseInLocation(DateTimeLayout, dateTimeInput, time.Local)
 		if err != nil {
 			return err
+		}
+
+		manager, err := parseSlackUser(client, escapedManager)
+		if err != nil {
+			return fmt.Errorf("Invalid argument for @MANAGER: %v", err)
 		}
 
 		interview := models.Interview{
