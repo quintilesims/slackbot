@@ -27,6 +27,9 @@ func TestGlossaryDefine(t *testing.T) {
 		if err := runTestApp(cmd, input); err != nil {
 			t.Fatal(err)
 		}
+
+		assert.Contains(t, w.String(), key)
+		assert.Contains(t, w.String(), val)
 	}
 
 	result := models.Glossary{}
@@ -80,6 +83,8 @@ func TestGlossaryRemove(t *testing.T) {
 		if err := runTestApp(cmd, input); err != nil {
 			t.Fatal(err)
 		}
+
+		assert.Contains(t, w.String(), key)
 	}
 
 	result := models.Glossary{}
@@ -119,13 +124,14 @@ func TestGlossarySearch(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cases := map[string][]string{
-		"*":   []string{"foo", "bar", "baz"},
-		"foo": []string{"foo"},
-		"*a*": []string{"bar", "baz"},
+	cases := map[string]models.Glossary{
+		"*":   {"foo": "bar", "bar": "baz", "baz": "foo"},
+		"b*":  {"bar": "baz", "baz": "foo"},
+		"*a*": {"bar": "baz", "baz": "foo"},
+		"foo": {"foo": "bar"},
 	}
 
-	for glob, expectedDefinitions := range cases {
+	for glob, expected := range cases {
 		t.Run(glob, func(t *testing.T) {
 			w := bytes.NewBuffer(nil)
 			cmd := NewGlossaryCommand(store, w)
@@ -134,8 +140,9 @@ func TestGlossarySearch(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			for _, expected := range expectedDefinitions {
-				assert.Contains(t, w.String(), expected)
+			for key, val := range expected {
+				assert.Contains(t, w.String(), key)
+				assert.Contains(t, w.String(), val)
 			}
 		})
 	}
