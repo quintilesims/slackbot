@@ -20,7 +20,7 @@ func NewKarmaCommand(store db.Store, w io.Writer) cli.Command {
 			cli.IntFlag{
 				Name:  "count",
 				Value: 1,
-				Usage: "The number of entries to display",
+				Usage: "The maximum number of entries to display",
 			},
 			cli.BoolFlag{
 				Name:  "ascending",
