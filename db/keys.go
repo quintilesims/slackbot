@@ -4,4 +4,5 @@ package db
 const (
 	InterviewsKey = "interviews"
 	KarmasKey     = "karmas"
+	TriviaKey     = "trivia"
 )
