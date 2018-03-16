@@ -14,7 +14,7 @@ import (
 func TestGlossaryDefine(t *testing.T) {
 	inputs := map[string]string{
 		"foo": "bar",
-		"bar": "baz",
+		"bar": "baz is multiple words",
 		"baz": "foo",
 	}
 
@@ -39,7 +39,7 @@ func TestGlossaryDefine(t *testing.T) {
 
 	expected := models.Glossary{
 		"foo": "bar",
-		"bar": "baz",
+		"bar": "baz is multiple words",
 		"baz": "foo",
 	}
 
@@ -136,7 +136,7 @@ func TestGlossarySearch(t *testing.T) {
 			w := bytes.NewBuffer(nil)
 			cmd := NewGlossaryCommand(store, w)
 			input := fmt.Sprintf("!glossary search %s", glob)
-			
+
 			if err := runTestApp(cmd, input); err != nil {
 				t.Fatal(err)
 			}
