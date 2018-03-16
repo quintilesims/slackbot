@@ -11,6 +11,7 @@ import (
 	"github.com/zpatrick/rclient"
 )
 
+// Endpoint for the gif api
 const GiphyAPIEndpoint = "https://api.giphy.com"
 
 // GiphySearchResponse is the response type for a Giphy API search
