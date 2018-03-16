@@ -136,6 +136,7 @@ func TestGlossarySearch(t *testing.T) {
 			w := bytes.NewBuffer(nil)
 			cmd := NewGlossaryCommand(store, w)
 			input := fmt.Sprintf("!glossary search %s", glob)
+			
 			if err := runTestApp(cmd, input); err != nil {
 				t.Fatal(err)
 			}

@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-// NewGlossaryCommand returns a cli.Command that manages !karma
+// NewGlossaryCommand returns a cli.Command that manages !glossary
 func NewGlossaryCommand(store db.Store, w io.Writer) cli.Command {
 	return cli.Command{
 		Name:  "!glossary",
