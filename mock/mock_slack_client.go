@@ -46,6 +46,59 @@ func (mr *MockSlackClientMockRecorder) AddReminder(arg0, arg1, arg2, arg3 interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddReminder", reflect.TypeOf((*MockSlackClient)(nil).AddReminder), arg0, arg1, arg2, arg3)
 }
 
+// DeleteMessage mocks base method
+func (m *MockSlackClient) DeleteMessage(arg0, arg1 string) (string, string, error) {
+	ret := m.ctrl.Call(m, "DeleteMessage", arg0, arg1)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// DeleteMessage indicates an expected call of DeleteMessage
+func (mr *MockSlackClientMockRecorder) DeleteMessage(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteMessage", reflect.TypeOf((*MockSlackClient)(nil).DeleteMessage), arg0, arg1)
+}
+
+// GetChannelHistory mocks base method
+func (m *MockSlackClient) GetChannelHistory(arg0 string, arg1 slack.HistoryParameters) (*slack.History, error) {
+	ret := m.ctrl.Call(m, "GetChannelHistory", arg0, arg1)
+	ret0, _ := ret[0].(*slack.History)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetChannelHistory indicates an expected call of GetChannelHistory
+func (mr *MockSlackClientMockRecorder) GetChannelHistory(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChannelHistory", reflect.TypeOf((*MockSlackClient)(nil).GetChannelHistory), arg0, arg1)
+}
+
+// GetGroupHistory mocks base method
+func (m *MockSlackClient) GetGroupHistory(arg0 string, arg1 slack.HistoryParameters) (*slack.History, error) {
+	ret := m.ctrl.Call(m, "GetGroupHistory", arg0, arg1)
+	ret0, _ := ret[0].(*slack.History)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetGroupHistory indicates an expected call of GetGroupHistory
+func (mr *MockSlackClientMockRecorder) GetGroupHistory(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGroupHistory", reflect.TypeOf((*MockSlackClient)(nil).GetGroupHistory), arg0, arg1)
+}
+
+// GetIMHistory mocks base method
+func (m *MockSlackClient) GetIMHistory(arg0 string, arg1 slack.HistoryParameters) (*slack.History, error) {
+	ret := m.ctrl.Call(m, "GetIMHistory", arg0, arg1)
+	ret0, _ := ret[0].(*slack.History)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetIMHistory indicates an expected call of GetIMHistory
+func (mr *MockSlackClientMockRecorder) GetIMHistory(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIMHistory", reflect.TypeOf((*MockSlackClient)(nil).GetIMHistory), arg0, arg1)
+}
+
 // GetUserInfo mocks base method
 func (m *MockSlackClient) GetUserInfo(arg0 string) (*slack.User, error) {
 	ret := m.ctrl.Call(m, "GetUserInfo", arg0)

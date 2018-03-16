@@ -191,6 +191,7 @@ func main() {
 					bot.NewInterviewCommand(appClient, store, w),
 					bot.NewKarmaCommand(store, w),
 					bot.NewPingCommand(w),
+					bot.NewUndoCommand(appClient, botClient, e.Channel, rtm.GetInfo().User.ID),
 				}
 
 				if err := app.Run(args); err != nil {

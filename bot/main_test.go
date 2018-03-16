@@ -51,3 +51,13 @@ func newSlackMessageEvent(format string, tokens ...interface{}) slack.RTMEvent {
 		},
 	}
 }
+
+func newSlackMessage(user, timestamp, format string, tokens ...interface{}) slack.Message {
+	return slack.Message{
+		Msg: slack.Msg{
+			User:      user,
+			Timestamp: timestamp,
+			Text:      fmt.Sprintf(format, tokens...),
+		},
+	}
+}
