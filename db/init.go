@@ -16,6 +16,10 @@ func Init(store Store) error {
 		return nil
 	}
 
+	if err := initFunc(AliasesKey, models.Aliases{}); err != nil {
+		return err
+	}
+
 	if err := initFunc(InterviewsKey, models.Interviews{}); err != nil {
 		return err
 	}
