@@ -23,8 +23,8 @@ func TestKarma(t *testing.T) {
 	}
 
 	cases := map[string][]string{
-		"!karma *":                         []string{"dogs"},
-		"!karma --ascending *":             []string{"cats"},
+		"!karma --count 1 *":               []string{"dogs"},
+		"!karma --count 1 --ascending *":   []string{"cats"},
 		"!karma --count 3 *":               []string{"dogs", "people", "cats"},
 		"!karma --count 100 *":             []string{"dogs", "people", "cats"},
 		"!karma --count 3 --ascending *":   []string{"cats", "people", "dogs"},

@@ -5,4 +5,5 @@ const (
 	GlossaryKey   = "glossary"
 	InterviewsKey = "interviews"
 	KarmasKey     = "karmas"
+	TriviaKey     = "trivia"
 )

@@ -38,12 +38,14 @@ data "template_file" "deploy" {
   template = "${file("${path.module}/Dockerrun.aws.json")}"
 
   vars {
-    docker_image   = "${var.docker_image}"
-    slack_token    = "${var.slack_token}"
-    aws_access_key = "${aws_iam_access_key.mod.id}"
-    aws_secret_key = "${aws_iam_access_key.mod.secret}"
-    aws_region     = "${data.aws_region.current.name}"
-    dynamodb_table = "${aws_dynamodb_table.mod.name}"
+    docker_image    = "${var.docker_image}"
+    slack_bot_token = "${var.slack_bot_token}"
+    slack_app_token = "${var.slack_app_token}"
+    giphy_token     = "${var.giphy_token}"
+    aws_access_key  = "${aws_iam_access_key.mod.id}"
+    aws_secret_key  = "${aws_iam_access_key.mod.secret}"
+    aws_region      = "${data.aws_region.current.name}"
+    dynamodb_table  = "${aws_dynamodb_table.mod.name}"
   }
 }
 

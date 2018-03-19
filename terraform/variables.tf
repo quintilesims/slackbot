@@ -23,8 +23,16 @@ variable "docker_image" {
   default     = "quintilesims/slackbot:latest"
 }
 
-variable "slack_token" {
+variable "slack_bot_token" {
   description = "Authentication token for the Slack bot"
+}
+
+variable "slack_app_token" {
+  description = "Authentication token for the Slack app"
+}
+
+variable "giphy_token" {
+  description = "Authentication token for Giphy"
 }
 
 variable "deploy_name" {

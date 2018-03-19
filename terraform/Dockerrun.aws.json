@@ -12,9 +12,17 @@
                     "value": "true"
                 },
                 {
-                    "name": "SB_SLACK_TOKEN",
-                    "value": "${slack_token}"
+                    "name": "SB_SLACK_BOT_TOKEN",
+                    "value": "${slack_bot_token}"
                 },   
+                {
+                    "name": "SB_SLACK_APP_TOKEN",
+                    "value": "${slack_app_token}"
+                },
+                {
+                    "name": "SB_GIPHY_TOKEN",
+                    "value": "${giphy_token}"
+                },
                 {
                     "name": "SB_AWS_ACCESS_KEY",
                     "value": "${aws_access_key}"
