@@ -29,11 +29,11 @@ func TestAliasBehavior(t *testing.T) {
 			Assert: func(t *testing.T, e slack.RTMEvent) {},
 		},
 		"No matching patterns": {
-                        Event:  newSlackMessageEvent("blah blah blah"),
-                        Assert: func(t *testing.T, e slack.RTMEvent) {
-				 assert.Equal(t, "blah blah blah", e.Data.(*slack.MessageEvent).Text)
+			Event: newSlackMessageEvent("blah blah blah"),
+			Assert: func(t *testing.T, e slack.RTMEvent) {
+				assert.Equal(t, "blah blah blah", e.Data.(*slack.MessageEvent).Text)
 			},
-                },
+		},
 		"!x": {
 			Event: newSlackMessageEvent("!x"),
 			Assert: func(t *testing.T, e slack.RTMEvent) {
