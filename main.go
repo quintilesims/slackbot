@@ -187,11 +187,11 @@ func main() {
 				}
 
 				app.Commands = []cli.Command{
+					bot.NewAliasCommand(store, w),
 					bot.NewEchoCommand(w),
 					bot.NewGIFCommand(bot.GiphyAPIEndpoint, c.String("giphy-token"), w),
 					bot.NewInterviewCommand(appClient, store, w),
 					bot.NewKarmaCommand(store, w),
-					bot.NewPingCommand(w),
 					bot.NewTriviaCommand(store, bot.TriviaAPIEndpoint, w),
 					bot.NewUndoCommand(appClient, botClient, e.Channel, rtm.GetInfo().User.ID),
 				}
