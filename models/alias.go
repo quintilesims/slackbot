@@ -9,14 +9,15 @@ import (
 	glob "github.com/ryanuber/go-glob"
 )
 
-// Transformer models hold information about a specific transformation
-type Transformer struct {
+// Alias models hold information about a specific alias
+type Alias struct {
 	Pattern  string
 	Template string
 }
 
-func (t Transformer) Apply(m *slack.Message) error {
-	if !glob.Glob(t.Pattern, m.Text) {
+// Apply will update the MessageEvent's text if it matches the Alias's pattern
+func (a Alias) Apply(m *slack.MessageEvent) error {
+	if !glob.Glob(a.Pattern, m.Text) {
 		return nil
 	}
 
@@ -26,7 +27,7 @@ func (t Transformer) Apply(m *slack.Message) error {
 		},
 	}
 
-	tmpl, err := template.New("").Funcs(funcMap).Parse(t.Template)
+	tmpl, err := template.New("").Funcs(funcMap).Parse(a.Template)
 	if err != nil {
 		return err
 	}
@@ -40,5 +41,5 @@ func (t Transformer) Apply(m *slack.Message) error {
 	return nil
 }
 
-// The Transformers object is used to manage Transformer instances in a db.Store
-type Transformers map[string]Transformer
+// The Aliases object is used to manage Alias instances in a db.Store
+type Aliases map[string]Alias

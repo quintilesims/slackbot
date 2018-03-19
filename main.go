@@ -136,6 +136,7 @@ func main() {
 
 	slackbot.Action = func(c *cli.Context) error {
 		behaviors := bot.Behaviors{
+			bot.NewAliasBehavior(store).Behavior(),
 			bot.NewKarmaTrackingBehavior(store),
 		}
 

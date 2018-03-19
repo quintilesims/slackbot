@@ -6,8 +6,8 @@ import (
 	"github.com/quintilesims/slack"
 )
 
-func newSlackMessage(user, format string, tokens ...interface{}) *slack.Message {
-	return &slack.Message{
+func newSlackMessageEvent(user, format string, tokens ...interface{}) *slack.MessageEvent {
+	return &slack.MessageEvent{
 		Msg: slack.Msg{
 			User: user,
 			Text: fmt.Sprintf(format, tokens...),
