@@ -3,7 +3,9 @@ package bot
 import (
 	"fmt"
 	"io"
+	"strings"
 
+	"github.com/quintilesims/slack"
 	"github.com/quintilesims/slackbot/db"
 	"github.com/quintilesims/slackbot/models"
 	"github.com/urfave/cli"
@@ -37,8 +39,20 @@ func NewAliasCommand(store db.Store, w io.Writer, invalidate func()) cli.Command
 			{
 				Name:      "test",
 				Usage:     "test an alias",
-				ArgsUsage: "NAME TEXT",
-				Action:    newAliasTestAction(store, w),
+				ArgsUsage: "TEXT",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "channel",
+						Value: "channel_id",
+						Usage: "the channel id to use for the test message",
+					},
+					cli.StringFlag{
+						Name:  "user",
+						Value: "user_id",
+						Usage: "the user id to use for the test message",
+					},
+				},
+				Action: newAliasTestAction(store, w),
 			},
 		},
 	}
@@ -52,7 +66,11 @@ func newAliasAddAction(store db.Store, w io.Writer, invalidate func()) func(c *c
 			return fmt.Errorf("NAME is required")
 		}
 
-		value := args.Get(1)
+		if strings.Contains(name, " ") {
+			return fmt.Errorf("Alias names may not contain whitespace")
+		}
+
+		value := strings.Join(args[1:], " ")
 		if value == "" {
 			return fmt.Errorf("VALUE is required")
 		}
@@ -109,9 +127,32 @@ func newAliasListAction(store db.Store, w io.Writer) func(c *cli.Context) error 
 
 func newAliasRemoveAction(store db.Store, w io.Writer, invalidate func()) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
+		name := c.Args().Get(0)
+		if name == "" {
+			return fmt.Errorf("NAME is required")
+		}
+
+		aliases := models.Aliases{}
+		if err := store.Read(db.AliasesKey, &aliases); err != nil {
+			return err
+		}
+
+		if _, ok := aliases[name]; !ok {
+			return fmt.Errorf("No aliases for *%s* exist", name)
+		}
+
+		delete(aliases, name)
+		if err := store.Write(db.AliasesKey, aliases); err != nil {
+			return err
+		}
 
 		// make sure we tell the alias behavior cache to invalidate
 		invalidate()
+
+		text := fmt.Sprintf("Ok, I've removed alias *%s*", name)
+		if _, err := w.Write([]byte(text)); err != nil {
+			return err
+		}
 
 		return nil
 	}
@@ -119,6 +160,32 @@ func newAliasRemoveAction(store db.Store, w io.Writer, invalidate func()) func(c
 
 func newAliasTestAction(store db.Store, w io.Writer) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
+		text := strings.Join(c.Args(), " ")
+		if text == "" {
+			return fmt.Errorf("TEXT is required")
+		}
+
+		aliases := models.Aliases{}
+		if err := store.Read(db.AliasesKey, &aliases); err != nil {
+			return err
+		}
+
+		m := &slack.MessageEvent{
+			Msg: slack.Msg{
+				Channel: c.String("channel"),
+				User:    c.String("user"),
+				Text:    text,
+			},
+		}
+
+		if err := aliases.Apply(m); err != nil {
+			return err
+		}
+
+		if _, err := w.Write([]byte(m.Text)); err != nil {
+			return err
+		}
+
 		return nil
 	}
 }

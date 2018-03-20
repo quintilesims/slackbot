@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"html"
 	"strings"
 )
 
@@ -9,6 +10,9 @@ import (
 // Anything wrapped in quotation marks will be treated as a single argument.
 // If there is an odd number of quotation marks, an error will be returned.
 func ParseShell(input string) ([]string, error) {
+	// unescape html
+	input = html.UnescapeString(input)
+
 	// normalize quotation marks
 	r := strings.NewReplacer("‘", "'", "’", "'", "“", "\"", "”", "\"")
 	input = r.Replace(input)
