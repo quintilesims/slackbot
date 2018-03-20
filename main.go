@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"html"
 	"log"
 	"math/rand"
 	"os"
@@ -135,8 +136,9 @@ func main() {
 	}
 
 	slackbot.Action = func(c *cli.Context) error {
+		aliasBehavior := bot.NewAliasBehavior(store)
 		behaviors := bot.Behaviors{
-			bot.NewAliasBehavior(store).Behavior(),
+			aliasBehavior.Behavior(),
 			bot.NewKarmaTrackingBehavior(store),
 		}
 
@@ -187,7 +189,7 @@ func main() {
 				}
 
 				app.Commands = []cli.Command{
-					bot.NewAliasCommand(store, w),
+					bot.NewAliasCommand(store, w, aliasBehavior.Invalidate),
 					bot.NewEchoCommand(w),
 					bot.NewGIFCommand(bot.GiphyAPIEndpoint, c.String("giphy-token"), w),
 					bot.NewInterviewCommand(appClient, store, w),
@@ -206,7 +208,7 @@ func main() {
 					text = fmt.Sprintf("```%s```", text)
 				}
 
-				msg := rtm.NewOutgoingMessage(text, e.Channel)
+				msg := rtm.NewOutgoingMessage(html.UnescapeString(text), e.Channel)
 				rtm.SendMessage(msg)
 			case *slack.InvalidAuthEvent:
 				return fmt.Errorf("The bot's auth token is invalid")

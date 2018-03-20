@@ -1,8 +1,6 @@
 package bot
 
 import (
-	"fmt"
-
 	"github.com/quintilesims/slack"
 	"github.com/quintilesims/slackbot/db"
 	"github.com/quintilesims/slackbot/models"
@@ -25,7 +23,7 @@ func NewAliasBehavior(store db.Store) *AliasBehavior {
 
 // Behavior will return the AliasBehavior's Behavior function.
 // This function will apply alias transformations to slack message events.
-// Transformations are loaded from the AliasBehavior's store, and then cached for performance.
+// Aliases are loaded from the AliasBehavior's store, and then cached for performance.
 // The Invalidate() function should be called to invalid the AliasBehavior's cache.
 func (a *AliasBehavior) Behavior() Behavior {
 	return func(e slack.RTMEvent) error {
@@ -39,13 +37,7 @@ func (a *AliasBehavior) Behavior() Behavior {
 			return err
 		}
 
-		for name, alias := range aliases {
-			if err := alias.Apply(m); err != nil {
-				return fmt.Errorf("Alias %s encountered an error: %v", name, err)
-			}
-		}
-
-		return nil
+		return aliases.Apply(m)
 	}
 }
 
@@ -55,13 +47,8 @@ func (a *AliasBehavior) Invalidate() {
 }
 
 func (a *AliasBehavior) load() (models.Aliases, error) {
-	if len(a.cache.Keys()) > 0 {
-		aliases := models.Aliases{}
-		for k, v := range a.cache.Items() {
-			aliases[k] = v.(models.Alias)
-		}
-
-		return aliases, nil
+	if v, ok := a.cache.Getf("key"); ok {
+		return v.(models.Aliases), nil
 	}
 
 	aliases := models.Aliases{}
@@ -69,10 +56,6 @@ func (a *AliasBehavior) load() (models.Aliases, error) {
 		return nil, err
 	}
 
-	a.cache.Clear()
-	for k, v := range aliases {
-		a.cache.Add(k, v)
-	}
-
+	a.cache.Set("key", aliases)
 	return aliases, nil
 }

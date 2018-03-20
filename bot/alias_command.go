@@ -3,7 +3,6 @@ package bot
 import (
 	"fmt"
 	"io"
-	"sort"
 
 	"github.com/quintilesims/slackbot/db"
 	"github.com/quintilesims/slackbot/models"
@@ -11,7 +10,7 @@ import (
 )
 
 // NewAliasCommand returns a cli.Command that manages !alias
-func NewAliasCommand(store db.Store, w io.Writer) cli.Command {
+func NewAliasCommand(store db.Store, w io.Writer, invalidate func()) cli.Command {
 	return cli.Command{
 		Name:  "!alias",
 		Usage: "manage aliases",
@@ -20,8 +19,8 @@ func NewAliasCommand(store db.Store, w io.Writer) cli.Command {
 				Name:  "add",
 				Usage: "add a new alias",
 				// todo: give better help text
-				ArgsUsage: "NAME `PATTERN` `TEMPLATE`",
-				Action:    newAliasAddAction(store, w),
+				ArgsUsage: "NAME VALUE",
+				Action:    newAliasAddAction(store, w, invalidate),
 			},
 			{
 				Name:      "ls",
@@ -33,7 +32,7 @@ func NewAliasCommand(store db.Store, w io.Writer) cli.Command {
 				Name:      "rm",
 				Usage:     "remove an alias",
 				ArgsUsage: "NAME",
-				Action:    newAliasRemoveAction(store, w),
+				Action:    newAliasRemoveAction(store, w, invalidate),
 			},
 			{
 				Name:      "test",
@@ -45,7 +44,7 @@ func NewAliasCommand(store db.Store, w io.Writer) cli.Command {
 	}
 }
 
-func newAliasAddAction(store db.Store, w io.Writer) func(c *cli.Context) error {
+func newAliasAddAction(store db.Store, w io.Writer, invalidate func()) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
 		args := c.Args()
 		name := args.Get(0)
@@ -53,14 +52,9 @@ func newAliasAddAction(store db.Store, w io.Writer) func(c *cli.Context) error {
 			return fmt.Errorf("NAME is required")
 		}
 
-		pattern := args.Get(1)
-		if pattern == "" {
-			return fmt.Errorf("PATTERN is required")
-		}
-
-		template := args.Get(2)
-		if template == "" {
-			return fmt.Errorf("TEMPLATE is required")
+		value := args.Get(1)
+		if value == "" {
+			return fmt.Errorf("VALUE is required")
 		}
 
 		aliases := models.Aliases{}
@@ -68,16 +62,19 @@ func newAliasAddAction(store db.Store, w io.Writer) func(c *cli.Context) error {
 			return err
 		}
 
-		aliases[name] = models.Alias{
-			Pattern:  pattern,
-			Template: template,
+		if _, ok := aliases[name]; ok {
+			return fmt.Errorf("An alias for *%s* already exists", name)
 		}
 
+		aliases[name] = value
 		if err := store.Write(db.AliasesKey, aliases); err != nil {
 			return err
 		}
 
-		text := fmt.Sprintf("Ok, I've added a new alias named *%s*", name)
+		// make sure we tell the alias behavior cache to invalidate
+		invalidate()
+
+		text := fmt.Sprintf("Ok, I've added a new alias for *%s*", name)
 		if _, err := w.Write([]byte(text)); err != nil {
 			return err
 		}
@@ -86,7 +83,6 @@ func newAliasAddAction(store db.Store, w io.Writer) func(c *cli.Context) error {
 	}
 }
 
-// todo: !alias show NAME that shows the pattern and template
 func newAliasListAction(store db.Store, w io.Writer) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
 		aliases := models.Aliases{}
@@ -98,21 +94,9 @@ func newAliasListAction(store db.Store, w io.Writer) func(c *cli.Context) error 
 			return fmt.Errorf("I don't have any aliases at the moment")
 		}
 
-		names := make([]string, 0, len(aliases))
-		for name := range aliases {
-			names = append(names, name)
-		}
-
-		sort.Sort(sort.StringSlice(names))
-
-		text := "Here are the aliases I have: "
-		for i, name := range names {
-			if i == len(names)-1 {
-				text += fmt.Sprintf("and *%s*", name)
-				break
-			}
-
-			text += fmt.Sprintf("*%s*, ", name)
+		text := "Here are the aliases I have: \n"
+		for name, value := range aliases {
+			text += fmt.Sprintf("*%s*: `%s`\n", name, value)
 		}
 
 		if _, err := w.Write([]byte(text)); err != nil {
@@ -123,8 +107,12 @@ func newAliasListAction(store db.Store, w io.Writer) func(c *cli.Context) error 
 	}
 }
 
-func newAliasRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) error {
+func newAliasRemoveAction(store db.Store, w io.Writer, invalidate func()) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
+
+		// make sure we tell the alias behavior cache to invalidate
+		invalidate()
+
 		return nil
 	}
 }

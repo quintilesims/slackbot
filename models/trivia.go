@@ -3,7 +3,6 @@ package models
 import (
 	"fmt"
 	"sort"
-	"strings"
 )
 
 // Trivia models hold information about a specific trivia question
@@ -29,7 +28,5 @@ func (t TriviaQuestion) String() string {
 		text += fmt.Sprintf("*%s*, ", answer)
 	}
 
-	// todo: use decoder
-	r := strings.NewReplacer("&#039;", "'", "&quot;", "\"")
-	return r.Replace(text)
+	return text
 }

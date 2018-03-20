@@ -6,40 +6,53 @@ import (
 	"strings"
 
 	"github.com/quintilesims/slack"
-	glob "github.com/ryanuber/go-glob"
+	"github.com/quintilesims/slackbot/utils"
 )
 
-// Alias models hold information about a specific alias
-type Alias struct {
-	Pattern  string
-	Template string
+// AliasContext objects are passed into an alias's value template when the alias is executed
+type AliasContext struct {
+	ChannelID  string
+	UserID     string
+	Args       []string
+	ArgsString string
 }
 
+// The Aliases object is used to manage aliases in a db.Store
+type Aliases map[string]string
+
 // Apply will update the MessageEvent's text if it matches the Alias's pattern
-func (a Alias) Apply(m *slack.MessageEvent) error {
-	if !glob.Glob(a.Pattern, m.Text) {
-		return nil
-	}
-
-	funcMap := template.FuncMap{
-		"replace": func(input, from, to string) string {
-			return strings.Replace(input, from, to, -1)
-		},
-	}
-
-	tmpl, err := template.New("").Funcs(funcMap).Parse(a.Template)
+func (a Aliases) Apply(m *slack.MessageEvent) error {
+	args, err := utils.ParseShell(m.Text)
 	if err != nil {
 		return err
 	}
 
+	if len(args) == 0 {
+		return nil
+	}
+
+	value, ok := a[args[0]]
+	if !ok {
+		return nil
+	}
+
+	t, err := template.New("").Parse(value)
+	if err != nil {
+		return err
+	}
+
+	context := AliasContext{
+		ChannelID:  m.Channel,
+		UserID:     m.User,
+		Args:       args[1:],
+		ArgsString: strings.Join(args[1:], " "),
+	}
+
 	b := bytes.NewBuffer(nil)
-	if err := tmpl.Execute(b, m); err != nil {
+	if err := t.Execute(b, context); err != nil {
 		return nil
 	}
 
 	m.Text = b.String()
 	return nil
 }
-
-// The Aliases object is used to manage Alias instances in a db.Store
-type Aliases map[string]Alias

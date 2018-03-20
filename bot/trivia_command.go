@@ -2,6 +2,7 @@ package bot
 
 import (
 	"fmt"
+	"html"
 	"io"
 	"net/url"
 	"strings"
@@ -107,10 +108,16 @@ func newTriviaStartAction(client *rclient.RestClient, store db.Store, w io.Write
 			return fmt.Errorf("No trivia questions returned by the api!")
 		}
 
+		q := response.Questions[0]
+		incorrectAnswers := make([]string, len(q.IncorrectAnswers))
+		for i, incorrectAnswer := range q.IncorrectAnswers {
+			incorrectAnswers[i] = html.UnescapeString(incorrectAnswer)
+		}
+
 		question := models.TriviaQuestion{
-			Question:         response.Questions[0].Question,
-			CorrectAnswer:    response.Questions[0].CorrectAnswer,
-			IncorrectAnswers: response.Questions[0].IncorrectAnswers,
+			Question:         html.UnescapeString(q.Question),
+			CorrectAnswer:    html.UnescapeString(q.CorrectAnswer),
+			IncorrectAnswers: incorrectAnswers,
 		}
 
 		if err := store.Write(db.TriviaKey, question); err != nil {

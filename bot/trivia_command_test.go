@@ -77,10 +77,11 @@ func TestTriviaNew(t *testing.T) {
 		assert.Equal(t, "1", query.Get("amount"))
 		assert.Equal(t, "hard", query.Get("difficulty"))
 
+		// opentdb send escaped html
 		response := TriviaResponse{
 			Questions: []TriviaQuestion{
 				{
-					Question:         "Which is the greatest band of all time?",
+					Question:         "Which is the world&#39;s &quot;greatest&quot; band of all time?",
 					CorrectAnswer:    "Hoobastank",
 					IncorrectAnswers: []string{"Smashmouth", "Matchbox Twenty", "My Chemical Romance"},
 				},
@@ -106,7 +107,7 @@ func TestTriviaNew(t *testing.T) {
 	}
 
 	expected := models.TriviaQuestion{
-		Question:         "Which is the greatest band of all time?",
+		Question:         "Which is the world's \"greatest\" band of all time?",
 		CorrectAnswer:    "Hoobastank",
 		IncorrectAnswers: []string{"Smashmouth", "Matchbox Twenty", "My Chemical Romance"},
 	}
