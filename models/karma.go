@@ -23,14 +23,14 @@ func (k Karma) String() string {
 type Karmas map[string]Karma
 
 // SortKeys will return a slice of ordered keys.
-// If descending is true, keys with the highest karma are returned first.
-// If descending is false, keys with the lowest karma are returned first.
-func (k Karmas) SortKeys(descending bool) []string {
+// If ascending is true, keys with the lowest karma are returned first.
+// If ascending is false, keys with the highest karma are returned first.
+func (k Karmas) SortKeys(ascending bool) []string {
 	sorter := newKarmaSorter(k)
-	if descending {
-		sort.Sort(sort.Reverse(sorter))
-	} else {
+	if ascending {
 		sort.Sort(sorter)
+	} else {
+		sort.Sort(sort.Reverse(sorter))
 	}
 
 	return sorter.keys
@@ -53,14 +53,17 @@ func newKarmaSorter(karmas Karmas) *karmaSorter {
 	}
 }
 
+// Len is a method to satisfy sort.Interface
 func (k *karmaSorter) Len() int {
 	return len(k.keys)
 }
 
+// Swap is a method to satisfy sort.Interface
 func (k *karmaSorter) Swap(i, j int) {
 	k.keys[i], k.keys[j] = k.keys[j], k.keys[i]
 }
 
+// Less is a method to satisfy sort.Interface
 func (k *karmaSorter) Less(i, j int) bool {
 	karmaI := k.karmas[k.keys[i]]
 	karmaJ := k.karmas[k.keys[j]]

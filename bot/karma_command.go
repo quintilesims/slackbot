@@ -49,7 +49,7 @@ func NewKarmaCommand(store db.Store, w io.Writer) cli.Command {
 				return fmt.Errorf("Could not find any karma entries matching the specified pattern")
 			}
 
-			keys := results.SortKeys(!c.Bool("ascending"))
+			keys := results.SortKeys(c.Bool("ascending"))
 			for i := 0; i < c.Int("count") && i < len(keys); i++ {
 				karma := results[keys[i]]
 				text := fmt.Sprintf("karma for *%s*: %s\n", keys[i], karma)

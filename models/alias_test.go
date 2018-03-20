@@ -7,52 +7,57 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAliasApply(t *testing.T) {
+func TestAliasesApply(t *testing.T) {
 	cases := map[string]struct {
-		Alias    Alias
+		Aliases  Aliases
 		Message  *slack.MessageEvent
 		Expected string
 	}{
-		"Pass-through": {
-			Alias:    Alias{},
-			Message:  newSlackMessageEvent("user", "input"),
-			Expected: "input",
+		"Pass-through empty Alias": {
+			Aliases:  Aliases{},
+			Message:  newSlackMessageEvent("", "", "message"),
+			Expected: "message",
 		},
-		"Static Transformation": {
-			Alias:    Alias{Pattern: "*", Template: "output"},
-			Message:  newSlackMessageEvent("user", "input"),
-			Expected: "output",
+		"Pass-through no match": {
+			Aliases:  Aliases{"message": ""},
+			Message:  newSlackMessageEvent("", "", "other"),
+			Expected: "other",
 		},
-		"User-Templated Transformation": {
-			Alias:    Alias{Pattern: "*", Template: "{{ .User }}"},
-			Message:  newSlackMessageEvent("user", "input"),
+		"Static Alias": {
+			Aliases:  Aliases{"message": "Hello, World!"},
+			Message:  newSlackMessageEvent("", "", "message"),
+			Expected: "Hello, World!",
+		},
+		"Args-Templated Alias": {
+			Aliases:  Aliases{"message": "{{ index .Args 0 }}"},
+			Message:  newSlackMessageEvent("", "", "message arg0 arg1"),
+			Expected: "arg0",
+		},
+		"ArgsString-Templated Alias": {
+			Aliases:  Aliases{"message": "{{ .ArgsString }}"},
+			Message:  newSlackMessageEvent("", "", "message arg0 arg1"),
+			Expected: "arg0 arg1",
+		},
+		"Channel-Templated Alias": {
+			Aliases:  Aliases{"message": "{{ .ChannelID }}"},
+			Message:  newSlackMessageEvent("channel", "", "message"),
+			Expected: "channel",
+		},
+		"User-Templated Alias": {
+			Aliases:  Aliases{"message": "{{ .UserID }}"},
+			Message:  newSlackMessageEvent("", "user", "message"),
 			Expected: "user",
 		},
-		"Message-Templated Transformation": {
-			Alias:    Alias{Pattern: "*", Template: "{{ .Text }}"},
-			Message:  newSlackMessageEvent("user", "input"),
-			Expected: "input",
-		},
-		"Patterned Transformation": {
-			Alias:    Alias{Pattern: "*see you later*", Template: "Goodbye {{ .User }}!"},
-			Message:  newSlackMessageEvent("user", "goodnight, I will see you later"),
-			Expected: "Goodbye user!",
-		},
-		"Patterned Transformation pass-through": {
-			Alias:    Alias{Pattern: "*see you later*", Template: "Goodbye {{ .User }}!"},
-			Message:  newSlackMessageEvent("user", "see y'all later"),
-			Expected: "see y'all later",
-		},
-		"Patterned & Templated Transformation": {
-			Alias:    Alias{Pattern: "!say *", Template: "{{ replace .Text \"!say\" \"!echo\"}}"},
-			Message:  newSlackMessageEvent("user", "!say Hello, World!"),
-			Expected: "!echo Hello, World!",
+		"Multi-Templated Alias": {
+			Aliases:  Aliases{"message": "{{ .UserID }} in {{ .ChannelID }} says {{ .ArgsString }}"},
+			Message:  newSlackMessageEvent("channel", "user", "message Hello, World!"),
+			Expected: "user in channel says Hello, World!",
 		},
 	}
 
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
-			if err := c.Alias.Apply(c.Message); err != nil {
+			if err := c.Aliases.Apply(c.Message); err != nil {
 				t.Fatal(err)
 			}
 

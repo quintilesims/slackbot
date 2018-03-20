@@ -8,6 +8,6 @@ type Store interface {
 	// Read will read the value at the specified key into v
 	Read(key string, v interface{}) error
 
-	// Write will write v into the store at the specified key
+	// Write will write v at the specified key
 	Write(key string, v interface{}) error
 }

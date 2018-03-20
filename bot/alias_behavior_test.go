@@ -11,12 +11,11 @@ import (
 
 func TestAliasBehavior(t *testing.T) {
 	store := db.NewMemoryStore()
-	transformers := models.Aliases{
-		"x":   models.Alias{Pattern: "!x", Template: "!undo"},
-		"say": models.Alias{Pattern: "!say *", Template: "{{ replace .Text \"!say\" \"!echo\"}}"},
+	aliases := models.Aliases{
+		"input": "output",
 	}
 
-	if err := store.Write(db.AliasesKey, transformers); err != nil {
+	if err := store.Write(db.AliasesKey, aliases); err != nil {
 		t.Fatal(err)
 	}
 
@@ -25,25 +24,21 @@ func TestAliasBehavior(t *testing.T) {
 		Assert func(t *testing.T, e slack.RTMEvent)
 	}{
 		"Non-Message event": {
-			Event:  slack.RTMEvent{},
-			Assert: func(t *testing.T, e slack.RTMEvent) {},
+			Event: slack.RTMEvent{},
+			Assert: func(t *testing.T, e slack.RTMEvent) {
+				assert.Equal(t, slack.RTMEvent{}, e)
+			},
 		},
-		"No matching patterns": {
+		"No matching alias": {
 			Event: newSlackMessageEvent("blah blah blah"),
 			Assert: func(t *testing.T, e slack.RTMEvent) {
 				assert.Equal(t, "blah blah blah", e.Data.(*slack.MessageEvent).Text)
 			},
 		},
-		"!x": {
-			Event: newSlackMessageEvent("!x"),
+		"input to output": {
+			Event: newSlackMessageEvent("input"),
 			Assert: func(t *testing.T, e slack.RTMEvent) {
-				assert.Equal(t, "!undo", e.Data.(*slack.MessageEvent).Text)
-			},
-		},
-		"!say": {
-			Event: newSlackMessageEvent("!say Hello, World!"),
-			Assert: func(t *testing.T, e slack.RTMEvent) {
-				assert.Equal(t, "!echo Hello, World!", e.Data.(*slack.MessageEvent).Text)
+				assert.Equal(t, "output", e.Data.(*slack.MessageEvent).Text)
 			},
 		},
 	}
