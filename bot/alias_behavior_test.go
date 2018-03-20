@@ -56,4 +56,29 @@ func TestAliasBehavior(t *testing.T) {
 	}
 }
 
-// todo: test invalidate
+func TestAliasBehaviorInvalidate(t *testing.T) {
+	store := db.NewMemoryStore()
+	if err := store.Write(db.AliasesKey, models.Aliases{"input": "one"}); err != nil {
+		t.Fatal(err)
+	}
+
+	b := NewAliasBehavior(store)
+
+	e1 := newSlackMessageEvent("input")
+	if err := b.Behavior()(e1); err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "one", e1.Data.(*slack.MessageEvent).Text)
+	if err := store.Write(db.AliasesKey, models.Aliases{"input": "two"}); err != nil {
+		t.Fatal(err)
+	}
+
+	b.Invalidate()
+	e2 := newSlackMessageEvent("input")
+	if err := b.Behavior()(e2); err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "two", e2.Data.(*slack.MessageEvent).Text)
+}
