@@ -174,9 +174,20 @@ func main() {
 					continue
 				}
 
+				// if a user types !help, treat it as if they ran "slackbot" with no args
+				if len(args) > 1 && args[1] == "!help" {
+					args = []string{"slackbot"}
+				}
+
 				var isDisplayingHelp bool
 				w := bytes.NewBuffer(nil)
+
 				app := cli.NewApp()
+				app.Name = "slackbot"
+				app.Usage = "making email obsolete one step at a time"
+				app.HideHelp = true
+				app.UsageText = "command [flags...] arguments..."
+				app.Version = Version
 				app.Writer = utils.WriterFunc(func(b []byte) (n int, err error) {
 					isDisplayingHelp = true
 					return w.Write(b)
