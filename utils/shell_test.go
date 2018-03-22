@@ -19,7 +19,6 @@ func TestParseShell(t *testing.T) {
 		"one 'two three'":            []string{"one", "'two", "three'"},
 		"\"one two three\"":          []string{"one two three"},
 		"'one two three'":            []string{"'one", "two", "three'"},
-		"“one two three”":            []string{"one two three"},
 		"one 'two three":             []string{"one", "'two", "three"},
 		"one\" two\" three":          []string{"one", " two", "three"},
 		"one \"two \"three\" four\"": []string{"one", "two ", "three", " four"},
@@ -44,10 +43,6 @@ func TestParseShellErrors(t *testing.T) {
 		"one\" two\"\" three",
 		"one \"two \"three\"\" four\"",
 		"one '\"two' three",
-		"one “two three",
-		"one two ”three",
-		"one “two' three",
-		"one 'two” three",
 	}
 
 	for _, input := range inputs {
