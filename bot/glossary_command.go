@@ -34,6 +34,13 @@ func NewGlossaryCommand(store db.Store, w io.Writer) cli.Command {
 				Usage:     "search for entries in the glossary",
 				ArgsUsage: "GLOB",
 				Action:    newGlossarySearchAction(store, w),
+				Flags: []cli.Flag{
+					cli.IntFlag{
+						Name:  "count",
+						Value: 10,
+						Usage: "The maximum number of entries to display",
+					},
+				},
 			},
 		},
 	}
@@ -41,14 +48,12 @@ func NewGlossaryCommand(store db.Store, w io.Writer) cli.Command {
 
 func newGlossaryDefineAction(store db.Store, w io.Writer) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
-		args := c.Args()
-		key := args.First()
-		definition := strings.Join(args.Tail(), " ")
-
+		key := c.Args().Get(0)
 		if key == "" {
 			return fmt.Errorf("Arg KEY is required")
 		}
 
+		definition := strings.Join(c.Args().Tail(), " ")
 		if definition == "" {
 			return fmt.Errorf("Arg DEFINITION is required")
 		}
@@ -58,19 +63,12 @@ func newGlossaryDefineAction(store db.Store, w io.Writer) func(c *cli.Context) e
 			return err
 		}
 
-		var text string
-		if previousDefinition, ok := glossary[key]; previousDefinition != "" && ok {
-			text = fmt.Sprintf("Replacing previous definition of *%s*: *%s* with *%s*", key, previousDefinition, definition)
-		} else {
-			text = fmt.Sprintf("Ok, *%s* %s", key, definition)
-		}
-
 		glossary[key] = definition
-
 		if err := store.Write(db.GlossaryKey, glossary); err != nil {
 			return err
 		}
 
+		text := fmt.Sprintf("Ok, *%s* %s", key, definition)
 		if _, err := w.Write([]byte(text)); err != nil {
 			return err
 		}
@@ -82,7 +80,6 @@ func newGlossaryDefineAction(store db.Store, w io.Writer) func(c *cli.Context) e
 func newGlossaryRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
 		key := c.Args().Get(0)
-
 		if key == "" {
 			return fmt.Errorf("Arg KEY is required")
 		}
@@ -92,17 +89,16 @@ func newGlossaryRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) e
 			return err
 		}
 
-		if _, ok := glossary[key]; ok {
-			delete(glossary, key)
-		} else {
+		if _, ok := glossary[key]; !ok {
 			return fmt.Errorf("Key: *%s* not in glossary", key)
 		}
 
+		delete(glossary, key)
 		if err := store.Write(db.GlossaryKey, glossary); err != nil {
 			return err
 		}
 
-		text := fmt.Sprintf("Ok, deleted *%s*", key)
+		text := fmt.Sprintf("Ok, I've deleted the entry for *%s*", key)
 		if _, err := w.Write([]byte(text)); err != nil {
 			return err
 		}
@@ -114,7 +110,6 @@ func newGlossaryRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) e
 func newGlossarySearchAction(store db.Store, w io.Writer) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
 		g := c.Args().Get(0)
-
 		if g == "" {
 			return fmt.Errorf("Arg GLOB is required")
 		}
@@ -128,16 +123,20 @@ func newGlossarySearchAction(store db.Store, w io.Writer) func(c *cli.Context) e
 		for k, v := range glossary {
 			if glob.Glob(g, k) {
 				results[k] = v
+
+				if len(results) >= c.Int("count") {
+					break
+				}
 			}
 		}
 
 		if len(results) == 0 {
-			return fmt.Errorf("Could not find any glossary entries matching the specified pattern *%s*", g)
+			return fmt.Errorf("Could not find any glossary entries matching *%s*", g)
 		}
 
 		var text string
 		for key, definition := range results {
-			text += fmt.Sprintf("*%s* %s\n", key, definition)
+			text += fmt.Sprintf("*%s*: %s\n", key, definition)
 		}
 
 		if _, err := w.Write([]byte(text)); err != nil {

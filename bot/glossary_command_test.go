@@ -65,9 +65,9 @@ func TestGlossaryDefineErrors(t *testing.T) {
 
 func TestGlossaryRemove(t *testing.T) {
 	glossary := models.Glossary{
-		"foo": "bar",
-		"bar": "baz",
-		"baz": "foo",
+		"foo": "",
+		"bar": "",
+		"baz": "",
 	}
 
 	store := newMemoryStore(t)
@@ -125,10 +125,11 @@ func TestGlossarySearch(t *testing.T) {
 	}
 
 	cases := map[string]models.Glossary{
-		"*":   {"foo": "bar", "bar": "baz", "baz": "foo"},
-		"b*":  {"bar": "baz", "baz": "foo"},
-		"*a*": {"bar": "baz", "baz": "foo"},
-		"foo": {"foo": "bar"},
+		"*":           {"foo": "bar", "bar": "baz", "baz": "foo"},
+		"--count 2 *": {"foo": "bar", "bar": "baz", "baz": "foo"},
+		"b*":          {"bar": "baz", "baz": "foo"},
+		"*a*":         {"bar": "baz", "baz": "foo"},
+		"foo":         {"foo": "bar"},
 	}
 
 	for glob, expected := range cases {
