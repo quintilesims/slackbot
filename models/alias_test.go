@@ -65,3 +65,20 @@ func TestAliasesApply(t *testing.T) {
 		})
 	}
 }
+
+func TestAliasesApplyErrors(t *testing.T) {
+	values := []string{
+		"Hello {{ UserID }}",
+		"Hello {{ .UserName }}",
+	}
+
+	m := newSlackMessageEvent("channel", "user", "text")
+	for _, value := range values {
+		t.Run(value, func(t *testing.T) {
+			aliases := Aliases{"text": value}
+			if err := aliases.Apply(m); err == nil {
+				t.Fatal("Error was nil!")
+			}
+		})
+	}
+}
