@@ -50,7 +50,7 @@ func (a Aliases) Apply(m *slack.MessageEvent) error {
 
 	b := bytes.NewBuffer(nil)
 	if err := t.Execute(b, context); err != nil {
-		return nil
+		return err
 	}
 
 	m.Text = b.String()
