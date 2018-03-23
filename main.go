@@ -187,6 +187,7 @@ func main() {
 				app.Name = "slackbot"
 				app.Usage = "making email obsolete one step at a time"
 				app.HideHelp = true
+				app.HideVersion = true
 				app.UsageText = "command [flags...] arguments..."
 				app.Version = Version
 				app.Writer = utils.WriterFunc(func(b []byte) (n int, err error) {
