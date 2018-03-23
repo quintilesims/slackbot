@@ -18,22 +18,24 @@ func NewGlossaryCommand(store db.Store, w io.Writer) cli.Command {
 		Usage: "manage the glossary",
 		Subcommands: []cli.Command{
 			{
-				Name:      "define",
+				Name:      "add",
+				Aliases:   []string{"a"},
 				Usage:     "add or set an entry in the glossary",
 				ArgsUsage: "KEY DEFINITION",
-				Action:    newGlossaryDefineAction(store, w),
+				Action:    newGlossaryAddAction(store, w),
 			},
 			{
-				Name:      "rm",
+				Name:      "remove",
+				Aliases:   []string{"rm"},
 				Usage:     "remove an entry from the glossary",
 				ArgsUsage: "KEY",
 				Action:    newGlossaryRemoveAction(store, w),
 			},
 			{
 				Name:      "search",
+				Aliases:   []string{"s"},
 				Usage:     "search for entries in the glossary",
 				ArgsUsage: "GLOB",
-				Action:    newGlossarySearchAction(store, w),
 				Flags: []cli.Flag{
 					cli.IntFlag{
 						Name:  "count",
@@ -41,19 +43,22 @@ func NewGlossaryCommand(store db.Store, w io.Writer) cli.Command {
 						Usage: "The maximum number of entries to display",
 					},
 				},
+				Action: newGlossarySearchAction(store, w),
 			},
 		},
 	}
 }
 
-func newGlossaryDefineAction(store db.Store, w io.Writer) func(c *cli.Context) error {
+func newGlossaryAddAction(store db.Store, w io.Writer) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
-		key := c.Args().Get(0)
+		args := c.Args()
+
+		key := args.First()
 		if key == "" {
 			return fmt.Errorf("Arg KEY is required")
 		}
 
-		definition := strings.Join(c.Args().Tail(), " ")
+		definition := strings.Join(args.Tail(), " ")
 		if definition == "" {
 			return fmt.Errorf("Arg DEFINITION is required")
 		}
@@ -63,12 +68,16 @@ func newGlossaryDefineAction(store db.Store, w io.Writer) func(c *cli.Context) e
 			return err
 		}
 
+		if _, ok := glossary[key]; ok {
+			return fmt.Errorf("Key: *%s* already exists", key)
+		}
+
 		glossary[key] = definition
 		if err := store.Write(db.GlossaryKey, glossary); err != nil {
 			return err
 		}
 
-		text := fmt.Sprintf("Ok, *%s* %s", key, definition)
+		text := fmt.Sprintf("OK, I've added *%s* as \"%s\"\n", key, definition)
 		if _, err := w.Write([]byte(text)); err != nil {
 			return err
 		}
@@ -123,10 +132,6 @@ func newGlossarySearchAction(store db.Store, w io.Writer) func(c *cli.Context) e
 		for k, v := range glossary {
 			if glob.Glob(g, k) {
 				results[k] = v
-
-				if len(results) >= c.Int("count") {
-					break
-				}
 			}
 		}
 
@@ -135,7 +140,11 @@ func newGlossarySearchAction(store db.Store, w io.Writer) func(c *cli.Context) e
 		}
 
 		var text string
-		for key, definition := range results {
+		keys := results.SortKeys(true)
+		for i := 0; i < c.Int("count") && i < len(keys); i++ {
+			definition := results[keys[i]]
+			key := keys[i]
+
 			text += fmt.Sprintf("*%s*: %s\n", key, definition)
 		}
 

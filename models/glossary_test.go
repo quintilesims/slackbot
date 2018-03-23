@@ -13,5 +13,6 @@ func TestGlossarySortKeys(t *testing.T) {
 		"baz": "foo",
 	}
 
-	assert.Equal(t, []string{"bar", "baz", "foo"}, glossary.SortKeyAlphabetical())
+	assert.Equal(t, []string{"bar", "baz", "foo"}, glossary.SortKeys(true))
+	assert.Equal(t, []string{"foo", "baz", "bar"}, glossary.SortKeys(false))
 }

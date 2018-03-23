@@ -5,14 +5,18 @@ import "sort"
 // The Glossary object is used to manage a Glossary in a db.Store
 type Glossary map[string]string
 
-// SortKeys will return a slice of ordered keys.
-func (g Glossary) SortKeyAlphabetical() []string {
-	m := make([]string, len(g))
-	i := 0
-	for k := range g {
-		m[i] = k
-		i++
+// SortKeys will return a slice of alphabetically ordered keys.
+func (g Glossary) SortKeys(ascending bool) []string {
+	keys := make([]string, 0, len(g))
+	for key := range g {
+		keys = append(keys, key)
 	}
-	sort.Strings(m)
-	return m
+
+	if ascending {
+		sort.Sort(sort.StringSlice(keys))
+	} else {
+		sort.Sort(sort.Reverse(sort.StringSlice(keys)))
+	}
+
+	return keys
 }

@@ -22,7 +22,7 @@ func TestGlossaryDefine(t *testing.T) {
 	for key, val := range inputs {
 		w := bytes.NewBuffer(nil)
 		cmd := NewGlossaryCommand(store, w)
-		input := fmt.Sprintf("!glossary define %s %s", key, val)
+		input := fmt.Sprintf("!glossary add %s %s", key, val)
 
 		if err := runTestApp(cmd, input); err != nil {
 			t.Fatal(err)
@@ -46,10 +46,11 @@ func TestGlossaryDefine(t *testing.T) {
 	assert.Equal(t, expected, result)
 }
 
-func TestGlossaryDefineErrors(t *testing.T) {
+func TestGlossaryAddErrors(t *testing.T) {
 	inputs := []string{
-		"!glossary define",
-		"!glossary define foo",
+		"!glossary add",
+		"!glossary add foo",
+		"!glossary add foo",
 	}
 
 	store := newMemoryStore(t)
@@ -67,7 +68,6 @@ func TestGlossaryRemove(t *testing.T) {
 	glossary := models.Glossary{
 		"foo": "",
 		"bar": "",
-		"baz": "",
 	}
 
 	store := newMemoryStore(t)
@@ -75,24 +75,22 @@ func TestGlossaryRemove(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for key := range glossary {
-		w := bytes.NewBuffer(nil)
-		cmd := NewGlossaryCommand(store, w)
-		input := fmt.Sprintf("!glossary rm %s", key)
+	w := bytes.NewBuffer(nil)
+	cmd := NewGlossaryCommand(store, w)
+	input := fmt.Sprintf("!glossary rm %s", "foo")
 
-		if err := runTestApp(cmd, input); err != nil {
-			t.Fatal(err)
-		}
-
-		assert.Contains(t, w.String(), key)
+	if err := runTestApp(cmd, input); err != nil {
+		t.Fatal(err)
 	}
+
+	assert.Contains(t, w.String(), "foo")
 
 	result := models.Glossary{}
 	if err := store.Read(db.GlossaryKey, &result); err != nil {
 		t.Fatal(err)
 	}
 
-	assert.Len(t, result, 0)
+	assert.Len(t, result, 1)
 }
 
 func TestGlossaryRemoveErrors(t *testing.T) {
@@ -125,8 +123,8 @@ func TestGlossarySearch(t *testing.T) {
 	}
 
 	cases := map[string]models.Glossary{
-		"*":           {"foo": "bar", "bar": "baz", "baz": "foo"},
-		"--count 2 *": {"foo": "bar", "bar": "baz", "baz": "foo"},
+		"*":           {"foo": "bar", "bar": "baz"},
+		"--count 1 *": {"bar": "baz"},
 		"b*":          {"bar": "baz", "baz": "foo"},
 		"*a*":         {"bar": "baz", "baz": "foo"},
 		"foo":         {"foo": "bar"},
