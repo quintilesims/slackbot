@@ -9,9 +9,10 @@ import (
 
 func TestEcho(t *testing.T) {
 	cases := map[string]string{
-		"!echo":           "",
-		"!echo arg0":      "arg0",
-		"!echo arg0 arg1": "arg0 arg1",
+		"!echo":                      "",
+		"!echo arg0":                 "arg0",
+		"!echo arg0 arg1":            "arg0 arg1",
+		"!echo -v arg0 --stuff arg1": "-v arg0 --stuff arg1",
 	}
 
 	for input, expected := range cases {
