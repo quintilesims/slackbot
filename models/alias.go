@@ -20,7 +20,7 @@ type AliasContext struct {
 // The Aliases object is used to manage aliases in a db.Store
 type Aliases map[string]string
 
-// Apply will update the MessageEvent's text if it matches the Alias's pattern
+// Apply will update the MessageEvent's text if it matches any of the Aliases' patterns
 func (a Aliases) Apply(m *slack.MessageEvent) error {
 	args, err := utils.ParseShell(m.Text)
 	if err != nil {
