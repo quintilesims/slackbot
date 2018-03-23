@@ -15,6 +15,6 @@ func TestKarmaSortKeys(t *testing.T) {
 		"four":  {Upvotes: 5, Downvotes: 0},
 	}
 
-	assert.Equal(t, []string{"five", "four", "three", "two", "one"}, karmas.SortKeys(true))
-	assert.Equal(t, []string{"one", "two", "three", "four", "five"}, karmas.SortKeys(false))
+	assert.Equal(t, []string{"one", "two", "three", "four", "five"}, karmas.SortKeys(true))
+	assert.Equal(t, []string{"five", "four", "three", "two", "one"}, karmas.SortKeys(false))
 }

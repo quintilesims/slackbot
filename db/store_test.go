@@ -2,8 +2,6 @@ package db
 
 import (
 	"fmt"
-	"math/rand"
-	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -39,8 +37,7 @@ func testStore(t *testing.T, store Store) {
 		assert.Equal(t, fmt.Sprintf("%v", writes[k]), fmt.Sprintf("%v", v))
 	}
 
-	key := strconv.Itoa(rand.Int())
-	if err, ok := store.Read(key, nil).(MissingEntryError); !ok {
+	if err, ok := store.Read("k5", nil).(MissingEntryError); !ok {
 		t.Errorf("Error was not MissingEntryError: %#v", err)
 	}
 }

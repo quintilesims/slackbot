@@ -135,7 +135,10 @@ func main() {
 	}
 
 	slackbot.Action = func(c *cli.Context) error {
+		aliasBehavior := bot.NewAliasBehavior(store)
 		behaviors := bot.Behaviors{
+			bot.NewNormalizeTextBehavior(),
+			aliasBehavior.Behavior(),
 			bot.NewKarmaTrackingBehavior(store),
 		}
 
@@ -174,7 +177,12 @@ func main() {
 
 				var isDisplayingHelp bool
 				w := bytes.NewBuffer(nil)
+
 				app := cli.NewApp()
+				app.Name = "slackbot"
+				app.Usage = "making email obsolete one step at a time"
+				app.UsageText = "command [flags...] arguments..."
+				app.Version = Version
 				app.Writer = utils.WriterFunc(func(b []byte) (n int, err error) {
 					isDisplayingHelp = true
 					return w.Write(b)
@@ -186,12 +194,13 @@ func main() {
 				}
 
 				app.Commands = []cli.Command{
+					bot.NewAliasCommand(store, w, aliasBehavior.Invalidate),
 					bot.NewEchoCommand(w),
 					bot.NewGIFCommand(bot.GiphyAPIEndpoint, c.String("giphy-token"), w),
 					bot.NewGlossaryCommand(store, w),
+					bot.NewHelpCommand(w),
 					bot.NewInterviewCommand(appClient, store, w),
 					bot.NewKarmaCommand(store, w),
-					bot.NewPingCommand(w),
 					bot.NewTriviaCommand(store, bot.TriviaAPIEndpoint, w),
 					bot.NewUndoCommand(appClient, botClient, e.Channel, rtm.GetInfo().User.ID),
 				}

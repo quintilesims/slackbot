@@ -27,6 +27,8 @@ func TestKarmaTrackingBehavior(t *testing.T) {
 		newSlackMessageEvent("cats--"),
 		newSlackMessageEvent("new++"),
 		newSlackMessageEvent("new--"),
+		newSlackMessageEvent("new+-"),
+		newSlackMessageEvent("new-+"),
 		newSlackMessageEvent("blah blah"),
 		{},
 	}
@@ -46,7 +48,7 @@ func TestKarmaTrackingBehavior(t *testing.T) {
 	expected := models.Karmas{
 		"dogs": models.Karma{Upvotes: 12, Downvotes: 0},
 		"cats": models.Karma{Upvotes: 0, Downvotes: 12},
-		"new":  models.Karma{Upvotes: 1, Downvotes: 1},
+		"new":  models.Karma{Upvotes: 3, Downvotes: 3},
 	}
 
 	assert.Equal(t, expected, result)
