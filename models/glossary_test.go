@@ -8,9 +8,9 @@ import (
 
 func TestGlossarySortKeys(t *testing.T) {
 	glossary := Glossary{
-		"foo": "bar",
-		"bar": "baz",
-		"baz": "foo",
+		"foo": "one",
+		"bar": "two",
+		"baz": "three",
 	}
 
 	assert.Equal(t, []string{"bar", "baz", "foo"}, glossary.SortKeys(true))

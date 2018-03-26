@@ -19,21 +19,24 @@ func NewGlossaryCommand(store db.Store, w io.Writer) cli.Command {
 		Subcommands: []cli.Command{
 			{
 				Name:      "add",
-				Aliases:   []string{"a"},
 				Usage:     "add or set an entry in the glossary",
 				ArgsUsage: "KEY DEFINITION",
-				Action:    newGlossaryAddAction(store, w),
+				Flags: []cli.Flag{
+					cli.BoolFlag{
+						Name:  "force",
+						Usage: "overwrite existing definition",
+					},
+				},
+				Action: newGlossaryAddAction(store, w),
 			},
 			{
-				Name:      "remove",
-				Aliases:   []string{"rm"},
+				Name:      "rm",
 				Usage:     "remove an entry from the glossary",
 				ArgsUsage: "KEY",
 				Action:    newGlossaryRemoveAction(store, w),
 			},
 			{
-				Name:      "search",
-				Aliases:   []string{"s"},
+				Name:      "ls",
 				Usage:     "search for entries in the glossary",
 				ArgsUsage: "GLOB",
 				Flags: []cli.Flag{
@@ -68,7 +71,7 @@ func newGlossaryAddAction(store db.Store, w io.Writer) func(c *cli.Context) erro
 			return err
 		}
 
-		if _, ok := glossary[key]; ok {
+		if _, ok := glossary[key]; ok && !c.Bool("force") {
 			return fmt.Errorf("Key: *%s* already exists", key)
 		}
 
@@ -128,24 +131,23 @@ func newGlossarySearchAction(store db.Store, w io.Writer) func(c *cli.Context) e
 			return err
 		}
 
-		results := models.Glossary{}
+		definitions := models.Glossary{}
 		for k, v := range glossary {
 			if glob.Glob(g, k) {
-				results[k] = v
+				definitions[k] = v
 			}
 		}
 
-		if len(results) == 0 {
+		if len(definitions) == 0 {
 			return fmt.Errorf("Could not find any glossary entries matching *%s*", g)
 		}
 
 		var text string
-		keys := results.SortKeys(true)
+		keys := definitions.SortKeys(true)
 		for i := 0; i < c.Int("count") && i < len(keys); i++ {
-			definition := results[keys[i]]
 			key := keys[i]
 
-			text += fmt.Sprintf("*%s*: %s\n", key, definition)
+			text += fmt.Sprintf("*%s*: %s\n", key, definitions[key])
 		}
 
 		if _, err := w.Write([]byte(text)); err != nil {
