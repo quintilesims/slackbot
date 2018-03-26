@@ -60,6 +60,8 @@ func TestCandidateAddErrors(t *testing.T) {
 	}
 }
 
+// todo: test --count flag
+// todo: test --descending flag
 func TestCandidateList(t *testing.T) {
 	candidates := models.Candidates{
 		"John Doe": nil,

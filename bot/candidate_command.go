@@ -59,7 +59,7 @@ func NewCandidateCommand(store db.Store, w io.Writer) cli.Command {
 			},
 			{
 				Name:      "update",
-				Usage:     "update a candidate's information",
+				Usage:     "upsert a candidate's information",
 				ArgsUsage: "NAME KEY=VAL...",
 				Action:    newCandidateUpdateAction(store, w),
 			},
