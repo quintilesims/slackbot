@@ -216,7 +216,6 @@ func main() {
 					text = fmt.Sprintf("```%s```", text)
 				}
 
-				//text = html.UnescapeString(text)
 				msg := rtm.NewOutgoingMessage(text, e.Channel)
 				rtm.SendMessage(msg)
 			case *slack.InvalidAuthEvent:
