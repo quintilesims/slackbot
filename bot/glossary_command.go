@@ -7,7 +7,6 @@ import (
 
 	"github.com/quintilesims/slackbot/db"
 	"github.com/quintilesims/slackbot/models"
-	glob "github.com/ryanuber/go-glob"
 	"github.com/urfave/cli"
 )
 
@@ -30,15 +29,8 @@ func NewGlossaryCommand(store db.Store, w io.Writer) cli.Command {
 				Action: newGlossaryAddAction(store, w),
 			},
 			{
-				Name:      "rm",
-				Usage:     "remove an entry from the glossary",
-				ArgsUsage: "KEY",
-				Action:    newGlossaryRemoveAction(store, w),
-			},
-			{
-				Name:      "search",
-				Usage:     "search for entries in the glossary",
-				ArgsUsage: "GLOB",
+				Name:  "ls",
+				Usage: "remove an entry from the glossary",
 				Flags: []cli.Flag{
 					cli.IntFlag{
 						Name:  "count",
@@ -46,7 +38,19 @@ func NewGlossaryCommand(store db.Store, w io.Writer) cli.Command {
 						Usage: "The maximum number of entries to display",
 					},
 				},
-				Action: newGlossarySearchAction(store, w),
+				Action: newGlossaryListAction(store, w),
+			},
+			{
+				Name:      "rm",
+				Usage:     "remove an entry from the glossary",
+				ArgsUsage: "KEY",
+				Action:    newGlossaryRemoveAction(store, w),
+			},
+			{
+				Name:      "show",
+				Usage:     "show an entry in the glossary",
+				ArgsUsage: "ENTRY",
+				Action:    newGlossaryShowAction(store, w),
 			},
 		},
 	}
@@ -89,6 +93,32 @@ func newGlossaryAddAction(store db.Store, w io.Writer) func(c *cli.Context) erro
 	}
 }
 
+func newGlossaryListAction(store db.Store, w io.Writer) func(c *cli.Context) error {
+	return func(c *cli.Context) error {
+		glossary := models.Glossary{}
+		if err := store.Read(db.GlossaryKey, &glossary); err != nil {
+			return err
+		}
+
+		if len(glossary) == 0 {
+			return fmt.Errorf("There are currently no entries in the glossary")
+		}
+
+		var text string
+		keys := glossary.SortKeys(true)
+		for i := 0; i < len(keys) && i < c.Int("count"); i++ {
+			entry := keys[i]
+			text += fmt.Sprintf("*%s*: %s\n", entry, glossary[entry])
+		}
+
+		if _, err := w.Write([]byte(text)); err != nil {
+			return err
+		}
+
+		return nil
+	}
+}
+
 func newGlossaryRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
 		key := c.Args().Get(0)
@@ -119,11 +149,11 @@ func newGlossaryRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) e
 	}
 }
 
-func newGlossarySearchAction(store db.Store, w io.Writer) func(c *cli.Context) error {
+func newGlossaryShowAction(store db.Store, w io.Writer) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
-		g := c.Args().Get(0)
-		if g == "" {
-			return fmt.Errorf("Arg GLOB is required")
+		entry := strings.ToLower(c.Args().Get(0))
+		if entry == "" {
+			return fmt.Errorf("ENTRY is required")
 		}
 
 		glossary := models.Glossary{}
@@ -131,24 +161,19 @@ func newGlossarySearchAction(store db.Store, w io.Writer) func(c *cli.Context) e
 			return err
 		}
 
-		definitions := models.Glossary{}
+		var definition string
 		for k, v := range glossary {
-			if glob.Glob(g, k) {
-				definitions[k] = v
+			if strings.ToLower(k) == entry {
+				definition = v
+				break
 			}
 		}
 
-		if len(definitions) == 0 {
-			return fmt.Errorf("Could not find any glossary entries matching *%s*", g)
+		if definition == "" {
+			return fmt.Errorf("There is no entry for *%s*", entry)
 		}
 
-		var text string
-		keys := definitions.SortKeys(true)
-		for i := 0; i < c.Int("count") && i < len(keys); i++ {
-			key := keys[i]
-			text += fmt.Sprintf("*%s*: %s\n", key, definitions[key])
-		}
-
+		text := fmt.Sprintf("*%s*: %s\n", entry, definition)
 		if _, err := w.Write([]byte(text)); err != nil {
 			return err
 		}

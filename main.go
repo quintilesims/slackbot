@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"html"
 	"log"
 	"math/rand"
 	"os"
@@ -217,7 +216,7 @@ func main() {
 					text = fmt.Sprintf("```%s```", text)
 				}
 
-				text = html.UnescapeString(text)
+				//text = html.UnescapeString(text)
 				msg := rtm.NewOutgoingMessage(text, e.Channel)
 				rtm.SendMessage(msg)
 			case *slack.InvalidAuthEvent:

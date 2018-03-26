@@ -61,7 +61,6 @@ func TestCandidateAddErrors(t *testing.T) {
 }
 
 // todo: test --count flag
-// todo: test --descending flag
 func TestCandidateList(t *testing.T) {
 	candidates := models.Candidates{
 		"John Doe": nil,
@@ -185,7 +184,7 @@ func TestCandidateUpdate(t *testing.T) {
 	}
 
 	cmd := NewCandidateCommand(store, ioutil.Discard)
-	if err := runTestApp(cmd, "!candidate update \"John Doe\" k1=v0 k2=v2"); err != nil {
+	if err := runTestApp(cmd, "!candidate update \"John Doe\" k1 v2"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -196,8 +195,7 @@ func TestCandidateUpdate(t *testing.T) {
 
 	expected := models.Candidates{
 		"John Doe": map[string]string{
-			"k1": "v0",
-			"k2": "v2",
+			"k1": "v2",
 		},
 	}
 
@@ -208,7 +206,8 @@ func TestCandidateUpdateErrors(t *testing.T) {
 	inputs := []string{
 		"!candidate update",
 		"!candidate update \"John Doe\"",
-		"!candidate update \"John Doe\" k1=v1",
+		"!candidate update \"John Doe\" k1",
+		"!candidate update \"John Doe\" k1 v1",
 	}
 
 	cmd := NewCandidateCommand(newMemoryStore(t), ioutil.Discard)

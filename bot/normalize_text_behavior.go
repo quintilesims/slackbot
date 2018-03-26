@@ -1,7 +1,6 @@
 package bot
 
 import (
-	"html"
 	"strings"
 
 	"github.com/quintilesims/slack"
@@ -17,7 +16,6 @@ func NewNormalizeTextBehavior() Behavior {
 		}
 
 		m.Text = replacer.Replace(m.Text)
-		m.Text = html.UnescapeString(m.Text)
 		return nil
 	}
 }

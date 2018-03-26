@@ -38,10 +38,6 @@ func NewCandidateCommand(store db.Store, w io.Writer) cli.Command {
 						Value: 10,
 						Usage: "The maximum number of candidates to display",
 					},
-					cli.BoolFlag{
-						Name:  "descending",
-						Usage: "Info results in descending alphabetical order",
-					},
 				},
 				Action: newCandidateListAction(store, w),
 			},
@@ -60,7 +56,7 @@ func NewCandidateCommand(store db.Store, w io.Writer) cli.Command {
 			{
 				Name:      "update",
 				Usage:     "upsert a candidate's information",
-				ArgsUsage: "NAME KEY=VAL...",
+				ArgsUsage: "NAME KEY VAL",
 				Action:    newCandidateUpdateAction(store, w),
 			},
 		},
@@ -114,7 +110,7 @@ func newCandidateListAction(store db.Store, w io.Writer) func(c *cli.Context) er
 		}
 
 		text := "Here are the candidates I have: \n"
-		keys := candidates.SortKeys(!c.Bool("descending"))
+		keys := candidates.SortKeys(true)
 		for i := 0; i < c.Int("count") && i < len(keys); i++ {
 			text += fmt.Sprintf("*%s* \n", keys[i])
 		}
@@ -199,13 +195,14 @@ func newCandidateUpdateAction(store db.Store, w io.Writer) func(c *cli.Context) 
 			return fmt.Errorf("NAME is required")
 		}
 
-		meta, err := parseMetaFlag(args.Tail())
-		if err != nil {
-			return err
+		key := args.Get(1)
+		if key == "" {
+			return fmt.Errorf("KEY is required")
 		}
 
-		if len(meta) == 0 {
-			return fmt.Errorf("At least one KEY=VAL pair needs to be specified")
+		val := args.Get(2)
+		if val == "" {
+			return fmt.Errorf("VAL is required")
 		}
 
 		candidates := models.Candidates{}
@@ -221,10 +218,7 @@ func newCandidateUpdateAction(store db.Store, w io.Writer) func(c *cli.Context) 
 			candidates[name] = map[string]string{}
 		}
 
-		for key, val := range meta {
-			candidates[name][key] = val
-		}
-
+		candidates[name][key] = val
 		if err := store.Write(db.CandidatesKey, candidates); err != nil {
 			return err
 		}

@@ -2,7 +2,6 @@ package bot
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"testing"
 
@@ -14,17 +13,29 @@ import (
 func TestGlossaryAdd(t *testing.T) {
 	store := newMemoryStore(t)
 
-	cases := map[string]models.Glossary{
-		"!glossary add foo one":           models.Glossary{"foo": "one"},
-		"!glossary add bar two":           models.Glossary{"bar": "two", "foo": "one"},
-		"!glossary add --force foo three": models.Glossary{"bar": "two", "foo": "three"},
+	cases := []struct {
+		Input    string
+		Expected models.Glossary
+	}{
+		{
+			Input:    "!glossary add foo one",
+			Expected: models.Glossary{"foo": "one"},
+		},
+		{
+			Input:    "!glossary add bar two",
+			Expected: models.Glossary{"bar": "two", "foo": "one"},
+		},
+		{
+			Input:    "!glossary add --force foo three",
+			Expected: models.Glossary{"bar": "two", "foo": "three"},
+		},
 	}
 
-	for input, expected := range cases {
-		t.Run(input, func(t *testing.T) {
+	for _, c := range cases {
+		t.Run(c.Input, func(t *testing.T) {
 			w := bytes.NewBuffer(nil)
 			cmd := NewGlossaryCommand(store, w)
-			if err := runTestApp(cmd, input); err != nil {
+			if err := runTestApp(cmd, c.Input); err != nil {
 				t.Fatal(err)
 			}
 
@@ -33,7 +44,7 @@ func TestGlossaryAdd(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			assert.Equal(t, expected, result)
+			assert.Equal(t, c.Expected, result)
 		})
 	}
 }
@@ -57,6 +68,45 @@ func TestGlossaryAddErrors(t *testing.T) {
 	for _, input := range inputs {
 		t.Run(input, func(t *testing.T) {
 			cmd := NewGlossaryCommand(store, ioutil.Discard)
+			if err := runTestApp(cmd, input); err == nil {
+				t.Fatal("Error was nil!")
+			}
+		})
+	}
+}
+
+func TestGlossaryList(t *testing.T) {
+	glossary := models.Glossary{
+		"foo": "one",
+		"bar": "two",
+	}
+
+	store := newMemoryStore(t)
+	if err := store.Write(db.GlossaryKey, glossary); err != nil {
+		t.Fatal(err)
+	}
+
+	w := bytes.NewBuffer(nil)
+	cmd := NewGlossaryCommand(store, w)
+	if err := runTestApp(cmd, "!glossary ls"); err != nil {
+		t.Fatal(err)
+	}
+
+	for k, v := range glossary {
+		assert.Contains(t, w.String(), k)
+		assert.Contains(t, w.String(), v)
+	}
+}
+
+func TestGlossaryListErrors(t *testing.T) {
+	inputs := []string{
+		"!glossary ls",
+		"!glossary --count n ls",
+	}
+
+	cmd := NewGlossaryCommand(newMemoryStore(t), ioutil.Discard)
+	for _, input := range inputs {
+		t.Run(input, func(t *testing.T) {
 			if err := runTestApp(cmd, input); err == nil {
 				t.Fatal("Error was nil!")
 			}
@@ -112,48 +162,26 @@ func TestGlossaryRemoveErrors(t *testing.T) {
 	}
 }
 
-func TestGlossarySearch(t *testing.T) {
-	glossary := models.Glossary{
-		"foo": "one",
-		"bar": "two",
-		"baz": "three",
-	}
-
+func TestGlossaryShow(t *testing.T) {
 	store := newMemoryStore(t)
-	if err := store.Write(db.GlossaryKey, glossary); err != nil {
+	if err := store.Write(db.GlossaryKey, models.Glossary{"foo": "bar"}); err != nil {
 		t.Fatal(err)
 	}
 
-	cases := map[string]models.Glossary{
-		"*":           {"foo": "one", "bar": "two"},
-		"--count 1 *": {"bar": "two"},
-		"b*":          {"bar": "two", "baz": "three"},
-		"*a*":         {"bar": "two", "baz": "three"},
-		"foo":         {"foo": "one"},
+	w := bytes.NewBuffer(nil)
+	cmd := NewGlossaryCommand(store, w)
+	if err := runTestApp(cmd, "!glossary show foo"); err != nil {
+		t.Fatal(err)
 	}
 
-	for glob, expected := range cases {
-		t.Run(glob, func(t *testing.T) {
-			w := bytes.NewBuffer(nil)
-			cmd := NewGlossaryCommand(store, w)
-			input := fmt.Sprintf("!glossary search %s", glob)
-
-			if err := runTestApp(cmd, input); err != nil {
-				t.Fatal(err)
-			}
-
-			for key, val := range expected {
-				assert.Contains(t, w.String(), key)
-				assert.Contains(t, w.String(), val)
-			}
-		})
-	}
+	assert.Contains(t, w.String(), "foo")
+	assert.Contains(t, w.String(), "bar")
 }
 
-func TestGlossarySearchErrors(t *testing.T) {
+func TestGlossaryShowErrors(t *testing.T) {
 	inputs := []string{
-		"!glossary search",
-		"!glossary search foo",
+		"!glossary show",
+		"!glossary show foo",
 	}
 
 	store := newMemoryStore(t)

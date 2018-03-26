@@ -9,11 +9,9 @@ import (
 
 func TestNormalizeTextBehavior(t *testing.T) {
 	cases := map[string]string{
-		"foo":            "foo",
-		"“foo”":          "\"foo\"",
-		"‘foo’":          "'foo'",
-		"&quot;foo&quot": "\"foo\"",
-		"&lt;foo&gt;":    "<foo>",
+		"foo":   "foo",
+		"“foo”": "\"foo\"",
+		"‘foo’": "'foo'",
 	}
 
 	b := NewNormalizeTextBehavior()
