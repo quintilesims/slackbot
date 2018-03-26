@@ -36,7 +36,7 @@ func (m *MemoryStore) Read(key string, v interface{}) error {
 	return json.Unmarshal(d, &v)
 }
 
-// Write will populate the entry at the specified key with v
+// Write will write v at the specified key
 func (m *MemoryStore) Write(key string, v interface{}) error {
 	d, err := json.Marshal(v)
 	if err != nil {

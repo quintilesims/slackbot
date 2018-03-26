@@ -12,22 +12,23 @@ import (
 func TestDynamoDBStore(t *testing.T) {
 	accessKey := os.Getenv("SB_AWS_ACCESS_KEY")
 	if accessKey == "" {
-		t.Skip("Skipping test, aws access key is not set")
+		t.Skip("Skipping test, SB_AWS_ACCESS_KEY is not set")
 	}
 
 	secretKey := os.Getenv("SB_AWS_SECRET_KEY")
 	if secretKey == "" {
-		t.Skip("Skipping test, aws secret key is not set")
+		t.Skip("Skipping test, SB_AWS_SECRET_KEY is not set")
 	}
 
 	region := os.Getenv("SB_AWS_REGION")
 	if region == "" {
+		t.Log("SB_AWS_REGION is not set, using default 'us-west-2'")
 		region = "us-west-2"
 	}
 
 	table := os.Getenv("SB_DYNAMODB_TEST_TABLE")
 	if table == "" {
-		t.Skip("Skipping test, dynamodb test table is not set")
+		t.Skip("Skipping test, SB_DYNAMODB_TEST_TABLE is not set")
 	}
 
 	config := &aws.Config{
