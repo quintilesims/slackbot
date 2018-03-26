@@ -102,7 +102,7 @@ func newGlossaryRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) e
 		}
 
 		if _, ok := glossary[key]; !ok {
-			return fmt.Errorf("An entry for *%s* not in glossary", key)
+			return fmt.Errorf("There is no entry for *%s* in the glossary", key)
 		}
 
 		delete(glossary, key)
