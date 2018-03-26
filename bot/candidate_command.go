@@ -40,7 +40,7 @@ func NewCandidateCommand(store db.Store, w io.Writer) cli.Command {
 					},
 					cli.BoolFlag{
 						Name:  "descending",
-						Usage: "Show results in descending alphabetical order",
+						Usage: "Info results in descending alphabetical order",
 					},
 				},
 				Action: newCandidateListAction(store, w),
@@ -52,22 +52,16 @@ func NewCandidateCommand(store db.Store, w io.Writer) cli.Command {
 				Action:    newCandidateRemoveAction(store, w),
 			},
 			{
-				Name:      "show",
+				Name:      "info",
 				Usage:     "show information about a candidate",
 				ArgsUsage: "NAME",
-				Action:    newCandidateShowAction(store, w),
+				Action:    newCandidateInfoAction(store, w),
 			},
 			{
 				Name:      "update",
 				Usage:     "update a candidate's information",
-				ArgsUsage: "NAME",
-				Flags: []cli.Flag{
-					cli.StringSliceFlag{
-						Name:  "meta",
-						Usage: "metadata to upsert in key=val format",
-					},
-				},
-				Action: newCandidateAddAction(store, w),
+				ArgsUsage: "NAME KEY=VAL...",
+				Action:    newCandidateUpdateAction(store, w),
 			},
 		},
 	}
@@ -135,11 +129,35 @@ func newCandidateListAction(store db.Store, w io.Writer) func(c *cli.Context) er
 
 func newCandidateRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
+		name := strings.Join(c.Args(), " ")
+		if name == "" {
+			return fmt.Errorf("NAME is required")
+		}
+
+		candidates := models.Candidates{}
+		if err := store.Read(db.CandidatesKey, &candidates); err != nil {
+			return err
+		}
+
+		if _, ok := candidates[name]; !ok {
+			return fmt.Errorf("I don't have any candidates by the name *%s*", name)
+		}
+
+		delete(candidates, name)
+		if err := store.Write(db.CandidatesKey, candidates); err != nil {
+			return err
+		}
+
+		text := fmt.Sprintf("Ok, I've deleted candidate *%s*", name)
+		if _, err := w.Write([]byte(text)); err != nil {
+			return err
+		}
+
 		return nil
 	}
 }
 
-func newCandidateShowAction(store db.Store, w io.Writer) func(c *cli.Context) error {
+func newCandidateInfoAction(store db.Store, w io.Writer) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
 		name := strings.Join(c.Args(), " ")
 		if name == "" {
@@ -175,6 +193,47 @@ func newCandidateShowAction(store db.Store, w io.Writer) func(c *cli.Context) er
 
 func newCandidateUpdateAction(store db.Store, w io.Writer) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
+		args := c.Args()
+		name := args.Get(0)
+		if name == "" {
+			return fmt.Errorf("NAME is required")
+		}
+
+		meta, err := parseMetaFlag(args.Tail())
+		if err != nil {
+			return err
+		}
+
+		if len(meta) == 0 {
+			return fmt.Errorf("At least one KEY=VAL pair needs to be specified")
+		}
+
+		candidates := models.Candidates{}
+		if err := store.Read(db.CandidatesKey, &candidates); err != nil {
+			return err
+		}
+
+		if _, ok := candidates[name]; !ok {
+			return fmt.Errorf("I don't have any candidates by the name *%s*", name)
+		}
+
+		if candidates[name] == nil {
+			candidates[name] = map[string]string{}
+		}
+
+		for key, val := range meta {
+			candidates[name][key] = val
+		}
+
+		if err := store.Write(db.CandidatesKey, candidates); err != nil {
+			return err
+		}
+
+		text := fmt.Sprintf("Ok, I've updated information for *%s*", name)
+		if _, err := w.Write([]byte(text)); err != nil {
+			return err
+		}
+
 		return nil
 	}
 }

@@ -89,7 +89,51 @@ func TestCandidateListErrors(t *testing.T) {
 	}
 }
 
-func TestCandidateShow(t *testing.T) {
+func TestCandidateRemove(t *testing.T) {
+	candidates := models.Candidates{
+		"John Doe": nil,
+		"Jane Doe": nil,
+	}
+
+	store := newMemoryStore(t)
+	if err := store.Write(db.CandidatesKey, candidates); err != nil {
+		t.Fatal(err)
+	}
+
+	cmd := NewCandidateCommand(store, ioutil.Discard)
+	if err := runTestApp(cmd, "!candidate rm John Doe"); err != nil {
+		t.Fatal(err)
+	}
+
+	result := models.Candidates{}
+	if err := store.Read(db.CandidatesKey, &result); err != nil {
+		t.Fatal(err)
+	}
+
+	expected := models.Candidates{
+		"Jane Doe": nil,
+	}
+
+	assert.Equal(t, expected, result)
+}
+
+func TestCandidateRemoveErrors(t *testing.T) {
+	inputs := []string{
+		"!candidate rm",
+		"!candidate rm John Doe",
+	}
+
+	cmd := NewCandidateCommand(newMemoryStore(t), ioutil.Discard)
+	for _, input := range inputs {
+		t.Run(input, func(t *testing.T) {
+			if err := runTestApp(cmd, input); err == nil {
+				t.Fatal("Error was nil!")
+			}
+		})
+	}
+}
+
+func TestCandidateInfo(t *testing.T) {
 	candidates := models.Candidates{
 		"John Doe": map[string]string{"k1": "v1", "k2": "v2"},
 	}
@@ -101,7 +145,7 @@ func TestCandidateShow(t *testing.T) {
 
 	w := bytes.NewBuffer(nil)
 	cmd := NewCandidateCommand(store, w)
-	if err := runTestApp(cmd, "!candidate show John Doe"); err != nil {
+	if err := runTestApp(cmd, "!candidate info John Doe"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -112,10 +156,57 @@ func TestCandidateShow(t *testing.T) {
 	}
 }
 
-func TestCandidateShowErrors(t *testing.T) {
+func TestCandidateInfoErrors(t *testing.T) {
 	inputs := []string{
-		"!candidate show",
-		"!candidate show John Doe",
+		"!candidate info",
+		"!candidate info John Doe",
+	}
+
+	cmd := NewCandidateCommand(newMemoryStore(t), ioutil.Discard)
+	for _, input := range inputs {
+		t.Run(input, func(t *testing.T) {
+			if err := runTestApp(cmd, input); err == nil {
+				t.Fatal("Error was nil!")
+			}
+		})
+	}
+}
+
+func TestCandidateUpdate(t *testing.T) {
+	candidates := models.Candidates{
+		"John Doe": map[string]string{"k1": "v1"},
+	}
+
+	store := newMemoryStore(t)
+	if err := store.Write(db.CandidatesKey, candidates); err != nil {
+		t.Fatal(err)
+	}
+
+	cmd := NewCandidateCommand(store, ioutil.Discard)
+	if err := runTestApp(cmd, "!candidate update \"John Doe\" k1=v0 k2=v2"); err != nil {
+		t.Fatal(err)
+	}
+
+	result := models.Candidates{}
+	if err := store.Read(db.CandidatesKey, &result); err != nil {
+		t.Fatal(err)
+	}
+
+	expected := models.Candidates{
+		"John Doe": map[string]string{
+			"k1": "v0",
+			"k2": "v2",
+		},
+	}
+
+	assert.Equal(t, expected, result)
+}
+
+func TestCandidateUpdateErrors(t *testing.T) {
+	inputs := []string{
+		"!candidate update",
+		"!candidate update \"John Doe\"",
+		"!candidate update \"John Doe\" k1=v1",
 	}
 
 	cmd := NewCandidateCommand(newMemoryStore(t), ioutil.Discard)
