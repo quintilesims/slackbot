@@ -196,6 +196,7 @@ func main() {
 
 				app.Commands = []cli.Command{
 					bot.NewAliasCommand(store, w, aliasBehavior.Invalidate),
+					bot.NewCandidateCommand(store, w),
 					bot.NewEchoCommand(w),
 					bot.NewGIFCommand(bot.GiphyAPIEndpoint, c.String("giphy-token"), w),
 					bot.NewHelpCommand(w),
