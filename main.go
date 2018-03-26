@@ -199,6 +199,7 @@ func main() {
 					bot.NewCandidateCommand(store, w),
 					bot.NewEchoCommand(w),
 					bot.NewGIFCommand(bot.GiphyAPIEndpoint, c.String("giphy-token"), w),
+					bot.NewGlossaryCommand(store, w),
 					bot.NewHelpCommand(w),
 					bot.NewInterviewCommand(appClient, store, w),
 					bot.NewKarmaCommand(store, w),

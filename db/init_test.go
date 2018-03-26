@@ -19,7 +19,8 @@ func TestInit(t *testing.T) {
 
 	expected := []string{
 		AliasesKey,
-		CandidatesKey,
+    CandidatesKey,
+		GlossaryKey,
 		InterviewsKey,
 		KarmasKey,
 	}
