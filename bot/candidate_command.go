@@ -31,7 +31,7 @@ func NewCandidateCommand(store db.Store, w io.Writer) cli.Command {
 			{
 				Name:      "ls",
 				Usage:     "list candidates",
-				ArgsUsage: "[GLOB]",
+				ArgsUsage: " ",
 				Flags: []cli.Flag{
 					cli.IntFlag{
 						Name:  "count",
@@ -48,17 +48,23 @@ func NewCandidateCommand(store db.Store, w io.Writer) cli.Command {
 			{
 				Name:      "rm",
 				Usage:     "remove a candidate",
-				ArgsUsage: "KEY",
+				ArgsUsage: "NAME",
 				Action:    newCandidateRemoveAction(store, w),
 			},
 			{
+				Name:      "show",
+				Usage:     "show information about a candidate",
+				ArgsUsage: "NAME",
+				Action:    newCandidateShowAction(store, w),
+			},
+			{
 				Name:      "update",
-				Usage:     "update a candidate",
+				Usage:     "update a candidate's information",
 				ArgsUsage: "NAME",
 				Flags: []cli.Flag{
 					cli.StringSliceFlag{
 						Name:  "meta",
-						Usage: "metadata about the candidate in key=val format",
+						Usage: "metadata to upsert in key=val format",
 					},
 				},
 				Action: newCandidateAddAction(store, w),
@@ -104,12 +110,65 @@ func newCandidateAddAction(store db.Store, w io.Writer) func(c *cli.Context) err
 
 func newCandidateListAction(store db.Store, w io.Writer) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
+		candidates := models.Candidates{}
+		if err := store.Read(db.CandidatesKey, &candidates); err != nil {
+			return err
+		}
+
+		if len(candidates) == 0 {
+			return fmt.Errorf("I don't have any candidates at the moment")
+		}
+
+		text := "Here are the candidates I have: \n"
+		keys := candidates.SortKeys(!c.Bool("descending"))
+		for i := 0; i < c.Int("count") && i < len(keys); i++ {
+			text += fmt.Sprintf("*%s* \n", keys[i])
+		}
+
+		if _, err := w.Write([]byte(text)); err != nil {
+			return err
+		}
+
 		return nil
 	}
 }
 
 func newCandidateRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
+		return nil
+	}
+}
+
+func newCandidateShowAction(store db.Store, w io.Writer) func(c *cli.Context) error {
+	return func(c *cli.Context) error {
+		name := strings.Join(c.Args(), " ")
+		if name == "" {
+			return fmt.Errorf("NAME is required")
+		}
+
+		candidates := models.Candidates{}
+		if err := store.Read(db.CandidatesKey, &candidates); err != nil {
+			return err
+		}
+
+		metadata, ok := candidates[name]
+		if !ok {
+			return fmt.Errorf("I don't have any candidates by the name *%s*", name)
+		}
+
+		text := fmt.Sprintf("*%s*: \n", name)
+		if len(metadata) == 0 {
+			text += "This candidate currently doesn't have any information associated with them"
+		}
+
+		for key, val := range metadata {
+			text += fmt.Sprintf("%s: %s\n", key, val)
+		}
+
+		if _, err := w.Write([]byte(text)); err != nil {
+			return err
+		}
+
 		return nil
 	}
 }
