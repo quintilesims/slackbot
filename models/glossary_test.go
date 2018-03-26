@@ -7,12 +7,14 @@ import (
 )
 
 func TestGlossarySortKeys(t *testing.T) {
-	glossary := Glossary{
-		"foo": "one",
-		"bar": "two",
-		"baz": "three",
+	candidates := Candidates{
+		"charlie": nil,
+		"alpha":   nil,
+		"echo":    nil,
+		"beta":    nil,
+		"delta":   nil,
 	}
 
-	assert.Equal(t, []string{"bar", "baz", "foo"}, glossary.SortKeys(true))
-	assert.Equal(t, []string{"foo", "baz", "bar"}, glossary.SortKeys(false))
+	assert.Equal(t, []string{"alpha", "beta", "charlie", "delta", "echo"}, candidates.SortKeys(true))
+	assert.Equal(t, []string{"echo", "delta", "charlie", "beta", "alpha"}, candidates.SortKeys(false))
 }

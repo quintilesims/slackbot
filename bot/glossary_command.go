@@ -36,7 +36,7 @@ func NewGlossaryCommand(store db.Store, w io.Writer) cli.Command {
 				Action:    newGlossaryRemoveAction(store, w),
 			},
 			{
-				Name:      "ls",
+				Name:      "search",
 				Usage:     "search for entries in the glossary",
 				ArgsUsage: "GLOB",
 				Flags: []cli.Flag{
@@ -72,7 +72,7 @@ func newGlossaryAddAction(store db.Store, w io.Writer) func(c *cli.Context) erro
 		}
 
 		if _, ok := glossary[key]; ok && !c.Bool("force") {
-			return fmt.Errorf("Key: *%s* already exists", key)
+			return fmt.Errorf("An entry for *%s* already exists", key)
 		}
 
 		glossary[key] = definition
@@ -102,7 +102,7 @@ func newGlossaryRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) e
 		}
 
 		if _, ok := glossary[key]; !ok {
-			return fmt.Errorf("Key: *%s* not in glossary", key)
+			return fmt.Errorf("An entry for *%s* not in glossary", key)
 		}
 
 		delete(glossary, key)
@@ -146,7 +146,6 @@ func newGlossarySearchAction(store db.Store, w io.Writer) func(c *cli.Context) e
 		keys := definitions.SortKeys(true)
 		for i := 0; i < c.Int("count") && i < len(keys); i++ {
 			key := keys[i]
-
 			text += fmt.Sprintf("*%s*: %s\n", key, definitions[key])
 		}
 

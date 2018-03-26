@@ -58,7 +58,6 @@ func TestGlossaryAddErrors(t *testing.T) {
 		t.Run(input, func(t *testing.T) {
 			cmd := NewGlossaryCommand(store, ioutil.Discard)
 			if err := runTestApp(cmd, input); err == nil {
-				fmt.Println(err)
 				t.Fatal("Error was nil!")
 			}
 		})
@@ -137,7 +136,7 @@ func TestGlossarySearch(t *testing.T) {
 		t.Run(glob, func(t *testing.T) {
 			w := bytes.NewBuffer(nil)
 			cmd := NewGlossaryCommand(store, w)
-			input := fmt.Sprintf("!glossary ls %s", glob)
+			input := fmt.Sprintf("!glossary search %s", glob)
 
 			if err := runTestApp(cmd, input); err != nil {
 				t.Fatal(err)
