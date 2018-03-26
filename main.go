@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"html"
 	"log"
 	"math/rand"
 	"os"
@@ -195,6 +196,7 @@ func main() {
 
 				app.Commands = []cli.Command{
 					bot.NewAliasCommand(store, w, aliasBehavior.Invalidate),
+					bot.NewCandidateCommand(store, w),
 					bot.NewEchoCommand(w),
 					bot.NewGIFCommand(bot.GiphyAPIEndpoint, c.String("giphy-token"), w),
 					bot.NewGlossaryCommand(store, w),
@@ -215,6 +217,7 @@ func main() {
 					text = fmt.Sprintf("```%s```", text)
 				}
 
+				text = html.UnescapeString(text)
 				msg := rtm.NewOutgoingMessage(text, e.Channel)
 				rtm.SendMessage(msg)
 			case *slack.InvalidAuthEvent:

@@ -21,10 +21,14 @@ func Init(store Store) error {
 		return err
 	}
 
-	if err := initFunc(GlossaryKey, models.Glossary{}); err != nil {
+	if err := initFunc(CandidatesKey, models.Candidates{}); err != nil {
 		return err
 	}
-
+  
+  if err := initFunc(GlossaryKey, models.Glossary{}); err != nil {
+		return err
+	}
+  
 	if err := initFunc(InterviewsKey, models.Interviews{}); err != nil {
 		return err
 	}
