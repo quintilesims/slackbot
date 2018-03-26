@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"bytes"
 	"io/ioutil"
 	"testing"
 
@@ -50,6 +51,74 @@ func TestCandidateAddErrors(t *testing.T) {
 	}
 
 	cmd := NewCandidateCommand(store, ioutil.Discard)
+	for _, input := range inputs {
+		t.Run(input, func(t *testing.T) {
+			if err := runTestApp(cmd, input); err == nil {
+				t.Fatal("Error was nil!")
+			}
+		})
+	}
+}
+
+func TestCandidateList(t *testing.T) {
+	candidates := models.Candidates{
+		"John Doe": nil,
+		"Jane Doe": nil,
+	}
+
+	store := newMemoryStore(t)
+	if err := store.Write(db.CandidatesKey, candidates); err != nil {
+		t.Fatal(err)
+	}
+
+	w := bytes.NewBuffer(nil)
+	cmd := NewCandidateCommand(store, w)
+	if err := runTestApp(cmd, "!candidate ls"); err != nil {
+		t.Fatal(err)
+	}
+
+	for name := range candidates {
+		assert.Contains(t, w.String(), name)
+	}
+}
+
+func TestCandidateListErrors(t *testing.T) {
+	cmd := NewCandidateCommand(newMemoryStore(t), ioutil.Discard)
+	if err := runTestApp(cmd, "!candidate ls"); err == nil {
+		t.Fatal("Error was nil!")
+	}
+}
+
+func TestCandidateShow(t *testing.T) {
+	candidates := models.Candidates{
+		"John Doe": map[string]string{"k1": "v1", "k2": "v2"},
+	}
+
+	store := newMemoryStore(t)
+	if err := store.Write(db.CandidatesKey, candidates); err != nil {
+		t.Fatal(err)
+	}
+
+	w := bytes.NewBuffer(nil)
+	cmd := NewCandidateCommand(store, w)
+	if err := runTestApp(cmd, "!candidate show John Doe"); err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Contains(t, w.String(), "John Doe")
+	for key, val := range map[string]string{"k1": "v1", "k2": "v2"} {
+		assert.Contains(t, w.String(), key)
+		assert.Contains(t, w.String(), val)
+	}
+}
+
+func TestCandidateShowErrors(t *testing.T) {
+	inputs := []string{
+		"!candidate show",
+		"!candidate show John Doe",
+	}
+
+	cmd := NewCandidateCommand(newMemoryStore(t), ioutil.Discard)
 	for _, input := range inputs {
 		t.Run(input, func(t *testing.T) {
 			if err := runTestApp(cmd, input); err == nil {
