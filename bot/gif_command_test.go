@@ -3,6 +3,7 @@ package bot
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -14,15 +15,15 @@ import (
 func TestGIF(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "GET", r.Method)
-		assert.Equal(t, "/v1/gifs/search", r.URL.Path)
+		assert.Equal(t, "/v1/search", r.URL.Path)
 
 		query := r.URL.Query()
-		assert.Equal(t, "token", query.Get("api_key"))
-		assert.Equal(t, "pg", query.Get("rating"))
+		fmt.Println(query)
+		assert.Equal(t, "key", query.Get("key"))
 		assert.Equal(t, "dogs playing poker", query.Get("q"))
 
-		response := GiphySearchResponse{
-			Gifs: []GiphyGif{
+		response := TenorSearchResponse{
+			Gifs: []Gif{
 				{URL: "some url"},
 			},
 		}
@@ -39,8 +40,8 @@ func TestGIF(t *testing.T) {
 	defer server.Close()
 
 	w := bytes.NewBuffer(nil)
-	cmd := NewGIFCommand(server.URL, "token", w)
-	if err := runTestApp(cmd, "!gif --rating pg dogs playing poker"); err != nil {
+	cmd := NewGIFCommand(server.URL, "key", w)
+	if err := runTestApp(cmd, "!gif --explicit dogs playing poker"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -50,8 +51,8 @@ func TestGIF(t *testing.T) {
 func TestGIFErrors(t *testing.T) {
 	inputs := []string{
 		"!gif",
-		"!gif --rating r",
-		"!gif --rating 2 dogs",
+		"!gif --explicit",
+		"!gif --explicit 2 dogs",
 	}
 
 	cmd := NewGIFCommand("", "", ioutil.Discard)
