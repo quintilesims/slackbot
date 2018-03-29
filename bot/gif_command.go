@@ -3,7 +3,6 @@ package bot
 import (
 	"fmt"
 	"io"
-	"math/rand"
 	"net/url"
 	"strings"
 
@@ -11,31 +10,30 @@ import (
 	"github.com/zpatrick/rclient"
 )
 
-// Endpoint for the gif api
-const GiphyAPIEndpoint = "https://api.giphy.com"
+// TenorAPIEndpoint for the gif api
+const TenorAPIEndpoint = "https://api.tenor.com/"
 
-// GiphySearchResponse is the response type for a Giphy API search
-type GiphySearchResponse struct {
-	Gifs []GiphyGif `json:"data"`
+// TenorSearchResponse is the response type for a Tenor API search
+type TenorSearchResponse struct {
+	Gifs []Gif `json:"results"`
 }
 
-// GiphyGif holds information about a Gif from Giphy
-type GiphyGif struct {
-	URL string `json:"bitly_gif_url"`
+// Gif holds information about a Gif from Tenor
+type Gif struct {
+	URL string `json:"itemurl"`
 }
 
 // NewGIFCommand returns a cli.Command that manages !gif
-func NewGIFCommand(endpoint, token string, w io.Writer) cli.Command {
+func NewGIFCommand(endpoint, key string, w io.Writer) cli.Command {
 	client := rclient.NewRestClient(endpoint)
 	return cli.Command{
 		Name:      "!gif",
 		Usage:     "display a gif",
 		ArgsUsage: "args...",
 		Flags: []cli.Flag{
-			cli.StringFlag{
-				Name:  "rating",
-				Value: "pg-13",
-				Usage: "the MPAA-style rating for the search, e.g. 'pg', 'pg-13', 'r'",
+			cli.BoolFlag{
+				Name:  "explicit",
+				Usage: "This will turn off safe search https://tenor.com/gifapi/documentation#safesearch",
 			},
 		},
 		Action: func(c *cli.Context) error {
@@ -45,13 +43,15 @@ func NewGIFCommand(endpoint, token string, w io.Writer) cli.Command {
 			}
 
 			query := url.Values{}
-			query.Set("api_key", token)
-			query.Set("lang", "en")
-			query.Set("rating", c.String("rating"))
+			query.Set("key", key)
 			query.Set("q", strings.Join(args, " "))
 
-			var response GiphySearchResponse
-			if err := client.Get("/v1/gifs/search", &response, rclient.Query(query)); err != nil {
+			if !c.Bool("explicit") {
+				query.Set("safesearch", "strict")
+			}
+
+			var response TenorSearchResponse
+			if err := client.Get("/v1/search", &response, rclient.Query(query)); err != nil {
 				return err
 			}
 
@@ -59,8 +59,12 @@ func NewGIFCommand(endpoint, token string, w io.Writer) cli.Command {
 				return fmt.Errorf("No gifs matching query '%s'", query.Get("q"))
 			}
 
-			gif := response.Gifs[rand.Intn(len(response.Gifs))]
-			if _, err := w.Write([]byte(gif.URL)); err != nil {
+			var url string
+			if url = response.Gifs[0].URL; url == "" {
+				return fmt.Errorf("URL does not exist")
+			}
+
+			if _, err := w.Write([]byte(url)); err != nil {
 				return err
 			}
 

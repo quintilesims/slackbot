@@ -48,9 +48,9 @@ func main() {
 			EnvVar: "SB_SLACK_APP_TOKEN",
 		},
 		cli.StringFlag{
-			Name:   "giphy-token",
-			Usage:  "authentication token for the Giphy API",
-			EnvVar: "SB_GIPHY_TOKEN",
+			Name:   "tenor-key",
+			Usage:  "authentication key for the Tenor API",
+			EnvVar: "SB_TENOR_KEY",
 		},
 		cli.StringFlag{
 			Name:   "aws-region",
@@ -197,7 +197,7 @@ func main() {
 					bot.NewAliasCommand(store, w, aliasBehavior.Invalidate),
 					bot.NewCandidateCommand(store, w),
 					bot.NewEchoCommand(w),
-					bot.NewGIFCommand(bot.GiphyAPIEndpoint, c.String("giphy-token"), w),
+					bot.NewGIFCommand(bot.TenorAPIEndpoint, c.String("tenor-key"), w),
 					bot.NewGlossaryCommand(store, w),
 					bot.NewHelpCommand(w),
 					bot.NewInterviewCommand(appClient, store, w),
