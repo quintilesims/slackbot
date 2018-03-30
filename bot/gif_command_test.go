@@ -12,17 +12,13 @@ import (
 )
 
 func TestGIF(t *testing.T) {
-	cases := []struct {
-		name  string
-		input string
-		url   string
-	}{
-		{"Clean GIF", "!gif dogs playing poker", "url"},
-		{"Explicit GIF", "!gif --explicit dogs playing poker", "saucy url"},
+	cases := map[string]bool{
+		"explicit flag disabled": false,
+		"explicit flag enabled":  true,
 	}
 
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
+	for name, explicit := range cases {
+		t.Run(name, func(t *testing.T) {
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, "GET", r.Method)
 				assert.Equal(t, "/v1/search", r.URL.Path)
@@ -30,14 +26,13 @@ func TestGIF(t *testing.T) {
 				query := r.URL.Query()
 				assert.Equal(t, "key", query.Get("key"))
 				assert.Equal(t, "dogs playing poker", query.Get("q"))
-				// How do we validate the input?
-				// if !c.Bool("explicit") {
-				// assert.Equal(t, "strict", query.Get("safesearch"))
-				// }
+				if explicit {
+					assert.Equal(t, "strict", query.Get("safesearch"))
+				}
 
 				response := TenorSearchResponse{
 					Gifs: []Gif{
-						{URL: c.url},
+						{URL: "url"},
 					},
 				}
 
@@ -54,11 +49,11 @@ func TestGIF(t *testing.T) {
 
 			w := bytes.NewBuffer(nil)
 			cmd := NewGIFCommand(server.URL, "key", w)
-			if err := runTestApp(cmd, c.input); err != nil {
+			if err := runTestApp(cmd, "!gif dogs playing poker"); err != nil {
 				t.Fatal(err)
 			}
 
-			assert.Equal(t, c.url, w.String())
+			assert.Equal(t, "url", w.String())
 		})
 	}
 }
