@@ -19,8 +19,8 @@ func NewInterviewCleanupRunner(store db.Store) *Runner {
 
 			oneWeek := time.Hour * 24 * 7
 			for i := 0; i < len(interviews); i++ {
-				if time.Since(interviews[i].Date) >= oneWeek {
-					log.Printf("[DEBUG] [InterviewCleanup] Removing old interview for %s", interviews[i].Interviewee)
+				if time.Since(interviews[i].Time) >= oneWeek {
+					log.Printf("[DEBUG] [InterviewCleanup] Removing old interview for %s", interviews[i].Candidate)
 					interviews = append(interviews[:i], interviews[i+1:]...)
 					i--
 				}

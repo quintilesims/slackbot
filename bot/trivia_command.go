@@ -68,7 +68,7 @@ func newTriviaAnswerAction(store db.Store, w io.Writer) func(c *cli.Context) err
 	return func(c *cli.Context) error {
 		answer := strings.Join(c.Args(), " ")
 		if answer == "" {
-			return fmt.Errorf("ANSWER is required")
+			return fmt.Errorf("Argument ANSWER is required")
 		}
 
 		question := models.TriviaQuestion{}

@@ -21,31 +21,26 @@ func NewInterviewCommand(client slack.SlackClient, store db.Store, w io.Writer) 
 			{
 				Name:      "add",
 				Usage:     "add a new interview",
-				ArgsUsage: "@MANAGER INTERVIEWEE",
-				Flags: []cli.Flag{
-					cli.StringFlag{
-						Name:  "time",
-						Value: "09:00AM",
-						Usage: "time of the interview",
-					},
-					cli.StringFlag{
-						Name:  "date",
-						Value: time.Now().Format(DateLayout),
-						Usage: "date of the interview",
-					},
-				},
-				Action: newInterviewAddAction(client, store, w),
+				ArgsUsage: "CANDIDATE DATE (mm/dd/yyyy) TIME (mm:hh{am/pm}) @INTERVIEWERS..",
+				Action:    newInterviewAddAction(client, store, w),
 			},
 			{
 				Name:      "ls",
-				Usage:     "list all interviews",
+				Usage:     "list interviews",
 				ArgsUsage: " ",
-				Action:    newInterviewListAction(store, w),
+				Flags: []cli.Flag{
+					cli.IntFlag{
+						Name:  "count",
+						Value: 10,
+						Usage: "The maximum number of interviews to display",
+					},
+				},
+				Action: newInterviewListAction(store, w),
 			},
 			{
 				Name:      "rm",
 				Usage:     "remove an interview",
-				ArgsUsage: "INTERVIEWEE DATE",
+				ArgsUsage: "CANDIDATE DATE (mm/dd/yyyy) TIME (mm:hh{am/pm})",
 				Action:    newInterviewRemoveAction(store, w),
 			},
 		},
@@ -55,53 +50,66 @@ func NewInterviewCommand(client slack.SlackClient, store db.Store, w io.Writer) 
 func newInterviewAddAction(client slack.SlackClient, store db.Store, w io.Writer) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
 		args := c.Args()
-		escapedManager := args.Get(0)
-		if escapedManager == "" {
-			return fmt.Errorf("Argument @MANAGER is required")
+		candidate := args.Get(0)
+		if candidate == "" {
+			return fmt.Errorf("Argument CANDIDATE is required")
 		}
 
-		interviewee := args.Get(1)
-		if interviewee == "" {
-			return fmt.Errorf("Argument INTERVIEWEE is required")
+		dateStr := args.Get(1)
+		if dateStr == "" {
+			return fmt.Errorf("Argument DATE is required")
 		}
 
-		if len(args) > 2 {
-			interviewee = strings.Join(args[1:], " ")
+		timeStr := strings.ToUpper(args.Get(2))
+		if timeStr == "" {
+			return fmt.Errorf("Argument TIME is required")
 		}
 
-		dateTimeInput := strings.ToUpper(c.String("date") + c.String("time"))
-		date, err := time.ParseInLocation(DateTimeLayout, dateTimeInput, time.Local)
+		interviewers := args[3:]
+		if len(interviewers) == 0 {
+			return fmt.Errorf("At least one interviewer is required")
+		}
+
+		t, err := time.Parse(DateTimeLayout, dateStr+" "+timeStr)
 		if err != nil {
 			return err
 		}
 
-		manager, err := parseSlackUser(client, escapedManager)
-		if err != nil {
-			return fmt.Errorf("Invalid argument for @MANAGER: %v", err)
+		interviewerIDs := make([]string, len(interviewers))
+		for i := 0; i < len(interviewers); i++ {
+			interviewerID, err := parseEscapedUserID(interviewers[i])
+			if err != nil {
+				return err
+			}
+
+			interviewerIDs[i] = interviewerID
+		}
+
+		interviews := models.Interviews{}
+		if err := store.Read(db.InterviewsKey, &interviews); err != nil {
+			return err
 		}
 
 		interview := models.Interview{
-			Manager: models.User{
-				ID:   manager.ID,
-				Name: manager.Name,
-			},
-			Interviewee: interviewee,
-			Date:        date.UTC(),
+			Candidate:      candidate,
+			Time:           t,
+			InterviewerIDs: interviewerIDs,
 		}
 
-		if err := addInterview(store, interview); err != nil {
+		for i := 0; i < len(interviews); i++ {
+			if interviews[i].Equals(interview) {
+				return fmt.Errorf("An interview for that candidate on the same date and time already exists")
+			}
+		}
+
+		interviews = append(interviews, interview)
+		if err := store.Write(db.InterviewsKey, interviews); err != nil {
 			return err
 		}
 
-		if err := addInterviewReminders(client, interview); err != nil {
-			return err
-		}
-
-		text := fmt.Sprintf("Ok, I've added an interview for *%s* on %s\n",
-			interviewee,
-			date.Format(DateAtTimeLayout))
-		text += fmt.Sprintf("I've also added a few reminders for <@%s> \n", manager.ID)
-		text += "They can use `/remind list` to view their current reminders in Slack"
+		text := fmt.Sprintf("Ok, I've added an interview for *%s* on %s",
+			interview.Candidate,
+			interview.Time.Format(DateAtTimeLayout))
 
 		if _, err := w.Write([]byte(text)); err != nil {
 			return err
@@ -109,35 +117,6 @@ func newInterviewAddAction(client slack.SlackClient, store db.Store, w io.Writer
 
 		return nil
 	}
-}
-
-func addInterview(store db.Store, interview models.Interview) error {
-	interviews := models.Interviews{}
-	if err := store.Read(db.InterviewsKey, &interviews); err != nil {
-		return err
-	}
-
-	interviews = append(interviews, interview)
-	return store.Write(db.InterviewsKey, interviews)
-}
-
-func addInterviewReminders(client slack.SlackClient, interview models.Interview) error {
-	date := interview.Date.Local()
-	interviewee := interview.Interviewee
-	reminders := map[time.Time]string{
-		date.AddDate(0, 0, -1): fmt.Sprintf("Pre-interview items for %s", interviewee),
-		date.AddDate(0, 0, 0):  fmt.Sprintf("Interview with %s", interviewee),
-		date.AddDate(0, 0, 1):  fmt.Sprintf("Post-interview items for %s", interviewee),
-	}
-
-	for d, text := range reminders {
-		dateStr := d.Format(DateAtTimeLayout)
-		if err := client.AddReminder("", interview.Manager.ID, text, dateStr); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func newInterviewListAction(store db.Store, w io.Writer) func(c *cli.Context) error {
@@ -152,11 +131,14 @@ func newInterviewListAction(store db.Store, w io.Writer) func(c *cli.Context) er
 		}
 
 		text := "Here are the interviews I have:\n"
-		for _, interview := range interviews {
-			text += fmt.Sprintf("*%s* on %s (manager: <@%s>)\n",
-				interview.Interviewee,
-				interview.Date.Format(DateAtTimeLayout),
-				interview.Manager.ID)
+		for i := 0; i < len(interviews) && i < c.Int("count"); i++ {
+			dateAtTime := interviews[i].Time.Format(DateAtTimeLayout)
+			text += fmt.Sprintf("*%s* on %s with ", interviews[i].Candidate, dateAtTime)
+			for _, interviewerID := range interviews[i].InterviewerIDs {
+				text += fmt.Sprintf("<@%s> ", interviewerID)
+			}
+
+			text += "\n"
 		}
 
 		if _, err := w.Write([]byte(text)); err != nil {
@@ -169,17 +151,23 @@ func newInterviewListAction(store db.Store, w io.Writer) func(c *cli.Context) er
 
 func newInterviewRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
-		interviewee := c.Args().Get(0)
-		if interviewee == "" {
-			return fmt.Errorf("Argument INTERVIEWEE is required")
+		args := c.Args()
+		candidate := args.Get(0)
+		if candidate == "" {
+			return fmt.Errorf("Argument CANDIDATE is required")
 		}
 
-		date := c.Args().Get(1)
-		if date == "" {
+		dateStr := args.Get(1)
+		if dateStr == "" {
 			return fmt.Errorf("Argument DATE is required")
 		}
 
-		t, err := time.Parse(DateLayout, date)
+		timeStr := strings.ToUpper(args.Get(2))
+		if timeStr == "" {
+			return fmt.Errorf("Argument TIME is required")
+		}
+
+		t, err := time.Parse(DateTimeLayout, dateStr+" "+timeStr)
 		if err != nil {
 			return err
 		}
@@ -189,27 +177,29 @@ func newInterviewRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) 
 			return err
 		}
 
+		interview := models.Interview{
+			Candidate: candidate,
+			Time:      t,
+		}
+
 		var exists bool
 		for i := 0; i < len(interviews); i++ {
-			interview := interviews[i]
-			if strings.ToLower(interview.Interviewee) == strings.ToLower(interviewee) &&
-				interview.Date.Month() == t.Month() &&
-				interview.Date.Day() == t.Day() {
-				interviews = append(interviews[:i], interviews[i+1:]...)
+			if interviews[i].Equals(interview) {
 				exists = true
-				break
+				interviews = append(interviews[:i], interviews[i+1:]...)
+				i--
 			}
 		}
 
 		if !exists {
-			return fmt.Errorf("No interviews with %s on %s found", interviewee, t.Format(DateLayout))
+			return fmt.Errorf("I couldn't find any interviews matching the specified name, date, and time")
 		}
 
 		if err := store.Write(db.InterviewsKey, interviews); err != nil {
 			return err
 		}
 
-		text := fmt.Sprintf("Ok, I've deleted the *%s* interview on %s", interviewee, t.Format(DateLayout))
+		text := fmt.Sprintf("Ok, I've deleted the interview for *%s*", candidate)
 		if _, err := w.Write([]byte(text)); err != nil {
 			return err
 		}

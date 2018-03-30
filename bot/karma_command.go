@@ -30,7 +30,7 @@ func NewKarmaCommand(store db.Store, w io.Writer) cli.Command {
 		Action: func(c *cli.Context) error {
 			g := c.Args().Get(0)
 			if g == "" {
-				return fmt.Errorf("Arg GLOB is required")
+				return fmt.Errorf("Argument GLOB is required")
 			}
 
 			karmas := models.Karmas{}
@@ -45,17 +45,19 @@ func NewKarmaCommand(store db.Store, w io.Writer) cli.Command {
 				}
 			}
 
-			if len(results) == 0 {
+			keys := results.SortKeys(c.Bool("ascending"))
+			if len(keys) == 0 {
 				return fmt.Errorf("Could not find any karma entries matching the specified pattern")
 			}
 
-			keys := results.SortKeys(c.Bool("ascending"))
+			var text string
 			for i := 0; i < c.Int("count") && i < len(keys); i++ {
 				karma := results[keys[i]]
-				text := fmt.Sprintf("karma for *%s*: %s\n", keys[i], karma)
-				if _, err := w.Write([]byte(text)); err != nil {
-					return err
-				}
+				text += fmt.Sprintf("karma for *%s*: %s\n", keys[i], karma.String())
+			}
+
+			if _, err := w.Write([]byte(text)); err != nil {
+				return err
 			}
 
 			return nil

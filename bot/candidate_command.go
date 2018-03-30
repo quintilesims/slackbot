@@ -67,7 +67,7 @@ func newCandidateAddAction(store db.Store, w io.Writer) func(c *cli.Context) err
 	return func(c *cli.Context) error {
 		name := strings.Join(c.Args(), " ")
 		if name == "" {
-			return fmt.Errorf("NAME is required")
+			return fmt.Errorf("Argument NAME is required")
 		}
 
 		meta, err := parseMetaFlag(c.StringSlice("meta"))
@@ -127,7 +127,7 @@ func newCandidateRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) 
 	return func(c *cli.Context) error {
 		name := strings.Join(c.Args(), " ")
 		if name == "" {
-			return fmt.Errorf("NAME is required")
+			return fmt.Errorf("Argument NAME is required")
 		}
 
 		candidates := models.Candidates{}
@@ -157,7 +157,7 @@ func newCandidateInfoAction(store db.Store, w io.Writer) func(c *cli.Context) er
 	return func(c *cli.Context) error {
 		name := strings.Join(c.Args(), " ")
 		if name == "" {
-			return fmt.Errorf("NAME is required")
+			return fmt.Errorf("Argument NAME is required")
 		}
 
 		candidates := models.Candidates{}
@@ -192,17 +192,17 @@ func newCandidateUpdateAction(store db.Store, w io.Writer) func(c *cli.Context) 
 		args := c.Args()
 		name := args.Get(0)
 		if name == "" {
-			return fmt.Errorf("NAME is required")
+			return fmt.Errorf("Argument NAME is required")
 		}
 
 		key := args.Get(1)
 		if key == "" {
-			return fmt.Errorf("KEY is required")
+			return fmt.Errorf("Argument KEY is required")
 		}
 
 		val := args.Get(2)
 		if val == "" {
-			return fmt.Errorf("VAL is required")
+			return fmt.Errorf("Argument VAL is required")
 		}
 
 		candidates := models.Candidates{}
@@ -237,7 +237,7 @@ func parseMetaFlag(inputs []string) (map[string]string, error) {
 	for _, input := range inputs {
 		split := strings.Split(input, "=")
 		if len(split) != 2 {
-			return nil, fmt.Errorf("Input '%s' is not in key=val format", input)
+			return nil, fmt.Errorf("'%s' is not in proper key=val format", input)
 		}
 
 		meta[split[0]] = split[1]

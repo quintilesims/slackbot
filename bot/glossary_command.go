@@ -62,12 +62,12 @@ func newGlossaryAddAction(store db.Store, w io.Writer) func(c *cli.Context) erro
 
 		key := args.First()
 		if key == "" {
-			return fmt.Errorf("Arg KEY is required")
+			return fmt.Errorf("Argument KEY is required")
 		}
 
 		definition := strings.Join(args.Tail(), " ")
 		if definition == "" {
-			return fmt.Errorf("Arg DEFINITION is required")
+			return fmt.Errorf("Argument DEFINITION is required")
 		}
 
 		glossary := models.Glossary{}
@@ -123,7 +123,7 @@ func newGlossaryRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) e
 	return func(c *cli.Context) error {
 		key := strings.Join(c.Args(), " ")
 		if key == "" {
-			return fmt.Errorf("Arg KEY is required")
+			return fmt.Errorf("Argument KEY is required")
 		}
 
 		glossary := models.Glossary{}
