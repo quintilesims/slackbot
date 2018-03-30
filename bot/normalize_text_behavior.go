@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"html"
 	"strings"
 
 	"github.com/quintilesims/slack"
@@ -8,7 +9,12 @@ import (
 
 // NewNormalizeTextBehavior returns a behavior that normalizes the text in slack message events
 func NewNormalizeTextBehavior() Behavior {
-	replacer := strings.NewReplacer("‘", "'", "’", "'", "“", "\"", "”", "\"")
+	replacer := strings.NewReplacer(
+		"‘", "'",
+		"’", "'",
+		"“", "\"",
+		"”", "\"")
+
 	return func(e slack.RTMEvent) error {
 		m, ok := e.Data.(*slack.MessageEvent)
 		if !ok {
@@ -16,6 +22,7 @@ func NewNormalizeTextBehavior() Behavior {
 		}
 
 		m.Text = replacer.Replace(m.Text)
+		m.Text = html.UnescapeString(m.Text)
 		return nil
 	}
 }

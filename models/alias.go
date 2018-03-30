@@ -2,8 +2,8 @@ package models
 
 import (
 	"bytes"
-	"html/template"
 	"strings"
+	"text/template"
 
 	"github.com/quintilesims/slack"
 	"github.com/quintilesims/slackbot/utils"
