@@ -26,9 +26,13 @@ func TestGIF(t *testing.T) {
 				query := r.URL.Query()
 				assert.Equal(t, "key", query.Get("key"))
 				assert.Equal(t, "dogs playing poker", query.Get("q"))
+
+				expectedSafesearch := "strict"
 				if explicit {
-					assert.Equal(t, "strict", query.Get("safesearch"))
+					expectedSafesearch = ""
 				}
+
+				assert.Equal(t, expectedSafesearch, query.Get("safesearch"))
 
 				response := TenorSearchResponse{
 					Gifs: []Gif{
@@ -49,7 +53,13 @@ func TestGIF(t *testing.T) {
 
 			w := bytes.NewBuffer(nil)
 			cmd := NewGIFCommand(server.URL, "key", w)
-			if err := runTestApp(cmd, "!gif dogs playing poker"); err != nil {
+
+			input := "!gif dogs playing poker"
+			if explicit {
+				input = "!gif --explicit dogs playing poker"
+			}
+
+			if err := runTestApp(cmd, input); err != nil {
 				t.Fatal(err)
 			}
 
