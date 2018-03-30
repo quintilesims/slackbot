@@ -21,7 +21,7 @@ func TestGIF(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, "GET", r.Method)
-				assert.Equal(t, "/v1/search", r.URL.Path)
+				assert.Equal(t, "/v1/random", r.URL.Path)
 
 				query := r.URL.Query()
 				assert.Equal(t, "key", query.Get("key"))

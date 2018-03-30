@@ -51,7 +51,7 @@ func NewGIFCommand(endpoint, key string, w io.Writer) cli.Command {
 			}
 
 			var response TenorSearchResponse
-			if err := client.Get("/v1/search", &response, rclient.Query(query)); err != nil {
+			if err := client.Get("/v1/random", &response, rclient.Query(query)); err != nil {
 				return err
 			}
 
