@@ -31,8 +31,8 @@ variable "slack_app_token" {
   description = "Authentication token for the Slack app"
 }
 
-variable "giphy_token" {
-  description = "Authentication token for Giphy"
+variable "tenor_key" {
+  description = "Authentication token for Tenor"
 }
 
 variable "deploy_name" {
