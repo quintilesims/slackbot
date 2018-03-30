@@ -33,7 +33,7 @@ func NewGIFCommand(endpoint, key string, w io.Writer) cli.Command {
 		Flags: []cli.Flag{
 			cli.BoolFlag{
 				Name:  "explicit",
-				Usage: "This will turn off safe search https://tenor.com/gifapi/documentation#safesearch",
+				Usage: "enable explicit content",
 			},
 		},
 		Action: func(c *cli.Context) error {
