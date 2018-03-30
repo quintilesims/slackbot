@@ -18,7 +18,7 @@ func NewGlossaryCommand(store db.Store, w io.Writer) cli.Command {
 		Subcommands: []cli.Command{
 			{
 				Name:      "add",
-				Usage:     "add or set an entry in the glossary",
+				Usage:     "add an entry in the glossary",
 				ArgsUsage: "KEY DEFINITION",
 				Flags: []cli.Flag{
 					cli.BoolFlag{
@@ -30,7 +30,7 @@ func NewGlossaryCommand(store db.Store, w io.Writer) cli.Command {
 			},
 			{
 				Name:  "ls",
-				Usage: "remove an entry from the glossary",
+				Usage: "list entries in the glossary",
 				Flags: []cli.Flag{
 					cli.IntFlag{
 						Name:  "count",
@@ -121,7 +121,7 @@ func newGlossaryListAction(store db.Store, w io.Writer) func(c *cli.Context) err
 
 func newGlossaryRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
-		key := c.Args().Get(0)
+		key := strings.Join(c.Args(), " ")
 		if key == "" {
 			return fmt.Errorf("Arg KEY is required")
 		}
@@ -151,7 +151,7 @@ func newGlossaryRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) e
 
 func newGlossaryShowAction(store db.Store, w io.Writer) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
-		entry := strings.ToLower(c.Args().Get(0))
+		entry := strings.ToLower(strings.Join(c.Args(), " "))
 		if entry == "" {
 			return fmt.Errorf("ENTRY is required")
 		}
