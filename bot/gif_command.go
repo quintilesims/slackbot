@@ -45,7 +45,7 @@ func NewGIFCommand(endpoint, key string, w io.Writer) cli.Command {
 			query := url.Values{}
 			query.Set("key", key)
 			query.Set("q", strings.Join(args, " "))
-
+			query.Set("limit", "1")
 			if !c.Bool("explicit") {
 				query.Set("safesearch", "strict")
 			}
@@ -59,12 +59,7 @@ func NewGIFCommand(endpoint, key string, w io.Writer) cli.Command {
 				return fmt.Errorf("No gifs matching query '%s'", query.Get("q"))
 			}
 
-			var url string
-			if url = response.Gifs[0].URL; url == "" {
-				return fmt.Errorf("URL does not exist")
-			}
-
-			if _, err := w.Write([]byte(url)); err != nil {
+			if _, err := w.Write([]byte(response.Gifs[0].URL)); err != nil {
 				return err
 			}
 
