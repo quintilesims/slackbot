@@ -6,14 +6,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/quintilesims/slack"
 	"github.com/quintilesims/slackbot/db"
 	"github.com/quintilesims/slackbot/models"
 	"github.com/urfave/cli"
 )
 
 // NewInterviewCommand returns a cli.Command that manages !interview
-func NewInterviewCommand(client slack.SlackClient, store db.Store, w io.Writer) cli.Command {
+func NewInterviewCommand(store db.Store, w io.Writer) cli.Command {
 	return cli.Command{
 		Name:  "!interview",
 		Usage: "manage interviews",
@@ -22,7 +21,7 @@ func NewInterviewCommand(client slack.SlackClient, store db.Store, w io.Writer) 
 				Name:      "add",
 				Usage:     "add a new interview",
 				ArgsUsage: "CANDIDATE DATE (mm/dd/yyyy) TIME (mm:hh{am/pm}) @INTERVIEWERS..",
-				Action:    newInterviewAddAction(client, store, w),
+				Action:    newInterviewAddAction(store, w),
 			},
 			{
 				Name:      "ls",
@@ -47,7 +46,7 @@ func NewInterviewCommand(client slack.SlackClient, store db.Store, w io.Writer) 
 	}
 }
 
-func newInterviewAddAction(client slack.SlackClient, store db.Store, w io.Writer) func(c *cli.Context) error {
+func newInterviewAddAction(store db.Store, w io.Writer) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
 		args := c.Args()
 		candidate := args.Get(0)
@@ -70,7 +69,7 @@ func newInterviewAddAction(client slack.SlackClient, store db.Store, w io.Writer
 			return fmt.Errorf("At least one interviewer is required")
 		}
 
-		t, err := time.Parse(DateTimeLayout, dateStr+" "+timeStr)
+		t, err := time.ParseInLocation(DateTimeLayout, dateStr+" "+timeStr, time.Local)
 		if err != nil {
 			return err
 		}
@@ -92,7 +91,7 @@ func newInterviewAddAction(client slack.SlackClient, store db.Store, w io.Writer
 
 		interview := models.Interview{
 			Candidate:      candidate,
-			Time:           t,
+			Time:           t.UTC(),
 			InterviewerIDs: interviewerIDs,
 		}
 
@@ -167,7 +166,7 @@ func newInterviewRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) 
 			return fmt.Errorf("Argument TIME is required")
 		}
 
-		t, err := time.Parse(DateTimeLayout, dateStr+" "+timeStr)
+		t, err := time.ParseInLocation(DateTimeLayout, dateStr+" "+timeStr, time.Local)
 		if err != nil {
 			return err
 		}
@@ -179,7 +178,7 @@ func newInterviewRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) 
 
 		interview := models.Interview{
 			Candidate: candidate,
-			Time:      t,
+			Time:      t.UTC(),
 		}
 
 		var exists bool
