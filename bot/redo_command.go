@@ -8,7 +8,7 @@ import (
 func NewRedoCommand(trigger func() error) cli.Command {
 	return cli.Command{
 		Name:  "!redo",
-		Usage: "redo the command executed by the slackbot",
+		Usage: "redo the last command executed by the slackbot",
 		Action: func(c *cli.Context) error {
 			return trigger()
 		},
