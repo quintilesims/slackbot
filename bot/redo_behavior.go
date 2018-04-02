@@ -43,7 +43,6 @@ func (r *RedoBehavior) Trigger(channelID string) error {
 		return fmt.Errorf("No event recorded for channel %s", channelID)
 	}
 
-	// todo: does this need be async?
-	r.eventChan <- e.(slack.RTMEvent)
+	go func() { r.eventChan <- e.(slack.RTMEvent) }()
 	return nil
 }
