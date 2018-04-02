@@ -8,9 +8,9 @@ import (
 	cache "github.com/zpatrick/go-cache"
 )
 
-// RedoBehavior tracks and executes slack.MessageEvent instances.
-// Events are recorded using the Record() function,
-// and the last event can be executed by using the Trigger() function.
+// RedoBehavior is used to record and trigger the last slack.MessageEvent for a Slack channel.
+// Events are recorded using the Record() function.
+// Events are triggered using the Trigger() function.
 type RedoBehavior struct {
 	eventChan  chan slack.RTMEvent
 	eventCache *cache.Cache
@@ -25,18 +25,18 @@ func NewRedoBehavior(c chan slack.RTMEvent) *RedoBehavior {
 }
 
 // Record will record e as the last event for the specified channel.
-// Events cannot be a *slack.MessageEvent whose text starts with "!redo".
+// Events cannot be a *slack.MessageEvent with a message that starts with "!redo".
 func (r *RedoBehavior) Record(channelID string, e slack.RTMEvent) error {
 	if m, ok := e.Data.(*slack.MessageEvent); ok && strings.HasPrefix(m.Text, "!redo") {
-		return fmt.Errorf("Cannot record MessageEvent starting with !redo")
+		return fmt.Errorf("Cannot record MessageEvent starting with '!redo'")
 	}
 
 	r.eventCache.Set(channelID, e)
 	return nil
 }
 
-// Trigger will send the last event on the specified channel to the RedoBehavior's RTMEvent channel.
-// An error will be thrown if no event is recorded for the specified channel.
+// Trigger will send the last event of the specified channel to the RedoBehavior's RTMEvent channel.
+// An error will be thrown if no event has been recorded for the specified channel.
 func (r *RedoBehavior) Trigger(channelID string) error {
 	e, ok := r.eventCache.Getf(channelID)
 	if !ok {
