@@ -103,11 +103,7 @@ func newInterviewAddAction(client slack.SlackClient, store db.Store, w io.Writer
 		text += fmt.Sprintf("I've also added a few reminders for <@%s> \n", manager.ID)
 		text += "They can use `/remind list` to view their current reminders in Slack"
 
-		if _, err := w.Write([]byte(text)); err != nil {
-			return err
-		}
-
-		return nil
+		return write(w, text)
 	}
 }
 
@@ -159,11 +155,7 @@ func newInterviewListAction(store db.Store, w io.Writer) func(c *cli.Context) er
 				interview.Manager.ID)
 		}
 
-		if _, err := w.Write([]byte(text)); err != nil {
-			return err
-		}
-
-		return nil
+		return write(w, text)
 	}
 }
 
@@ -210,10 +202,7 @@ func newInterviewRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) 
 		}
 
 		text := fmt.Sprintf("Ok, I've deleted the *%s* interview on %s", interviewee, t.Format(DateLayout))
-		if _, err := w.Write([]byte(text)); err != nil {
-			return err
-		}
 
-		return nil
+		return write(w, text)
 	}
 }

@@ -2,6 +2,7 @@ package bot
 
 import (
 	"fmt"
+	"io"
 	"regexp"
 
 	"github.com/quintilesims/slack"
@@ -24,4 +25,16 @@ func parseSlackUser(client slack.SlackClient, escaped string) (*slack.User, erro
 
 	userID := escaped[2 : len(escaped)-1]
 	return client.GetUserInfo(userID)
+}
+
+func write(w io.Writer, text string) error {
+	if _, err := w.Write([]byte(text)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func writef(w io.Writer, format string, tokens ...interface{}) error {
+	return write(w, fmt.Sprintf(format, tokens...))
 }

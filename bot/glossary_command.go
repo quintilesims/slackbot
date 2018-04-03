@@ -85,11 +85,8 @@ func newGlossaryAddAction(store db.Store, w io.Writer) func(c *cli.Context) erro
 		}
 
 		text := fmt.Sprintf("OK, I've added *%s* as \"%s\"\n", key, definition)
-		if _, err := w.Write([]byte(text)); err != nil {
-			return err
-		}
 
-		return nil
+		return write(w, text)
 	}
 }
 
@@ -111,11 +108,7 @@ func newGlossaryListAction(store db.Store, w io.Writer) func(c *cli.Context) err
 			text += fmt.Sprintf("*%s*: %s\n", entry, glossary[entry])
 		}
 
-		if _, err := w.Write([]byte(text)); err != nil {
-			return err
-		}
-
-		return nil
+		return write(w, text)
 	}
 }
 
@@ -141,11 +134,8 @@ func newGlossaryRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) e
 		}
 
 		text := fmt.Sprintf("Ok, I've deleted the entry for *%s*", key)
-		if _, err := w.Write([]byte(text)); err != nil {
-			return err
-		}
 
-		return nil
+		return write(w, text)
 	}
 }
 
@@ -174,10 +164,7 @@ func newGlossaryShowAction(store db.Store, w io.Writer) func(c *cli.Context) err
 		}
 
 		text := fmt.Sprintf("*%s*: %s\n", entry, definition)
-		if _, err := w.Write([]byte(text)); err != nil {
-			return err
-		}
 
-		return nil
+		return write(w, text)
 	}
 }

@@ -85,11 +85,7 @@ func newTriviaAnswerAction(store db.Store, w io.Writer) func(c *cli.Context) err
 			text = fmt.Sprintf("*%s* is the correct answer!", answer)
 		}
 
-		if _, err := w.Write([]byte(text)); err != nil {
-			return err
-		}
-
-		return nil
+		return write(w, text)
 	}
 }
 
@@ -124,11 +120,7 @@ func newTriviaStartAction(client *rclient.RestClient, store db.Store, w io.Write
 			return err
 		}
 
-		if _, err := w.Write([]byte(question.String())); err != nil {
-			return err
-		}
-
-		return nil
+		return write(w, question.String())
 	}
 }
 
@@ -143,10 +135,6 @@ func newTriviaShowAction(store db.Store, w io.Writer) func(c *cli.Context) error
 			return err
 		}
 
-		if _, err := w.Write([]byte(question.String())); err != nil {
-			return err
-		}
-
-		return nil
+		return write(w, question.String())
 	}
 }
