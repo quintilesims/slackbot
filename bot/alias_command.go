@@ -93,11 +93,7 @@ func newAliasAddAction(store db.Store, w io.Writer, invalidate func()) func(c *c
 		invalidate()
 
 		text := fmt.Sprintf("Ok, I've added a new alias for *%s*", name)
-		if _, err := w.Write([]byte(text)); err != nil {
-			return err
-		}
-
-		return nil
+		return write(w, text)
 	}
 }
 
@@ -117,11 +113,7 @@ func newAliasListAction(store db.Store, w io.Writer) func(c *cli.Context) error 
 			text += fmt.Sprintf("*%s*: `%s`\n", name, value)
 		}
 
-		if _, err := w.Write([]byte(text)); err != nil {
-			return err
-		}
-
-		return nil
+		return write(w, text)
 	}
 }
 
@@ -150,11 +142,7 @@ func newAliasRemoveAction(store db.Store, w io.Writer, invalidate func()) func(c
 		invalidate()
 
 		text := fmt.Sprintf("Ok, I've removed alias *%s*", name)
-		if _, err := w.Write([]byte(text)); err != nil {
-			return err
-		}
-
-		return nil
+		return write(w, text)
 	}
 }
 
@@ -182,10 +170,6 @@ func newAliasTestAction(store db.Store, w io.Writer) func(c *cli.Context) error 
 			return err
 		}
 
-		if _, err := w.Write([]byte(m.Text)); err != nil {
-			return err
-		}
-
-		return nil
+		return write(w, m.Text)
 	}
 }

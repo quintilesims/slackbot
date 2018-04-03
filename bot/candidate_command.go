@@ -90,11 +90,7 @@ func newCandidateAddAction(store db.Store, w io.Writer) func(c *cli.Context) err
 		}
 
 		text := fmt.Sprintf("Ok, I've added a new candidate named *%s*", name)
-		if _, err := w.Write([]byte(text)); err != nil {
-			return err
-		}
-
-		return nil
+		return write(w, text)
 	}
 }
 
@@ -115,11 +111,7 @@ func newCandidateListAction(store db.Store, w io.Writer) func(c *cli.Context) er
 			text += fmt.Sprintf("*%s* \n", keys[i])
 		}
 
-		if _, err := w.Write([]byte(text)); err != nil {
-			return err
-		}
-
-		return nil
+		return write(w, text)
 	}
 }
 
@@ -145,11 +137,7 @@ func newCandidateRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) 
 		}
 
 		text := fmt.Sprintf("Ok, I've deleted candidate *%s*", name)
-		if _, err := w.Write([]byte(text)); err != nil {
-			return err
-		}
-
-		return nil
+		return write(w, text)
 	}
 }
 
@@ -179,11 +167,7 @@ func newCandidateInfoAction(store db.Store, w io.Writer) func(c *cli.Context) er
 			text += fmt.Sprintf("%s: %s\n", key, val)
 		}
 
-		if _, err := w.Write([]byte(text)); err != nil {
-			return err
-		}
-
-		return nil
+		return write(w, text)
 	}
 }
 
@@ -224,11 +208,7 @@ func newCandidateUpdateAction(store db.Store, w io.Writer) func(c *cli.Context) 
 		}
 
 		text := fmt.Sprintf("Ok, I've updated information for *%s*", name)
-		if _, err := w.Write([]byte(text)); err != nil {
-			return err
-		}
-
-		return nil
+		return write(w, text)
 	}
 }
 

@@ -59,11 +59,7 @@ func NewGIFCommand(endpoint, key string, w io.Writer) cli.Command {
 				return fmt.Errorf("No gifs matching query '%s'", query.Get("q"))
 			}
 
-			if _, err := w.Write([]byte(response.Gifs[0].URL)); err != nil {
-				return err
-			}
-
-			return nil
+			return write(w, response.Gifs[0].URL)
 		},
 	}
 }
