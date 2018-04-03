@@ -48,9 +48,9 @@ func main() {
 			EnvVar: "SB_SLACK_APP_TOKEN",
 		},
 		cli.StringFlag{
-			Name:   "giphy-token",
-			Usage:  "authentication token for the Giphy API",
-			EnvVar: "SB_GIPHY_TOKEN",
+			Name:   "tenor-key",
+			Usage:  "authentication key for the Tenor API",
+			EnvVar: "SB_TENOR_KEY",
 		},
 		cli.StringFlag{
 			Name:   "aws-region",
@@ -155,6 +155,9 @@ func main() {
 		defer rtm.Disconnect()
 		go rtm.ManageConnection()
 
+		// allow the RedoBehavior to send events to the rtm.IncomingEvents channel
+		redoBehavior := bot.NewRedoBehavior(rtm.IncomingEvents)
+
 		for event := range rtm.IncomingEvents {
 			if err := behaviors.Run(event); err != nil {
 				log.Printf("[ERROR] %v", err)
@@ -197,14 +200,18 @@ func main() {
 					bot.NewAliasCommand(store, w, aliasBehavior.Invalidate),
 					bot.NewCandidateCommand(store, w),
 					bot.NewEchoCommand(w),
-					bot.NewGIFCommand(bot.GiphyAPIEndpoint, c.String("giphy-token"), w),
+					bot.NewGIFCommand(bot.TenorAPIEndpoint, c.String("tenor-key"), w),
 					bot.NewGlossaryCommand(store, w),
 					bot.NewHelpCommand(w),
 					bot.NewInterviewCommand(appClient, store, w),
 					bot.NewKarmaCommand(store, w),
+					bot.NewRedoCommand(func() error { return redoBehavior.Trigger(e.Msg.Channel) }),
 					bot.NewTriviaCommand(store, bot.TriviaAPIEndpoint, w),
 					bot.NewUndoCommand(appClient, botClient, e.Channel, rtm.GetInfo().User.ID),
 				}
+
+				// record the 'last event' for each channel
+				redoBehavior.Record(e.Msg.Channel, event)
 
 				if err := app.Run(args); err != nil {
 					log.Printf("[ERROR] %v", err)

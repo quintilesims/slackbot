@@ -12,46 +12,67 @@ import (
 )
 
 func TestGIF(t *testing.T) {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "GET", r.Method)
-		assert.Equal(t, "/v1/gifs/search", r.URL.Path)
-
-		query := r.URL.Query()
-		assert.Equal(t, "token", query.Get("api_key"))
-		assert.Equal(t, "pg", query.Get("rating"))
-		assert.Equal(t, "dogs playing poker", query.Get("q"))
-
-		response := GiphySearchResponse{
-			Gifs: []GiphyGif{
-				{URL: "some url"},
-			},
-		}
-
-		b, err := json.Marshal(response)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		w.Write(b)
-	})
-
-	server := httptest.NewServer(handler)
-	defer server.Close()
-
-	w := bytes.NewBuffer(nil)
-	cmd := NewGIFCommand(server.URL, "token", w)
-	if err := runTestApp(cmd, "!gif --rating pg dogs playing poker"); err != nil {
-		t.Fatal(err)
+	cases := map[string]bool{
+		"explicit flag disabled": false,
+		"explicit flag enabled":  true,
 	}
 
-	assert.Equal(t, "some url", w.String())
+	for name, explicit := range cases {
+		t.Run(name, func(t *testing.T) {
+			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				assert.Equal(t, "GET", r.Method)
+				assert.Equal(t, "/v1/random", r.URL.Path)
+
+				query := r.URL.Query()
+				assert.Equal(t, "key", query.Get("key"))
+				assert.Equal(t, "dogs playing poker", query.Get("q"))
+
+				expectedSafesearch := "strict"
+				if explicit {
+					expectedSafesearch = ""
+				}
+
+				assert.Equal(t, expectedSafesearch, query.Get("safesearch"))
+
+				response := TenorSearchResponse{
+					Gifs: []Gif{
+						{URL: "url"},
+					},
+				}
+
+				b, err := json.Marshal(response)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				w.Write(b)
+			})
+
+			server := httptest.NewServer(handler)
+			defer server.Close()
+
+			w := bytes.NewBuffer(nil)
+			cmd := NewGIFCommand(server.URL, "key", w)
+
+			input := "!gif dogs playing poker"
+			if explicit {
+				input = "!gif --explicit dogs playing poker"
+			}
+
+			if err := runTestApp(cmd, input); err != nil {
+				t.Fatal(err)
+			}
+
+			assert.Equal(t, "url", w.String())
+		})
+	}
 }
 
 func TestGIFErrors(t *testing.T) {
 	inputs := []string{
 		"!gif",
-		"!gif --rating r",
-		"!gif --rating 2 dogs",
+		"!gif --explicit",
+		"!gif --explicit 2 dogs",
 	}
 
 	cmd := NewGIFCommand("", "", ioutil.Discard)
