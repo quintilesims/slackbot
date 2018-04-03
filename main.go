@@ -203,7 +203,7 @@ func main() {
 					bot.NewGIFCommand(bot.TenorAPIEndpoint, c.String("tenor-key"), w),
 					bot.NewGlossaryCommand(store, w),
 					bot.NewHelpCommand(w),
-					bot.NewInterviewCommand(appClient, store, w),
+					bot.NewInterviewCommand(store, w),
 					bot.NewKarmaCommand(store, w),
 					bot.NewRedoCommand(func() error { return redoBehavior.Trigger(e.Msg.Channel) }),
 					bot.NewTriviaCommand(store, bot.TriviaAPIEndpoint, w),
