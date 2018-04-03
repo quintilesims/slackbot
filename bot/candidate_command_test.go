@@ -1,15 +1,6 @@
 package bot
 
-import (
-	"bytes"
-	"io/ioutil"
-	"testing"
-
-	"github.com/quintilesims/slackbot/db"
-	"github.com/quintilesims/slackbot/models"
-	"github.com/stretchr/testify/assert"
-)
-
+/*
 func TestCandidateAdd(t *testing.T) {
 	store := newMemoryStore(t)
 	if err := store.Write(db.CandidatesKey, models.Candidates{"John Doe": nil}); err != nil {
@@ -219,3 +210,4 @@ func TestCandidateUpdateErrors(t *testing.T) {
 		})
 	}
 }
+*/

@@ -6,15 +6,57 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCandidateSortKeys(t *testing.T) {
+func TestCandidateGet(t *testing.T) {
 	candidates := Candidates{
-		"charlie": nil,
-		"alpha":   nil,
-		"echo":    nil,
-		"beta":    nil,
-		"delta":   nil,
+		{Name: "alpha"},
+		{Name: "beta"},
+		{Name: "charlie"},
 	}
 
-	assert.Equal(t, []string{"alpha", "beta", "charlie", "delta", "echo"}, candidates.SortKeys(true))
-	assert.Equal(t, []string{"echo", "delta", "charlie", "beta", "alpha"}, candidates.SortKeys(false))
+	cases := map[string]bool{
+		"alpha":    true,
+		"ALPHA":    true,
+		"beta":     true,
+		"BETA":     true,
+		"alhpa":    false,
+		"charlie ": false,
+	}
+
+	for name, expected := range cases {
+		if _, ok := candidates.Get(name); ok != expected {
+			t.Errorf("%s: got %v, expected %v", name, ok, expected)
+		}
+	}
+}
+
+func TestCandidateSort(t *testing.T) {
+	candidates := Candidates{
+		{Name: "charlie"},
+		{Name: "alpha"},
+		{Name: "echo"},
+		{Name: "beta"},
+		{Name: "delta"},
+	}
+
+	expected := Candidates{
+		{Name: "alpha"},
+		{Name: "beta"},
+		{Name: "charlie"},
+		{Name: "delta"},
+		{Name: "echo"},
+	}
+
+	candidates.Sort(true)
+	assert.Equal(t, expected, candidates)
+
+	expected = Candidates{
+		{Name: "echo"},
+		{Name: "delta"},
+		{Name: "charlie"},
+		{Name: "beta"},
+		{Name: "alpha"},
+	}
+
+	candidates.Sort(false)
+	assert.Equal(t, expected, candidates)
 }
