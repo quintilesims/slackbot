@@ -1,6 +1,6 @@
 
 <div align="center">
-    <img src="Logo.jpg" width="100" max-width="80%" alt="Slackbot" />
+    <img src="Logo.jpg" width="200" max-width="80%" alt="Slackbot" />
     <h1>IQVBOT</h1>
 </div>
 
