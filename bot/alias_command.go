@@ -63,7 +63,7 @@ func newAliasAddAction(store db.Store, w io.Writer, invalidate func()) func(c *c
 		args := c.Args()
 		name := args.Get(0)
 		if name == "" {
-			return fmt.Errorf("NAME is required")
+			return fmt.Errorf("Argument NAME is required")
 		}
 
 		if strings.Contains(name, " ") {
@@ -72,7 +72,7 @@ func newAliasAddAction(store db.Store, w io.Writer, invalidate func()) func(c *c
 
 		value := strings.Join(args[1:], " ")
 		if value == "" {
-			return fmt.Errorf("VALUE is required")
+			return fmt.Errorf("Argument VALUE is required")
 		}
 
 		aliases := models.Aliases{}
@@ -120,7 +120,7 @@ func newAliasRemoveAction(store db.Store, w io.Writer, invalidate func()) func(c
 	return func(c *cli.Context) error {
 		name := c.Args().Get(0)
 		if name == "" {
-			return fmt.Errorf("NAME is required")
+			return fmt.Errorf("Argument NAME is required")
 		}
 
 		aliases := models.Aliases{}
@@ -148,7 +148,7 @@ func newAliasTestAction(store db.Store, w io.Writer) func(c *cli.Context) error 
 	return func(c *cli.Context) error {
 		text := strings.Join(c.Args(), " ")
 		if text == "" {
-			return fmt.Errorf("TEXT is required")
+			return fmt.Errorf("Argument TEXT is required")
 		}
 
 		aliases := models.Aliases{}

@@ -4,27 +4,24 @@ import (
 	"fmt"
 	"io"
 	"regexp"
-
-	"github.com/quintilesims/slack"
 )
 
 // date and time layouts
 const (
-	DateLayout       = "01/02"
+	DateLayout       = "01/02/2006"
 	TimeLayout       = "03:04PM"
-	DateTimeLayout   = "01/0203:04PM"
-	DateAtTimeLayout = "01/02 at 03:04PM"
+	DateTimeLayout   = DateLayout + " " + TimeLayout
+	DateAtTimeLayout = DateLayout + " at " + TimeLayout
 )
 
-func parseSlackUser(client slack.SlackClient, escaped string) (*slack.User, error) {
+func parseEscapedUserID(escaped string) (string, error) {
 	// escaped user format: '<@ABC123>'
 	r := regexp.MustCompile("\\<\\@.+\\>")
 	if !r.MatchString(escaped) {
-		return nil, fmt.Errorf("Escaped slack user '%s' is not in valid @<username> format", escaped)
+		return "", fmt.Errorf("Escaped slack user '%s' is not in valid @<username> format", escaped)
 	}
 
-	userID := escaped[2 : len(escaped)-1]
-	return client.GetUserInfo(userID)
+	return escaped[2 : len(escaped)-1], nil
 }
 
 func write(w io.Writer, text string) error {
