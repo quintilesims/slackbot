@@ -43,7 +43,7 @@ func NewDefineCommand(endpoint string, w io.Writer) cli.Command {
 				return err
 			}
 
-			if len(response[0].Definitions) == 0 {
+			if len(response) == 0 {
 				return fmt.Errorf("No definitions matching query '%s'", query.Get("sp"))
 			}
 
