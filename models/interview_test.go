@@ -62,3 +62,31 @@ func TestInterviewEquals(t *testing.T) {
 		})
 	}
 }
+
+func TestInterviewsSort(t *testing.T) {
+	now := time.Now()
+	interviews := Interviews{
+		{Candidate: "Today", Time: now},
+		{Candidate: "Yesterday", Time: now.AddDate(0, 0, -1)},
+		{Candidate: "Tomorrow", Time: now.AddDate(0, 0, 1)},
+	}
+
+	expected := Interviews{
+		{Candidate: "Yesterday", Time: now.AddDate(0, 0, -1)},
+		{Candidate: "Today", Time: now},
+		{Candidate: "Tomorrow", Time: now.AddDate(0, 0, 1)},
+	}
+
+	interviews.Sort(true)
+	assert.Equal(t, expected, interviews)
+
+	expected = Interviews{
+		{Candidate: "Tomorrow", Time: now.AddDate(0, 0, 1)},
+		{Candidate: "Today", Time: now},
+		{Candidate: "Yesterday", Time: now.AddDate(0, 0, -1)},
+	}
+
+	interviews.Sort(false)
+	assert.Equal(t, expected, interviews)
+
+}
