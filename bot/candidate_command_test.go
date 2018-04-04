@@ -1,14 +1,20 @@
 package bot
 
-/*
+import (
+	"bytes"
+	"io/ioutil"
+	"testing"
+
+	"github.com/quintilesims/slackbot/db"
+	"github.com/quintilesims/slackbot/models"
+	"github.com/stretchr/testify/assert"
+)
+
 func TestCandidateAdd(t *testing.T) {
 	store := newMemoryStore(t)
-	if err := store.Write(db.CandidatesKey, models.Candidates{"John Doe": nil}); err != nil {
-		t.Fatal(err)
-	}
-
 	cmd := NewCandidateCommand(store, ioutil.Discard)
-	if err := runTestApp(cmd, "!candidate add --meta k1=v1 --meta k2=v2 Jane Doe"); err != nil {
+
+	if err := runTestApp(cmd, "!candidate add --meta k1=v1 --meta k2=v2 \"John Doe\" <@uid>"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -18,10 +24,10 @@ func TestCandidateAdd(t *testing.T) {
 	}
 
 	expected := models.Candidates{
-		"John Doe": nil,
-		"Jane Doe": map[string]string{
-			"k1": "v1",
-			"k2": "v2",
+		{
+			Name:      "John Doe",
+			ManagerID: "uid",
+			Meta:      map[string]string{"k1": "v1", "k2": "v2"},
 		},
 	}
 
@@ -29,16 +35,20 @@ func TestCandidateAdd(t *testing.T) {
 }
 
 func TestCandidateAddErrors(t *testing.T) {
-	inputs := []string{
-		"!candidate add",
-		"!candidate add John Doe",
-		"!candidate add --meta stuff NAME",
-		"!candidate add --meta key:val NAME",
+	store := newMemoryStore(t)
+	if err := store.Write(db.CandidatesKey, models.Candidates{{Name: "John"}}); err != nil {
+		t.Fatal(err)
 	}
 
-	store := newMemoryStore(t)
-	if err := store.Write(db.CandidatesKey, models.Candidates{"John Doe": nil}); err != nil {
-		t.Fatal(err)
+	inputs := []string{
+		"!candidate add",
+		"!candidate add NAME",
+		"!candidate add NAME MANAGER",
+		"!candidate add NAME @MANAGER",
+		"!candidate add --meta NAME <@MANAGER>",
+		"!candidate add --meta key NAME <@MANAGER>",
+		"!candidate add --meta key:val NAME",
+		"!candidate add John <@MANAGER>",
 	}
 
 	cmd := NewCandidateCommand(store, ioutil.Discard)
@@ -51,11 +61,11 @@ func TestCandidateAddErrors(t *testing.T) {
 	}
 }
 
-// todo: test --count flag
+// todo: test --count and --ascending flag
 func TestCandidateList(t *testing.T) {
 	candidates := models.Candidates{
-		"John Doe": nil,
-		"Jane Doe": nil,
+		{Name: "John Doe"},
+		{Name: "Jane Doe"},
 	}
 
 	store := newMemoryStore(t)
@@ -69,8 +79,8 @@ func TestCandidateList(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for name := range candidates {
-		assert.Contains(t, w.String(), name)
+	for _, candidate := range candidates {
+		assert.Contains(t, w.String(), candidate.Name)
 	}
 }
 
@@ -83,8 +93,8 @@ func TestCandidateListErrors(t *testing.T) {
 
 func TestCandidateRemove(t *testing.T) {
 	candidates := models.Candidates{
-		"John Doe": nil,
-		"Jane Doe": nil,
+		{Name: "John Doe"},
+		{Name: "Jane Doe"},
 	}
 
 	store := newMemoryStore(t)
@@ -103,7 +113,7 @@ func TestCandidateRemove(t *testing.T) {
 	}
 
 	expected := models.Candidates{
-		"Jane Doe": nil,
+		{Name: "Jane Doe"},
 	}
 
 	assert.Equal(t, expected, result)
@@ -125,9 +135,9 @@ func TestCandidateRemoveErrors(t *testing.T) {
 	}
 }
 
-func TestCandidateInfo(t *testing.T) {
+func TestCandidateShow(t *testing.T) {
 	candidates := models.Candidates{
-		"John Doe": map[string]string{"k1": "v1", "k2": "v2"},
+		{Name: "John Doe"},
 	}
 
 	store := newMemoryStore(t)
@@ -137,21 +147,17 @@ func TestCandidateInfo(t *testing.T) {
 
 	w := bytes.NewBuffer(nil)
 	cmd := NewCandidateCommand(store, w)
-	if err := runTestApp(cmd, "!candidate info John Doe"); err != nil {
+	if err := runTestApp(cmd, "!candidate show john doe"); err != nil {
 		t.Fatal(err)
 	}
 
 	assert.Contains(t, w.String(), "John Doe")
-	for key, val := range map[string]string{"k1": "v1", "k2": "v2"} {
-		assert.Contains(t, w.String(), key)
-		assert.Contains(t, w.String(), val)
-	}
 }
 
-func TestCandidateInfoErrors(t *testing.T) {
+func TestCandidateShowErrors(t *testing.T) {
 	inputs := []string{
-		"!candidate info",
-		"!candidate info John Doe",
+		"!candidate show",
+		"!candidate show John Doe",
 	}
 
 	cmd := NewCandidateCommand(newMemoryStore(t), ioutil.Discard)
@@ -166,7 +172,13 @@ func TestCandidateInfoErrors(t *testing.T) {
 
 func TestCandidateUpdate(t *testing.T) {
 	candidates := models.Candidates{
-		"John Doe": map[string]string{"k1": "v1"},
+		{
+			Name: "John Doe",
+			Meta: map[string]string{
+				"k1": "v1",
+				"k2": "v2",
+			},
+		},
 	}
 
 	store := newMemoryStore(t)
@@ -175,7 +187,7 @@ func TestCandidateUpdate(t *testing.T) {
 	}
 
 	cmd := NewCandidateCommand(store, ioutil.Discard)
-	if err := runTestApp(cmd, "!candidate update \"John Doe\" k1 v2"); err != nil {
+	if err := runTestApp(cmd, "!candidate update \"John Doe\" k1 updated"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -185,8 +197,12 @@ func TestCandidateUpdate(t *testing.T) {
 	}
 
 	expected := models.Candidates{
-		"John Doe": map[string]string{
-			"k1": "v2",
+		{
+			Name: "John Doe",
+			Meta: map[string]string{
+				"k1": "updated",
+				"k2": "v2",
+			},
 		},
 	}
 
@@ -196,9 +212,9 @@ func TestCandidateUpdate(t *testing.T) {
 func TestCandidateUpdateErrors(t *testing.T) {
 	inputs := []string{
 		"!candidate update",
-		"!candidate update \"John Doe\"",
-		"!candidate update \"John Doe\" k1",
-		"!candidate update \"John Doe\" k1 v1",
+		"!candidate update NAME",
+		"!candidate update NAME KEY",
+		"!candidate update NAME KEY VAL",
 	}
 
 	cmd := NewCandidateCommand(newMemoryStore(t), ioutil.Discard)
@@ -210,4 +226,3 @@ func TestCandidateUpdateErrors(t *testing.T) {
 		})
 	}
 }
-*/

@@ -110,11 +110,7 @@ func newInterviewAddAction(store db.Store, w io.Writer) func(c *cli.Context) err
 			interview.Candidate,
 			interview.Time.Format(DateAtTimeLayout))
 
-		if _, err := w.Write([]byte(text)); err != nil {
-			return err
-		}
-
-		return nil
+		return write(w, text)
 	}
 }
 
@@ -140,11 +136,7 @@ func newInterviewListAction(store db.Store, w io.Writer) func(c *cli.Context) er
 			text += "\n"
 		}
 
-		if _, err := w.Write([]byte(text)); err != nil {
-			return err
-		}
-
-		return nil
+		return write(w, text)
 	}
 }
 
@@ -198,11 +190,6 @@ func newInterviewRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) 
 			return err
 		}
 
-		text := fmt.Sprintf("Ok, I've deleted the interview for *%s*", candidate)
-		if _, err := w.Write([]byte(text)); err != nil {
-			return err
-		}
-
-		return nil
+		return writef(w, "Ok, I've deleted the *%s* interview on %s", candidate, t.Format(DateLayout))
 	}
 }

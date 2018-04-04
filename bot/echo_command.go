@@ -16,11 +16,8 @@ func NewEchoCommand(w io.Writer) cli.Command {
 		SkipFlagParsing: true,
 		Action: func(c *cli.Context) error {
 			text := strings.Join(c.Args(), " ")
-			if _, err := w.Write([]byte(text)); err != nil {
-				return err
-			}
 
-			return nil
+			return write(w, text)
 		},
 	}
 }

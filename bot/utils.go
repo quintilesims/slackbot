@@ -2,6 +2,7 @@ package bot
 
 import (
 	"fmt"
+	"io"
 	"regexp"
 )
 
@@ -21,4 +22,16 @@ func parseEscapedUserID(escaped string) (string, error) {
 	}
 
 	return escaped[2 : len(escaped)-1], nil
+}
+
+func write(w io.Writer, text string) error {
+	if _, err := w.Write([]byte(text)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func writef(w io.Writer, format string, tokens ...interface{}) error {
+	return write(w, fmt.Sprintf(format, tokens...))
 }

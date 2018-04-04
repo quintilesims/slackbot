@@ -53,14 +53,10 @@ func NewKarmaCommand(store db.Store, w io.Writer) cli.Command {
 			var text string
 			for i := 0; i < c.Int("count") && i < len(keys); i++ {
 				karma := results[keys[i]]
-				text += fmt.Sprintf("karma for *%s*: %s\n", keys[i], karma.String())
+				text += fmt.Sprintf("karma for *%s*: %s\n", keys[i], karma)
 			}
 
-			if _, err := w.Write([]byte(text)); err != nil {
-				return err
-			}
-
-			return nil
+			return write(w, text)
 		},
 	}
 }
