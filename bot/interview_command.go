@@ -123,7 +123,7 @@ func newInterviewAddAction(store db.Store, w io.Writer) func(c *cli.Context) err
 
 		text := fmt.Sprintf("Ok, I've added an interview for *%s* on %s",
 			interview.Candidate,
-			interview.Time.Format(DateAtTimeLayout))
+			interview.Time.In(time.Local).Format(DateAtTimeLayout))
 
 		return write(w, text)
 	}
@@ -144,7 +144,7 @@ func newInterviewListAction(store db.Store, w io.Writer) func(c *cli.Context) er
 
 		text := "Here are the interviews I have:\n"
 		for i := 0; i < len(interviews) && i < c.Int("count"); i++ {
-			dateAtTime := interviews[i].Time.Format(DateAtTimeLayout)
+			dateAtTime := interviews[i].Time.In(time.Local).Format(DateAtTimeLayout)
 			text += fmt.Sprintf("*%s* on %s with ", interviews[i].Candidate, dateAtTime)
 			for _, interviewerID := range interviews[i].InterviewerIDs {
 				text += fmt.Sprintf("<@%s> ", interviewerID)
@@ -207,6 +207,6 @@ func newInterviewRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) 
 			return err
 		}
 
-		return writef(w, "Ok, I've deleted the *%s* interview on %s", candidate, t.Format(DateLayout))
+		return writef(w, "Ok, I've deleted the *%s* interview on %s", candidate, t.In(time.Local).Format(DateLayout))
 	}
 }

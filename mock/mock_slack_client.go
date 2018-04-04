@@ -5,9 +5,10 @@
 package mock
 
 import (
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	slack "github.com/nlopes/slack"
-	reflect "reflect"
 )
 
 // MockSlackClient is a mock of SlackClient interface
