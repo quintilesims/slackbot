@@ -1,6 +1,6 @@
 <div align="center">
     <img src=".github/logo.jpg" width="200" max-width="80%" alt="Slackbot" />
-    <h1>IQVBOT</h1>
+    <h1>SLACKBOT</h1>
 </div>
 
 [![Build Status](https://travis-ci.org/quintilesims/slackbot.svg?branch=master)](https://travis-ci.org/quintilesims/slackbot)
