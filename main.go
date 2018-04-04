@@ -143,7 +143,7 @@ func main() {
 		}
 
 		defer runner.NewCleanupRunner(store).RunEvery(time.Hour).Stop()
-		defer runner.NewReminderRunner(store, botClient).RunEvery(time.Minute * 5).Stop()
+		defer runner.NewReminderRunner(store, botClient).RunEvery(time.Minute * 30).Stop()
 
 		// initiate the RTM websocket connection
 		rtm := botClient.NewRTM()
