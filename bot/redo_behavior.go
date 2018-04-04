@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/quintilesims/slack"
+	"github.com/nlopes/slack"
 	cache "github.com/zpatrick/go-cache"
 )
 

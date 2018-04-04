@@ -6,12 +6,9 @@ LATEST_DOCKER_IMAGE=quintilesims/slackbot:latest
 deps: 
 	go get github.com/golang/mock/mockgen/model
 	go install github.com/golang/mock/mockgen
-	go get golang.org/x/tools/cmd/goimports
-	go install golang.org/x/tools/cmd/goimports
 
 mocks:
-	mockgen -package mock github.com/quintilesims/slack SlackClient > mock/mock_slack_client.go
-	cd mock && goimports -w . && cd -
+	mockgen -package mock github.com/quintilesims/slackbot/utils SlackClient > mock/mock_slack_client.go
 
 build:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a --ldflags "-X main.Version=$(VERSION)" -o slackbot . 

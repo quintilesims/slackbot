@@ -5,9 +5,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/quintilesims/slack"
+	"github.com/nlopes/slack"
 	"github.com/quintilesims/slackbot/db"
 	"github.com/quintilesims/slackbot/models"
+	"github.com/quintilesims/slackbot/utils"
 )
 
 // InterviewReminders will be send out 1 hour before the interview
@@ -15,7 +16,7 @@ const InterviewReminderLead = time.Hour
 
 // NewReminderRunner will return a runner that will send reminders to slack users.
 // Each time the runner executes, it will read from the store and
-func NewReminderRunner(store db.Store, client slack.SlackClient) *Runner {
+func NewReminderRunner(store db.Store, client utils.SlackClient) *Runner {
 	timers := []*time.Timer{}
 	return &Runner{
 		Name: "Remind",
@@ -36,7 +37,7 @@ func NewReminderRunner(store db.Store, client slack.SlackClient) *Runner {
 	}
 }
 
-func getInterviewTimers(store db.Store, client slack.SlackClient) ([]*time.Timer, error) {
+func getInterviewTimers(store db.Store, client utils.SlackClient) ([]*time.Timer, error) {
 	interviews := models.Interviews{}
 	if err := store.Read(db.InterviewsKey, &interviews); err != nil {
 		return nil, err
@@ -54,7 +55,8 @@ func getInterviewTimers(store db.Store, client slack.SlackClient) ([]*time.Timer
 				text := fmt.Sprintf("Hi <@%s>! Just reminding you that ", interviewerID)
 				text += fmt.Sprintf("you have an interview with *%s* ", interviews[i].Candidate)
 				text += fmt.Sprintf(" at %s", interviews[i].Time.Format("03:04:05PM"))
-				if err := client.SendMessage(interviewerID, text); err != nil {
+
+				if _, _, _, err := client.SendMessage(interviewerID, slack.MsgOptionText(text, true)); err != nil {
 					log.Printf("[ERROR] [Reminder] %v", err)
 				}
 			}

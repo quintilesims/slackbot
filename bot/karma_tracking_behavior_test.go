@@ -3,7 +3,7 @@ package bot
 import (
 	"testing"
 
-	"github.com/quintilesims/slack"
+	"github.com/nlopes/slack"
 	"github.com/quintilesims/slackbot/db"
 	"github.com/quintilesims/slackbot/models"
 	"github.com/stretchr/testify/assert"

@@ -6,7 +6,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/quintilesims/slack"
+	"github.com/nlopes/slack"
 	"github.com/quintilesims/slackbot/db"
 	"github.com/quintilesims/slackbot/utils"
 	"github.com/urfave/cli"
