@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/quintilesims/slack"
+	"github.com/nlopes/slack"
 	"github.com/quintilesims/slackbot/mock"
 )
 

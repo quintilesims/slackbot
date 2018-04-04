@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/quintilesims/slack"
+	"github.com/nlopes/slack"
 	"github.com/quintilesims/slackbot/bot"
 	"github.com/quintilesims/slackbot/db"
 	"github.com/quintilesims/slackbot/runner"
@@ -143,7 +143,7 @@ func main() {
 		}
 
 		defer runner.NewCleanupRunner(store).RunEvery(time.Hour).Stop()
-		defer runner.NewReminder(store).Runner().RunEvery(time.Minute * 5).Stop()
+		defer runner.NewReminderRunner(store, botClient).RunEvery(time.Minute * 5).Stop()
 
 		// initiate the RTM websocket connection
 		rtm := botClient.NewRTM()
