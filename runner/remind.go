@@ -55,7 +55,7 @@ func getInterviewTimers(store db.Store, client utils.SlackClient) ([]*time.Timer
 			for _, interviewerID := range interview.InterviewerIDs {
 				text := fmt.Sprintf("Hi <@%s>! Just reminding you that ", interviewerID)
 				text += fmt.Sprintf("you have an interview with *%s* ", interview.Candidate)
-				text += fmt.Sprintf(" at %s", interview.Time.Format("03:04:05PM"))
+				text += fmt.Sprintf(" at %s", interview.Time.In(time.Local).Format("03:04:05PM"))
 
 				if _, _, _, err := client.SendMessage(interviewerID, slack.MsgOptionText(text, true)); err != nil {
 					log.Printf("[ERROR] [Reminder] %v", err)
