@@ -26,7 +26,7 @@ func NewReminderRunner(store db.Store, client utils.SlackClient) *Runner {
 				return err
 			}
 
-			// reset all of our timers
+			// stop all of our timers before overwriting them
 			for i := 0; i < len(timers); i++ {
 				timers[i].Stop()
 			}
@@ -45,16 +45,17 @@ func getInterviewTimers(store db.Store, client utils.SlackClient) ([]*time.Timer
 
 	timers := []*time.Timer{}
 	for i := 0; i < len(interviews); i++ {
-		d := time.Until(interviews[i].Time)
+		interview := interviews[i]
+		d := time.Until(interview.Time)
 		if d < InterviewReminderLead {
 			continue
 		}
 
 		timer := time.AfterFunc(d, func() {
-			for _, interviewerID := range interviews[i].InterviewerIDs {
+			for _, interviewerID := range interview.InterviewerIDs {
 				text := fmt.Sprintf("Hi <@%s>! Just reminding you that ", interviewerID)
-				text += fmt.Sprintf("you have an interview with *%s* ", interviews[i].Candidate)
-				text += fmt.Sprintf(" at %s", interviews[i].Time.Format("03:04:05PM"))
+				text += fmt.Sprintf("you have an interview with *%s* ", interview.Candidate)
+				text += fmt.Sprintf(" at %s", interview.Time.Format("03:04:05PM"))
 
 				if _, _, _, err := client.SendMessage(interviewerID, slack.MsgOptionText(text, true)); err != nil {
 					log.Printf("[ERROR] [Reminder] %v", err)
