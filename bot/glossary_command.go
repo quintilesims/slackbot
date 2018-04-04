@@ -84,9 +84,7 @@ func newGlossaryAddAction(store db.Store, w io.Writer) func(c *cli.Context) erro
 			return err
 		}
 
-		text := fmt.Sprintf("OK, I've added *%s* as \"%s\"\n", key, definition)
-
-		return write(w, text)
+		return writef(w, "OK, I've added *%s* as \"%s\"\n", key, definition)
 	}
 }
 
@@ -133,9 +131,7 @@ func newGlossaryRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) e
 			return err
 		}
 
-		text := fmt.Sprintf("Ok, I've deleted the entry for *%s*", key)
-
-		return write(w, text)
+		return writef(w, "Ok, I've deleted the entry for *%s*", key)
 	}
 }
 
@@ -163,8 +159,6 @@ func newGlossaryShowAction(store db.Store, w io.Writer) func(c *cli.Context) err
 			return fmt.Errorf("There is no entry for *%s*", entry)
 		}
 
-		text := fmt.Sprintf("*%s*: %s\n", entry, definition)
-
-		return write(w, text)
+		return writef(w, "*%s*: %s\n", entry, definition)
 	}
 }

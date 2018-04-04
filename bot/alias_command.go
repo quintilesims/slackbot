@@ -92,8 +92,7 @@ func newAliasAddAction(store db.Store, w io.Writer, invalidate func()) func(c *c
 		// make sure we tell the alias behavior cache to invalidate
 		invalidate()
 
-		text := fmt.Sprintf("Ok, I've added a new alias for *%s*", name)
-		return write(w, text)
+		return writef(w, "Ok, I've added a new alias for *%s*", name)
 	}
 }
 
@@ -141,8 +140,7 @@ func newAliasRemoveAction(store db.Store, w io.Writer, invalidate func()) func(c
 		// make sure we tell the alias behavior cache to invalidate
 		invalidate()
 
-		text := fmt.Sprintf("Ok, I've removed alias *%s*", name)
-		return write(w, text)
+		return writef(w, "Ok, I've removed alias *%s*", name)
 	}
 }
 
