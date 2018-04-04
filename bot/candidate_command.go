@@ -171,6 +171,23 @@ func newCandidateRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) 
 			return err
 		}
 
+		// delete the candidate's interviews
+		interviews := models.Interviews{}
+		if err := store.Read(db.InterviewsKey, &interviews); err != nil {
+			return err
+		}
+
+		for i := 0; i < len(interviews); i++ {
+			if strings.ToLower(interviews[i].Candidate) == strings.ToLower(name) {
+				interviews = append(interviews[:i], interviews[i+1:]...)
+				i--
+			}
+		}
+
+		if err := store.Write(db.InterviewsKey, interviews); err != nil {
+			return err
+		}
+
 		return writef(w, "Ok, I've deleted candidate *%s*", name)
 	}
 }

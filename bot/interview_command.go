@@ -20,7 +20,7 @@ func NewInterviewCommand(store db.Store, w io.Writer) cli.Command {
 			{
 				Name:      "add",
 				Usage:     "add a new interview",
-				ArgsUsage: "CANDIDATE DATE (mm/dd/yyyy) TIME (mm:hh{am/pm}) @INTERVIEWERS..",
+				ArgsUsage: "CANDIDATE DATE (mm/dd/yyyy) TIME (mm:hh{am|pm}) @INTERVIEWERS..",
 				Action:    newInterviewAddAction(store, w),
 			},
 			{
@@ -33,13 +33,17 @@ func NewInterviewCommand(store db.Store, w io.Writer) cli.Command {
 						Value: 10,
 						Usage: "The maximum number of interviews to display",
 					},
+					cli.BoolFlag{
+						Name:  "ascending",
+						Usage: "Show results in reverse-chronological order",
+					},
 				},
 				Action: newInterviewListAction(store, w),
 			},
 			{
 				Name:      "rm",
 				Usage:     "remove an interview",
-				ArgsUsage: "CANDIDATE DATE (mm/dd/yyyy) TIME (mm:hh{am/pm})",
+				ArgsUsage: "CANDIDATE DATE (mm/dd/yyyy) TIME (mm:hh{am|pm})",
 				Action:    newInterviewRemoveAction(store, w),
 			},
 		},
@@ -84,6 +88,17 @@ func newInterviewAddAction(store db.Store, w io.Writer) func(c *cli.Context) err
 			interviewerIDs[i] = interviewerID
 		}
 
+		candidates := models.Candidates{}
+		if err := store.Read(db.CandidatesKey, &candidates); err != nil {
+			return err
+		}
+
+		if _, ok := candidates.Get(candidate); !ok {
+			text := fmt.Sprintf("I don't have any candidates by the name *%s*\n", candidate)
+			text += "You can create a candidate by running `!candidate add NAME @MANAGER`"
+			return fmt.Errorf(text)
+		}
+
 		interviews := models.Interviews{}
 		if err := store.Read(db.InterviewsKey, &interviews); err != nil {
 			return err
@@ -124,6 +139,8 @@ func newInterviewListAction(store db.Store, w io.Writer) func(c *cli.Context) er
 		if len(interviews) == 0 {
 			return fmt.Errorf("I don't have any interviews scheduled")
 		}
+
+		interviews.Sort(!c.Bool("ascending"))
 
 		text := "Here are the interviews I have:\n"
 		for i := 0; i < len(interviews) && i < c.Int("count"); i++ {
