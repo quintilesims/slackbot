@@ -89,8 +89,7 @@ func newCandidateAddAction(store db.Store, w io.Writer) func(c *cli.Context) err
 			return err
 		}
 
-		text := fmt.Sprintf("Ok, I've added a new candidate named *%s*", name)
-		return write(w, text)
+		return writef(w, "Ok, I've added a new candidate named *%s*", name)
 	}
 }
 
@@ -136,8 +135,7 @@ func newCandidateRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) 
 			return err
 		}
 
-		text := fmt.Sprintf("Ok, I've deleted candidate *%s*", name)
-		return write(w, text)
+		return writef(w, "Ok, I've deleted candidate *%s*", name)
 	}
 }
 
@@ -207,8 +205,7 @@ func newCandidateUpdateAction(store db.Store, w io.Writer) func(c *cli.Context) 
 			return err
 		}
 
-		text := fmt.Sprintf("Ok, I've updated information for *%s*", name)
-		return write(w, text)
+		return writef(w, "Ok, I've updated information for *%s*", name)
 	}
 }
 

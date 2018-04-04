@@ -201,8 +201,6 @@ func newInterviewRemoveAction(store db.Store, w io.Writer) func(c *cli.Context) 
 			return err
 		}
 
-		text := fmt.Sprintf("Ok, I've deleted the *%s* interview on %s", interviewee, t.Format(DateLayout))
-
-		return write(w, text)
+		return writef(w, "Ok, I've deleted the *%s* interview on %s", interviewee, t.Format(DateLayout))
 	}
 }
