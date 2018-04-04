@@ -142,13 +142,8 @@ func main() {
 			bot.NewKarmaTrackingBehavior(store),
 		}
 
-		runner := runner.NewInterviewCleanupRunner(store)
-		if err := runner.Run(); err != nil {
-			return err
-		}
-
-		ticker := runner.RunEvery(time.Hour * 24)
-		defer ticker.Stop()
+		defer runner.NewCleanupRunner(store).RunEvery(time.Hour).Stop()
+		defer runner.NewReminder(store).Runner().RunEvery(time.Minute * 5).Stop()
 
 		// initiate the RTM websocket connection
 		rtm := botClient.NewRTM()
