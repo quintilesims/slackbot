@@ -18,9 +18,9 @@ func TestGetInterviewReminders(t *testing.T) {
 
 	now := time.Now()
 	interviews := models.Interviews{
-		{Time: now.Add(InterviewReminderLead * 2), InterviewerIDs: []string{"uid1", "uid2"}},
-		{Time: now.Add(InterviewReminderLead * 2), InterviewerIDs: []string{"uid3"}},
-		{Time: now.Add(-InterviewReminderLead), InterviewerIDs: []string{"bad"}},
+		{Time: now.Add(InterviewReminderLead * 2).UTC(), InterviewerIDs: []string{"uid1", "uid2"}},
+		{Time: now.Add(InterviewReminderLead * 2).UTC(), InterviewerIDs: []string{"uid3"}},
+		{Time: now.Add(-InterviewReminderLead).UTC(), InterviewerIDs: []string{"bad"}},
 	}
 
 	store := newMemoryStore(t)
