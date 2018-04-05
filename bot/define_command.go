@@ -23,10 +23,9 @@ type DatamuseResponse []struct {
 func NewDefineCommand(endpoint string, w io.Writer) cli.Command {
 	client := rclient.NewRestClient(endpoint)
 	return cli.Command{
-		Name:        "!define",
-		Usage:       "display a definition for query",
-		Description: "A list of definitions is return with a preface of n for nouns or v is for verbs",
-		ArgsUsage:   "args...",
+		Name:      "!define",
+		Usage:     "display a definition for word",
+		ArgsUsage: "WORD OR PHRASE",
 		Action: func(c *cli.Context) error {
 			args := c.Args()
 			if len(args) == 0 {
@@ -43,12 +42,12 @@ func NewDefineCommand(endpoint string, w io.Writer) cli.Command {
 				return err
 			}
 
-			if len(response) == 0 {
+			if len(response) == 0 || len(response[0].Definitions) == 0 {
 				return fmt.Errorf("No definitions matching query '%s'", query.Get("sp"))
 			}
 
 			text := fmt.Sprintf("Here are the defintions for %s: \n", response[0].Word)
-			for i := 0; i < len(response[0].Definitions) && i != 5; i++ {
+			for i := 0; i < len(response[0].Definitions) && i != 4; i++ {
 				text += fmt.Sprintf("*%d* %s \n", i+1, response[0].Definitions[i])
 			}
 

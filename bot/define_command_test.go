@@ -12,7 +12,6 @@ import (
 )
 
 func TestDefine(t *testing.T) {
-
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "GET", r.Method)
 		assert.Equal(t, "/words", r.URL.Path)
@@ -49,22 +48,13 @@ func TestDefine(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, "Here are the defintions for ice cream: \n*1* frozen dessert containing cream and sugar and flavoring \n", w.String())
-
+	assert.Contains(t, w.String(), "frozen dessert containing cream and sugar and flavoring")
 }
 
 func TestDefineErrors(t *testing.T) {
-	inputs := []string{
-		"!define",
-		"!define dog",
-	}
-
 	cmd := NewDefineCommand("", ioutil.Discard)
-	for _, input := range inputs {
-		t.Run(input, func(t *testing.T) {
-			if err := runTestApp(cmd, input); err == nil {
-				t.Fatal("Error was nil!")
-			}
-		})
+
+	if err := runTestApp(cmd, "!define"); err == nil {
+		t.Fatal("Error was nil!")
 	}
 }
