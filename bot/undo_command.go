@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/quintilesims/slack"
+	"github.com/nlopes/slack"
+	"github.com/quintilesims/slackbot/utils"
 	"github.com/urfave/cli"
 )
 
@@ -12,7 +13,7 @@ import (
 // Due to Slack's permission model, only clients which have "bot" authentication are allowed to delete messages sent by the bot.
 // However, only clients which have "app" authentication are allowed to get chat history for Channels, Groups, and IMs.
 // Because of this, we must pass in a SlackClient authenticated for each.
-func NewUndoCommand(appClient, botClient slack.SlackClient, channelID, botID string) cli.Command {
+func NewUndoCommand(appClient, botClient utils.SlackClient, channelID, botID string) cli.Command {
 	return cli.Command{
 		Name:  "!undo",
 		Usage: "delete the last message sent by the slackbot",

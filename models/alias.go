@@ -5,7 +5,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/quintilesims/slack"
+	"github.com/nlopes/slack"
 	"github.com/quintilesims/slackbot/utils"
 )
 

@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/quintilesims/slack"
+	"github.com/nlopes/slack"
 	"github.com/quintilesims/slackbot/bot"
 	"github.com/quintilesims/slackbot/db"
 	"github.com/quintilesims/slackbot/runner"
@@ -142,13 +142,8 @@ func main() {
 			bot.NewKarmaTrackingBehavior(store),
 		}
 
-		runner := runner.NewInterviewCleanupRunner(store)
-		if err := runner.Run(); err != nil {
-			return err
-		}
-
-		ticker := runner.RunEvery(time.Hour * 24)
-		defer ticker.Stop()
+		defer runner.NewCleanupRunner(store).RunEvery(time.Hour).Stop()
+		defer runner.NewReminderRunner(store, botClient).RunEvery(time.Minute * 30).Stop()
 
 		// initiate the RTM websocket connection
 		rtm := botClient.NewRTM()

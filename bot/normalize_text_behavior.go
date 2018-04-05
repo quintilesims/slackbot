@@ -4,7 +4,7 @@ import (
 	"html"
 	"strings"
 
-	"github.com/quintilesims/slack"
+	"github.com/nlopes/slack"
 )
 
 // NewNormalizeTextBehavior returns a behavior that normalizes the text in slack message events

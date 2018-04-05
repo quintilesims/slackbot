@@ -12,7 +12,15 @@ import (
 )
 
 func TestInterviewAdd(t *testing.T) {
+	candidates := models.Candidates{
+		{Name: "John Doe"},
+	}
+
 	store := newMemoryStore(t)
+	if err := store.Write(db.CandidatesKey, candidates); err != nil {
+		t.Fatal(err)
+	}
+
 	w := bytes.NewBuffer(nil)
 	cmd := NewInterviewCommand(store, w)
 
