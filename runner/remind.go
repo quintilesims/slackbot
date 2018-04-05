@@ -46,7 +46,7 @@ func getInterviewTimers(store db.Store, client utils.SlackClient) ([]*time.Timer
 	timers := []*time.Timer{}
 	for i := 0; i < len(interviews); i++ {
 		interview := interviews[i]
-		d := time.Until(interview.Time)
+		d := interview.Time.UTC().Sub(time.Now().UTC())
 		if d < InterviewReminderLead {
 			continue
 		}
