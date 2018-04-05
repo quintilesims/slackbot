@@ -33,7 +33,7 @@ func cleanupInterviews(store db.Store) error {
 	}
 
 	for i := 0; i < len(interviews); i++ {
-		if time.Since(interviews[i].Time) >= InterviewExpiry {
+		if time.Now().UTC().Sub(interviews[i].Time.UTC()) >= InterviewExpiry {
 			log.Printf("[DEBUG] [Cleanup] Removing old interview %#v", interviews[i])
 			interviews = append(interviews[:i], interviews[i+1:]...)
 			i--
