@@ -45,13 +45,13 @@ func NewGIFCommand(endpoint, key string, w io.Writer) cli.Command {
 			query := url.Values{}
 			query.Set("key", key)
 			query.Set("q", strings.Join(args, " "))
-			query.Set("limit", "1")
+			query.Set("mediafilter", "minimal")
 			if !c.Bool("explicit") {
 				query.Set("safesearch", "strict")
 			}
 
 			var response TenorSearchResponse
-			if err := client.Get("/v1/random", &response, rclient.Query(query)); err != nil {
+			if err := client.Get("/v1/search", &response, rclient.Query(query)); err != nil {
 				return err
 			}
 
