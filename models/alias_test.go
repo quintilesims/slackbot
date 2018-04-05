@@ -3,7 +3,7 @@ package models
 import (
 	"testing"
 
-	"github.com/quintilesims/slack"
+	"github.com/nlopes/slack"
 	"github.com/stretchr/testify/assert"
 )
 

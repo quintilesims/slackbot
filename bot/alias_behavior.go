@@ -1,7 +1,7 @@
 package bot
 
 import (
-	"github.com/quintilesims/slack"
+	"github.com/nlopes/slack"
 	"github.com/quintilesims/slackbot/db"
 	"github.com/quintilesims/slackbot/models"
 	cache "github.com/zpatrick/go-cache"

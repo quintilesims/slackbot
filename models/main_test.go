@@ -3,7 +3,7 @@ package models
 import (
 	"fmt"
 
-	"github.com/quintilesims/slack"
+	"github.com/nlopes/slack"
 )
 
 func newSlackMessageEvent(channel, user, format string, tokens ...interface{}) *slack.MessageEvent {

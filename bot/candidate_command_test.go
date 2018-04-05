@@ -102,21 +102,42 @@ func TestCandidateRemove(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	interviews := models.Interviews{
+		{Candidate: "John Doe"},
+		{Candidate: "John Doe"},
+		{Candidate: "Jane Doe"},
+	}
+
+	if err := store.Write(db.InterviewsKey, interviews); err != nil {
+		t.Fatal(err)
+	}
+
 	cmd := NewCandidateCommand(store, ioutil.Discard)
 	if err := runTestApp(cmd, "!candidate rm John Doe"); err != nil {
 		t.Fatal(err)
 	}
 
-	result := models.Candidates{}
-	if err := store.Read(db.CandidatesKey, &result); err != nil {
+	resultCandidates := models.Candidates{}
+	if err := store.Read(db.CandidatesKey, &resultCandidates); err != nil {
 		t.Fatal(err)
 	}
 
-	expected := models.Candidates{
+	expectedCandidates := models.Candidates{
 		{Name: "Jane Doe"},
 	}
 
-	assert.Equal(t, expected, result)
+	assert.Equal(t, expectedCandidates, resultCandidates)
+
+	resultInterviews := models.Interviews{}
+	if err := store.Read(db.InterviewsKey, &resultInterviews); err != nil {
+		t.Fatal(err)
+	}
+
+	expectedInterviews := models.Interviews{
+		{Candidate: "Jane Doe"},
+	}
+
+	assert.Equal(t, expectedInterviews, resultInterviews)
 }
 
 func TestCandidateRemoveErrors(t *testing.T) {
