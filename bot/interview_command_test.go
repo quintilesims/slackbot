@@ -45,24 +45,24 @@ func TestInterviewAdd(t *testing.T) {
 }
 
 func TestInterviewAddErrors(t *testing.T) {
-	inputs := []string{
-		"!interview add",
-		"!interview add NAME",
-		"!interview add NAME 03/15/2006",
-		"!interview add NAME 03/15/2006 09:00am",
-		"!interview add NAME 03/15/2006 09:00am uname",
-		"!interview add NAME 03/15/2006 09:00am @uname",
-		"!interview add NAME 15/03/2006 09:00am <@uid>",
-		"!interview add NAME 3/15/2006 09:00am <@uid>",
-		"!interview add NAME 03/15/06 09:00am <@uid>",
-		"!interview add NAME 03/15/2006 9 <@uid>",
-		"!interview add NAME 03/15/2006 9am <@uid>",
-		"!interview add NAME 03/15/2006 9:00am <@uid>",
-		"!interview add NAME 03/15/2006 09:00 <@uid>",
+	cases := map[string]string{
+		"missing CANDIDATE argument":           "!interview add",
+		"missing DATE argument":                "!interview add NAME",
+		"missing TIME argument":                "!interview add NAME 03/15/2006",
+		"missing INTERVIEWER argument":         "!interview add NAME 03/15/2006 09:00am",
+		"missing '@' on INTERVIEWER argument":  "!interview add NAME 03/15/2006 09:00am uname",
+		"missing '<>' on INTERVIEWER argument": "!interview add NAME 03/15/2006 09:00am @uname",
+		"parse error month out of range":       "!interview add NAME 15/03/2006 09:00am <@uid>",
+		"parse error missing month digit":      "!interview add NAME 3/15/2006 09:00am <@uid>",
+		"parse error missing year digits":      "!interview add NAME 03/15/06 09:00am <@uid>",
+		"parse error missing full time":        "!interview add NAME 03/15/2006 9 <@uid>",
+		"parse error missing minute digit":     "!interview add NAME 03/15/2006 9am <@uid>",
+		"parse error missing hour digit":       "!interview add NAME 03/15/2006 9:00am <@uid>",
+		"parse error missing time period":      "!interview add NAME 03/15/2006 09:00 <@uid>",
 	}
 
-	for _, input := range inputs {
-		t.Run(input, func(t *testing.T) {
+	for name, input := range cases {
+		t.Run(name, func(t *testing.T) {
 			cmd := NewInterviewCommand(newMemoryStore(t), ioutil.Discard)
 			if err := runTestApp(cmd, input); err == nil {
 				t.Fatal("Error was nil!")
@@ -146,22 +146,22 @@ func TestInterviewRemove(t *testing.T) {
 }
 
 func TestInterviewRemoveErrors(t *testing.T) {
-	inputs := []string{
-		"!interview rm",
-		"!interview rm John",
-		"!interview rm John 03/15/2006",
-		"!interview rm John 03/15/2006 09:00am",
-		"!interview rm John 15/03/2006 09:00am",
-		"!interview rm John 3/15/2006 09:00am",
-		"!interview rm John 03/15/06 09:00am",
-		"!interview rm John 03/15/2006 9",
-		"!interview rm John 03/15/2006 9am",
-		"!interview rm John 03/15/2006 9:00am",
-		"!interview rm John 03/15/2006 09:00",
+	cases := map[string]string{
+		"missing CANDIDATE argument":       "!interview rm",
+		"missing DATE argument":            "!interview rm John",
+		"missing TIME argument":            "!interview rm John 03/15/2006",
+		"interview doesn't exist":          "!interview rm John 03/15/2006 09:00am",
+		"parse error month out of range":   "!interview rm John 15/03/2006 09:00am",
+		"parse error missing month digit":  "!interview rm John 3/15/2006 09:00am",
+		"parse error missing year digits":  "!interview rm John 03/15/06 09:00am",
+		"parse error missing full time":    "!interview rm John 03/15/2006 9",
+		"parse error missing minute digit": "!interview rm John 03/15/2006 9am",
+		"parse error missing hour digit":   "!interview rm John 03/15/2006 9:00am",
+		"parse error missing time period":  "!interview rm John 03/15/2006 09:00",
 	}
 
-	for _, input := range inputs {
-		t.Run(input, func(t *testing.T) {
+	for name, input := range cases {
+		t.Run(name, func(t *testing.T) {
 			cmd := NewInterviewCommand(newMemoryStore(t), ioutil.Discard)
 			if err := runTestApp(cmd, input); err == nil {
 				t.Fatal("Error was nil!")
