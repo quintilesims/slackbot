@@ -16,7 +16,6 @@ func NewEchoCommand(w io.Writer) cli.Command {
 		SkipFlagParsing: true,
 		Action: func(c *cli.Context) error {
 			text := strings.Join(c.Args(), " ")
-
 			return write(w, text)
 		},
 	}
