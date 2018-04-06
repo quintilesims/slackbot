@@ -21,7 +21,7 @@ func TestDefine(t *testing.T) {
 		assert.Equal(t, "d", query.Get("md"))
 		assert.Equal(t, "ice cream", query.Get("sp"))
 
-		response := DatamuseResponse{
+		response := []DatamuseResponse{
 			{
 				Definitions: []string{
 					"frozen dessert containing cream and sugar and flavoring",
@@ -52,9 +52,17 @@ func TestDefine(t *testing.T) {
 }
 
 func TestDefineErrors(t *testing.T) {
-	cmd := NewDefineCommand("", ioutil.Discard)
+	cases := map[string]string{
+		"missing WORD or PHRASE": "!define",
+		"missing --limit value":  "!define --limit",
+	}
 
-	if err := runTestApp(cmd, "!define"); err == nil {
-		t.Fatal("Error was nil!")
+	for name, input := range cases {
+		t.Run(name, func(t *testing.T) {
+			cmd := NewDefineCommand("", ioutil.Discard)
+			if err := runTestApp(cmd, input); err == nil {
+				t.Fatal("Error was nil!")
+			}
+		})
 	}
 }

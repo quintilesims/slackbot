@@ -14,7 +14,7 @@ import (
 const DatamuseAPIEndpoint = "https://api.datamuse.com"
 
 // DatamuseResponse is the response type for a Tenor API search
-type DatamuseResponse []struct {
+type DatamuseResponse struct {
 	Definitions []string `json:"defs"`
 	Word        string   `json:"word"`
 }
@@ -26,6 +26,13 @@ func NewDefineCommand(endpoint string, w io.Writer) cli.Command {
 		Name:      "!define",
 		Usage:     "display a definition for word",
 		ArgsUsage: "WORD OR PHRASE",
+		Flags: []cli.Flag{
+			cli.IntFlag{
+				Name:  "limit",
+				Value: 1,
+				Usage: "limit number of results returned",
+			},
+		},
 		Action: func(c *cli.Context) error {
 			args := c.Args()
 			if len(args) == 0 {
@@ -37,7 +44,7 @@ func NewDefineCommand(endpoint string, w io.Writer) cli.Command {
 			query.Set("max", "1")
 			query.Set("md", "d")
 
-			var response DatamuseResponse
+			var response []DatamuseResponse
 			if err := client.Get("/words", &response, rclient.Query(query)); err != nil {
 				return err
 			}
@@ -47,7 +54,7 @@ func NewDefineCommand(endpoint string, w io.Writer) cli.Command {
 			}
 
 			text := fmt.Sprintf("Here are the defintions for %s: \n", response[0].Word)
-			for i := 0; i < len(response[0].Definitions) && i != 4; i++ {
+			for i := 0; i < len(response[0].Definitions) && i != c.Int("limit"); i++ {
 				text += fmt.Sprintf("*%d* %s \n", i+1, response[0].Definitions[i])
 			}
 
