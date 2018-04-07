@@ -194,6 +194,7 @@ func main() {
 				app.Commands = []cli.Command{
 					bot.NewAliasCommand(store, w, aliasBehavior.Invalidate),
 					bot.NewCandidateCommand(store, w),
+					bot.NewDefineCommand(bot.DatamuseAPIEndpoint, w),
 					bot.NewEchoCommand(w),
 					bot.NewGIFCommand(bot.TenorAPIEndpoint, c.String("tenor-key"), w),
 					bot.NewGlossaryCommand(store, w),
