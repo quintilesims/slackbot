@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGIF(t *testing.T) {
+func TestGIFExplicit(t *testing.T) {
 	cases := map[string]bool{
 		"explicit flag disabled": false,
 		"explicit flag enabled":  true,
@@ -21,7 +21,7 @@ func TestGIF(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, "GET", r.Method)
-				assert.Equal(t, "/v1/random", r.URL.Path)
+				assert.Equal(t, "/v1/search", r.URL.Path)
 
 				query := r.URL.Query()
 				assert.Equal(t, "key", query.Get("key"))
@@ -29,7 +29,7 @@ func TestGIF(t *testing.T) {
 
 				expectedSafesearch := "strict"
 				if explicit {
-					expectedSafesearch = ""
+					expectedSafesearch = "off"
 				}
 
 				assert.Equal(t, expectedSafesearch, query.Get("safesearch"))
@@ -68,16 +68,49 @@ func TestGIF(t *testing.T) {
 	}
 }
 
+func TestGIFLimit(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "GET", r.Method)
+		assert.Equal(t, "/v1/search", r.URL.Path)
+
+		query := r.URL.Query()
+		assert.Equal(t, "10", query.Get("limit"))
+
+		response := TenorSearchResponse{
+			Gifs: []Gif{
+				{URL: "url"},
+			},
+		}
+
+		b, err := json.Marshal(response)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		w.Write(b)
+	})
+
+	server := httptest.NewServer(handler)
+	defer server.Close()
+
+	w := bytes.NewBuffer(nil)
+	cmd := NewGIFCommand(server.URL, "key", w)
+
+	input := "!gif --limit=10 dogs playing poker"
+	if err := runTestApp(cmd, input); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestGIFErrors(t *testing.T) {
-	inputs := []string{
-		"!gif",
-		"!gif --explicit",
-		"!gif --explicit 2 dogs",
+	cases := map[string]string{
+		"query missing": "!gif",
+		"limit missing": "!gif --limit dog",
 	}
 
 	cmd := NewGIFCommand("", "", ioutil.Discard)
-	for _, input := range inputs {
-		t.Run(input, func(t *testing.T) {
+	for name, input := range cases {
+		t.Run(name, func(t *testing.T) {
 			if err := runTestApp(cmd, input); err == nil {
 				t.Fatal("Error was nil!")
 			}

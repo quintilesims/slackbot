@@ -3,7 +3,9 @@ package bot
 import (
 	"fmt"
 	"io"
+	"math/rand"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/urfave/cli"
@@ -35,6 +37,15 @@ func NewGIFCommand(endpoint, key string, w io.Writer) cli.Command {
 				Name:  "explicit",
 				Usage: "enable explicit content",
 			},
+			cli.IntFlag{
+				Name:  "limit",
+				Value: 20,
+				Usage: "limit number of results returned (max size 50)",
+			},
+			cli.BoolFlag{
+				Name:  "random",
+				Usage: "return a random gif",
+			},
 		},
 		Action: func(c *cli.Context) error {
 			args := c.Args()
@@ -45,18 +56,29 @@ func NewGIFCommand(endpoint, key string, w io.Writer) cli.Command {
 			query := url.Values{}
 			query.Set("key", key)
 			query.Set("q", strings.Join(args, " "))
-			query.Set("limit", "1")
-			if !c.Bool("explicit") {
-				query.Set("safesearch", "strict")
+			query.Set("mediafilter", "minimal")
+			query.Set("safesearch", "strict")
+			query.Set("limit", strconv.Itoa(c.Int("limit")))
+
+			if c.Bool("explicit") {
+				query.Set("safesearch", "off")
+			}
+
+			if c.Int("limit") <= 50 {
+				query.Set("limit", strconv.Itoa(c.Int("limit")))
 			}
 
 			var response TenorSearchResponse
-			if err := client.Get("/v1/random", &response, rclient.Query(query)); err != nil {
+			if err := client.Get("/v1/search", &response, rclient.Query(query)); err != nil {
 				return err
 			}
 
 			if len(response.Gifs) == 0 {
 				return fmt.Errorf("No gifs matching query '%s'", query.Get("q"))
+			}
+
+			if c.Bool("random") {
+				return write(w, response.Gifs[rand.Intn(len(response.Gifs))].URL)
 			}
 
 			return write(w, response.Gifs[0].URL)
