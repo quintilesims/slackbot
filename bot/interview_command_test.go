@@ -46,19 +46,19 @@ func TestInterviewAdd(t *testing.T) {
 
 func TestInterviewAddErrors(t *testing.T) {
 	cases := map[string]string{
-		"missing CANDIDATE argument":           "!interview add",
-		"missing DATE argument":                "!interview add NAME",
-		"missing TIME argument":                "!interview add NAME 03/15/2006",
-		"missing INTERVIEWER argument":         "!interview add NAME 03/15/2006 09:00am",
-		"missing '@' on INTERVIEWER argument":  "!interview add NAME 03/15/2006 09:00am uname",
-		"missing '<>' on INTERVIEWER argument": "!interview add NAME 03/15/2006 09:00am @uname",
-		"parse error month out of range":       "!interview add NAME 15/03/2006 09:00am <@uid>",
-		"parse error missing month digit":      "!interview add NAME 3/15/2006 09:00am <@uid>",
-		"parse error missing year digits":      "!interview add NAME 03/15/06 09:00am <@uid>",
-		"parse error missing full time":        "!interview add NAME 03/15/2006 9 <@uid>",
-		"parse error missing minute digit":     "!interview add NAME 03/15/2006 9am <@uid>",
-		"parse error missing hour digit":       "!interview add NAME 03/15/2006 9:00am <@uid>",
-		"parse error missing time period":      "!interview add NAME 03/15/2006 09:00 <@uid>",
+		"missing CANDIDATE":                "!interview add",
+		"missing DATE":                     "!interview add NAME",
+		"missing TIME":                     "!interview add NAME 03/15/2006",
+		"missing INTERVIEWER":              "!interview add NAME 03/15/2006 09:00am",
+		"missing '@' on INTERVIEWER":       "!interview add NAME 03/15/2006 09:00am uname",
+		"missing '<>' on INTERVIEWER":      "!interview add NAME 03/15/2006 09:00am @uname",
+		"parse error month out of range":   "!interview add NAME 15/03/2006 09:00am <@uid>",
+		"parse error missing month digit":  "!interview add NAME 3/15/2006 09:00am <@uid>",
+		"parse error missing year digits":  "!interview add NAME 03/15/06 09:00am <@uid>",
+		"parse error missing full time":    "!interview add NAME 03/15/2006 9 <@uid>",
+		"parse error missing minute digit": "!interview add NAME 03/15/2006 9am <@uid>",
+		"parse error missing hour digit":   "!interview add NAME 03/15/2006 9:00am <@uid>",
+		"parse error missing time period":  "!interview add NAME 03/15/2006 09:00 <@uid>",
 	}
 
 	for name, input := range cases {

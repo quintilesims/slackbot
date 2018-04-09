@@ -22,29 +22,65 @@ func TestKarma(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cases := map[string][]string{
-		"!karma --count 1 *":               []string{"dogs"},
-		"!karma --count 1 --ascending *":   []string{"cats"},
-		"!karma --count 3 *":               []string{"dogs", "people", "cats"},
-		"!karma --count 100 *":             []string{"dogs", "people", "cats"},
-		"!karma --count 3 --ascending *":   []string{"cats", "people", "dogs"},
-		"!karma --count 100 --ascending *": []string{"cats", "people", "dogs"},
-		"!karma dogs":                      []string{"dogs"},
-		"!karma *o*":                       []string{"dogs"},
-		"!karma --ascending *o*":           []string{"people"},
-		"!karma --count 2 *o*":             []string{"dogs", "people"},
-		"!karma --count 100 *o*":           []string{"dogs", "people"},
+	cases := map[string]struct {
+		Input  string
+		Output []string
+	}{
+		"single count": {
+			Input:  "!karma --count 1 *",
+			Output: []string{"dogs"},
+		},
+		"single count ascending": {
+			Input:  "!karma --count 1 --ascending *",
+			Output: []string{"cats"},
+		},
+		"three count": {
+			Input:  "!karma --count 3 *",
+			Output: []string{"dogs", "people", "cats"},
+		},
+		"one-hundred count": {
+			Input:  "!karma --count 100 *",
+			Output: []string{"dogs", "people", "cats"},
+		},
+		"three count ascending": {
+			Input:  "!karma --count 3 --ascending *",
+			Output: []string{"dogs", "people", "cats"},
+		},
+		"one-hundred count ascending": {
+			Input:  "!karma --count 100 --ascending *",
+			Output: []string{"cats", "people", "dogs"},
+		},
+		"exact match": {
+			Input:  "!karma dogs",
+			Output: []string{"dogs"},
+		},
+		"wildcards": {
+			Input:  "!karma *o*",
+			Output: []string{"dogs"},
+		},
+		"wildcards ascending": {
+			Input:  "!karma --ascending *o*",
+			Output: []string{"people"},
+		},
+		"wildcards count": {
+			Input:  "!karma --count 2 *o*",
+			Output: []string{"dogs", "people"},
+		},
+		"wildcards count one-hundred": {
+			Input:  "!karma --count 2 *o*",
+			Output: []string{"dogs", "people"},
+		},
 	}
 
-	for input, expectedMatches := range cases {
-		t.Run(input, func(t *testing.T) {
+	for name := range cases {
+		t.Run(name, func(t *testing.T) {
 			w := bytes.NewBuffer(nil)
 			cmd := NewKarmaCommand(store, w)
-			if err := runTestApp(cmd, input); err != nil {
+			if err := runTestApp(cmd, cases[name].Input); err != nil {
 				t.Fatal(err)
 			}
 
-			for _, expected := range expectedMatches {
+			for _, expected := range cases[name].Output {
 				assert.Contains(t, w.String(), expected)
 			}
 		})
@@ -52,17 +88,17 @@ func TestKarma(t *testing.T) {
 }
 
 func TestKarmaErrors(t *testing.T) {
-	inputs := []string{
-		"!karma",
-		"!karma --ascending",
-		"!karma --count 5",
-		"!karma --count five *",
-		"!karma keyThatDoesNotExist",
+	cases := map[string]string{
+		"missing GLOB":           "!karma",
+		"missing GLOB ascending": "!karma --ascending",
+		"missing GlOB count":     "!karma --count 5",
+		"missing int count":      "!karma --count five *",
+		"unmatched key":          "!karma keyThatDoesNotExist",
 	}
 
 	store := newMemoryStore(t)
-	for _, input := range inputs {
-		t.Run(input, func(t *testing.T) {
+	for name, input := range cases {
+		t.Run(name, func(t *testing.T) {
 			cmd := NewKarmaCommand(store, ioutil.Discard)
 			if err := runTestApp(cmd, input); err == nil {
 				t.Fatal("Error was nil!")

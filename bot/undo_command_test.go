@@ -71,12 +71,12 @@ func TestUndo(t *testing.T) {
 }
 
 func TestUndoError(t *testing.T) {
-	inputs := map[string]string{
+	cases := map[string]string{
 		"bad channel": "some_channel",
 		"no matches":  "G123",
 	}
 
-	for name, channelID := range inputs {
+	for name, channelID := range cases {
 		t.Run(name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()

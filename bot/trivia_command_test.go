@@ -25,24 +25,42 @@ func TestTriviaAnswer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cases := map[string]bool{
-		"!trivia answer white chicks": true,
-		"!trivia answer White Chicks": true,
-		"!trivia answer casablanca":   false,
-		"!trivia answer Citizen Kane": false,
-		"!trivia answer foo":          false,
+	cases := map[string]struct {
+		Input     string
+		IsCorrect bool
+	}{
+		"correct answer case sensitivity": {
+			"!trivia answer white chicks",
+			true,
+		},
+		"correct answer exact": {
+			"!trivia answer White Chicks",
+			true,
+		},
+		"incorrect answer case sensitivity": {
+			"!trivia answer casablanca",
+			false,
+		},
+		"incorrect answer": {
+			"!trivia answer Citizen Kane",
+			false,
+		},
+		"non listed answer": {
+			"!trivia answer foo",
+			false,
+		},
 	}
 
-	for input, isCorrect := range cases {
-		t.Run(input, func(t *testing.T) {
+	for name := range cases {
+		t.Run(name, func(t *testing.T) {
 			w := bytes.NewBuffer(nil)
 			cmd := NewTriviaCommand(store, "", w)
-			if err := runTestApp(cmd, input); err != nil {
+			if err := runTestApp(cmd, cases[name].Input); err != nil {
 				t.Fatal(err)
 			}
 
 			expected := "is not the correct answer"
-			if isCorrect {
+			if cases[name].IsCorrect {
 				expected = "is the correct answer"
 			}
 
@@ -52,14 +70,14 @@ func TestTriviaAnswer(t *testing.T) {
 }
 
 func TestTriviaAnswerErrors(t *testing.T) {
-	inputs := []string{
-		"!trivia answer",
-		"!trivia answer foo",
+	cases := map[string]string{
+		"missing ANSWER":            "!trivia answer",
+		"no active trivia question": "!trivia answer foo",
 	}
 
 	store := newMemoryStore(t)
-	for _, input := range inputs {
-		t.Run(input, func(t *testing.T) {
+	for name, input := range cases {
+		t.Run(name, func(t *testing.T) {
 			cmd := NewTriviaCommand(store, "", ioutil.Discard)
 			if err := runTestApp(cmd, input); err == nil {
 				t.Fatal("Error was nil!")

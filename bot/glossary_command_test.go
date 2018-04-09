@@ -14,20 +14,20 @@ func TestGlossaryAdd(t *testing.T) {
 	store := newMemoryStore(t)
 
 	cases := []struct {
-		Input    string
-		Expected models.Glossary
+		Input  string
+		Output models.Glossary
 	}{
 		{
-			Input:    "!glossary add foo one",
-			Expected: models.Glossary{"foo": "one"},
+			Input:  "!glossary add foo one",
+			Output: models.Glossary{"foo": "one"},
 		},
 		{
-			Input:    "!glossary add bar two",
-			Expected: models.Glossary{"bar": "two", "foo": "one"},
+			Input:  "!glossary add bar two",
+			Output: models.Glossary{"bar": "two", "foo": "one"},
 		},
 		{
-			Input:    "!glossary add --force foo three",
-			Expected: models.Glossary{"bar": "two", "foo": "three"},
+			Input:  "!glossary add --force foo three",
+			Output: models.Glossary{"bar": "two", "foo": "three"},
 		},
 	}
 
@@ -44,7 +44,7 @@ func TestGlossaryAdd(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			assert.Equal(t, c.Expected, result)
+			assert.Equal(t, c.Output, result)
 		})
 	}
 }

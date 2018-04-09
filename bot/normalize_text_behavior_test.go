@@ -8,22 +8,33 @@ import (
 )
 
 func TestNormalizeTextBehavior(t *testing.T) {
-	cases := map[string]string{
-		"foo":         "foo",
-		"“foo”":       "\"foo\"",
-		"‘foo’":       "'foo'",
-		"&lt;foo&gt;": "<foo>",
+	cases := map[string]struct {
+		input          string
+		expectedOutput string
+	}{
+		"escape double quotes": {
+			"“foo”",
+			"\"foo\"",
+		},
+		"single quotes": {
+			"‘foo’",
+			"'foo'",
+		},
+		"sanitize character": {
+			"&lt;foo&gt;",
+			"<foo>",
+		},
 	}
 
 	b := NewNormalizeTextBehavior()
-	for input, expected := range cases {
-		t.Run(input, func(t *testing.T) {
-			e := newSlackMessageEvent(input)
+	for name := range cases {
+		t.Run(name, func(t *testing.T) {
+			e := newSlackMessageEvent(cases[name].input)
 			if err := b(e); err != nil {
 				t.Fatal(err)
 			}
 
-			assert.Equal(t, expected, e.Data.(*slack.MessageEvent).Text)
+			assert.Equal(t, cases[name].expectedOutput, e.Data.(*slack.MessageEvent).Text)
 		})
 	}
 }

@@ -37,14 +37,14 @@ func TestAliasAdd(t *testing.T) {
 }
 
 func TestAliasAddErrors(t *testing.T) {
-	inputs := []string{
-		"!alias add",
-		"!alias add !foo",
+	cases := map[string]string{
+		"missing NAME":  "!alias add",
+		"missing VALUE": "!alias add !foo",
 	}
 
 	cmd := NewAliasCommand(newMemoryStore(t), ioutil.Discard, func() {})
-	for _, input := range inputs {
-		t.Run(input, func(t *testing.T) {
+	for name, input := range cases {
+		t.Run(name, func(t *testing.T) {
 			if err := runTestApp(cmd, input); err == nil {
 				t.Fatal("Error was nil!")
 			}
@@ -116,14 +116,14 @@ func TestAliasRemove(t *testing.T) {
 }
 
 func TestAliasRemoveErrors(t *testing.T) {
-	inputs := []string{
-		"!alias rm",
-		"!alias rm !foo",
+	cases := map[string]string{
+		"missing NAME":       "!alias rm",
+		"NAME doesn't exist": "!alias rm !foo",
 	}
 
 	cmd := NewAliasCommand(newMemoryStore(t), ioutil.Discard, func() {})
-	for _, input := range inputs {
-		t.Run(input, func(t *testing.T) {
+	for name, input := range cases {
+		t.Run(name, func(t *testing.T) {
 			if err := runTestApp(cmd, input); err == nil {
 				t.Fatal("Error was nil!")
 			}
@@ -141,34 +141,51 @@ func TestAliasTest(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cases := map[string]string{
-		"!alias test !foo arg0":               "user_id in channel_id says arg0 (args=[arg0])",
-		"!alias test !foo arg0 arg1":          "user_id in channel_id says arg0 arg1 (args=[arg0 arg1])",
-		"!alias test --user UID !foo arg0":    "UID in channel_id says arg0 (args=[arg0])",
-		"!alias test --channel CID !foo arg0": "user_id in CID says arg0 (args=[arg0])",
+	cases := map[string]struct {
+		Input  string
+		Output string
+	}{
+		"one argument": {
+			Input:  "!alias test !foo arg0",
+			Output: "user_id in channel_id says arg0 (args=[arg0])",
+		},
+		"two arguments": {
+			Input:  "!alias test !foo arg0 arg1",
+			Output: "user_id in channel_id says arg0 arg1 (args=[arg0 arg1])",
+		},
+		"--user flag": {
+			Input:  "!alias test --user UID !foo arg0",
+			Output: "UID in channel_id says arg0 (args=[arg0])",
+		},
+		"--channel flag": {
+			Input:  "!alias test --channel CID !foo arg0",
+			Output: "user_id in CID says arg0 (args=[arg0])",
+		},
 	}
 
-	for input, expected := range cases {
-		t.Run(input, func(t *testing.T) {
+	for name := range cases {
+		t.Run(name, func(t *testing.T) {
 			w := bytes.NewBuffer(nil)
 			cmd := NewAliasCommand(store, w, func() {})
-			if err := runTestApp(cmd, input); err != nil {
+			if err := runTestApp(cmd, cases[name].Input); err != nil {
 				t.Fatal(err)
 			}
 
-			assert.Equal(t, expected, w.String())
+			assert.Equal(t, cases[name].Output, w.String())
 		})
 	}
 }
 
 func TestAliasTestErrors(t *testing.T) {
-	inputs := []string{
-		"!alias test",
+	cases := map[string]string{
+		"missing TEXT argument": "!alias test",
+		// TODO: Potential addition?
+		// "unmatched key":         "!alias keyThatDoesNotExist",
 	}
 
 	cmd := NewAliasCommand(newMemoryStore(t), ioutil.Discard, func() {})
-	for _, input := range inputs {
-		t.Run(input, func(t *testing.T) {
+	for name, input := range cases {
+		t.Run(name, func(t *testing.T) {
 			if err := runTestApp(cmd, input); err == nil {
 				t.Fatal("Error was nil!")
 			}

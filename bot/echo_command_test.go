@@ -8,22 +8,37 @@ import (
 )
 
 func TestEcho(t *testing.T) {
-	cases := map[string]string{
-		"!echo":                      "",
-		"!echo arg0":                 "arg0",
-		"!echo arg0 arg1":            "arg0 arg1",
-		"!echo -v arg0 --stuff arg1": "-v arg0 --stuff arg1",
+	cases := map[string]struct {
+		Input  string
+		Output string
+	}{
+		"empty string": {
+			Input:  "!echo",
+			Output: "",
+		},
+		"one argument": {
+			Input:  "!echo arg0",
+			Output: "arg0",
+		},
+		"two argument": {
+			Input:  "!echo arg0 arg1",
+			Output: "arg0 arg1",
+		},
+		"flags and commands": {
+			Input:  "!echo -v arg0 --stuff arg1",
+			Output: "-v arg0 --stuff arg1",
+		},
 	}
 
-	for input, expected := range cases {
-		t.Run(input, func(t *testing.T) {
+	for name := range cases {
+		t.Run(name, func(t *testing.T) {
 			w := bytes.NewBuffer(nil)
 			cmd := NewEchoCommand(w)
-			if err := runTestApp(cmd, input); err != nil {
+			if err := runTestApp(cmd, cases[name].Input); err != nil {
 				t.Fatal(err)
 			}
 
-			assert.Equal(t, expected, w.String())
+			assert.Equal(t, cases[name].Output, w.String())
 		})
 	}
 }
