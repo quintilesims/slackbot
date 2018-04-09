@@ -80,6 +80,7 @@ func TestKarma(t *testing.T) {
 				t.Fatal(err)
 			}
 
+			// TODO: Need to test orders
 			for _, expected := range cases[name].Output {
 				assert.Contains(t, w.String(), expected)
 			}

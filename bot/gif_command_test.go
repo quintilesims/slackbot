@@ -104,8 +104,8 @@ func TestGIFLimit(t *testing.T) {
 
 func TestGIFErrors(t *testing.T) {
 	cases := map[string]string{
-		"query missing": "!gif",
-		"limit missing": "!gif --limit dog",
+		"missing QUERY":           "!gif",
+		"missing value for LIMIT": "!gif --limit dog",
 	}
 
 	cmd := NewGIFCommand("", "", ioutil.Discard)
